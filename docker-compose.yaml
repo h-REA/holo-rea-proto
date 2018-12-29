@@ -1,0 +1,14 @@
+version: "2.1"
+services:
+
+  dht:
+    image: holochain/holochain-proto:develop
+    command: ["hcdev", "--verbose", "--path", "/dna", "web", "3141"]
+    # environment:
+    ports:
+      - 3141:3141
+    networks:
+      - default
+    volumes:
+      - ./dht:/root/.holochaindev
+      - ./bin/HoloREA:/dna

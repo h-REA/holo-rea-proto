@@ -1,5 +1,5 @@
 language: node_js
 before_install:
-  - npm i -g yarn
+  - npm i -g yarn@1.12.3
   - export PATH="$HOME/.yarn/bin:$PATH"
 cache: yarn

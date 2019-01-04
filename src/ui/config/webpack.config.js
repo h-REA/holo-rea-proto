@@ -113,7 +113,33 @@ module.exports = function(webpackEnv) {
     return loaders;
   };
 
-  return {
+  const babelOptions = {
+    customize: require.resolve(
+      'babel-preset-react-app/webpack-overrides'
+    ),
+
+    plugins: [
+      [
+        require.resolve('babel-plugin-named-asset-import'),
+        {
+          loaderMap: {
+            svg: {
+              ReactComponent:
+                '@svgr/webpack?-prettier,-svgo![path]',
+            },
+          },
+        },
+      ],
+    ],
+    // This is a feature of `babel-loader` for webpack (not Babel itself).
+    // It enables caching results in ./node_modules/.cache/babel-loader/
+    // directory for faster rebuilds.
+    cacheDirectory: true,
+    cacheCompression: isEnvProduction,
+    compact: isEnvProduction,
+  };
+
+  const conf = {
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
     // Stop compilation early in production
     bail: isEnvProduction,
@@ -248,7 +274,11 @@ module.exports = function(webpackEnv) {
       // We placed these paths second because we want `node_modules` to "win"
       // if there are any conflicts. This matches Node resolution mechanism.
       // https://github.com/facebook/create-react-app/issues/253
-      modules: ['node_modules'].concat(
+      modules: [
+        'node_modules',
+        // extra path for Yarn-hoisted packages
+        path.resolve(__dirname, '../../node_modules')
+      ].concat(
         // It is guaranteed to exist because we tweak it in `env.js`
         process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
       ),
@@ -324,37 +354,31 @@ module.exports = function(webpackEnv) {
                 name: 'static/media/[name].[hash:8].[ext]',
               },
             },
+            // Process typescript with ts-loader in preference to Babel
+            {
+              test: /\.tsx?$/,
+              include: paths.appSrc,
+              use: [
+                {
+                  loader: require.resolve('babel-loader'),
+                  options: babelOptions
+                },
+                {
+                  loader: require.resolve('ts-loader'),
+                  options: {
+                    logLevel: 'info',
+                    configFile: path.resolve(__dirname, '../tsconfig.json'),
+                  }
+                }
+              ]
+            },
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
-              test: /\.(js|mjs|jsx|ts|tsx)$/,
+              test: /\.(js|mjs|jsx)$/,
               include: paths.appSrc,
               loader: require.resolve('babel-loader'),
-              options: {
-                customize: require.resolve(
-                  'babel-preset-react-app/webpack-overrides'
-                ),
-
-                plugins: [
-                  [
-                    require.resolve('babel-plugin-named-asset-import'),
-                    {
-                      loaderMap: {
-                        svg: {
-                          ReactComponent:
-                            '@svgr/webpack?-prettier,-svgo![path]',
-                        },
-                      },
-                    },
-                  ],
-                ],
-                // This is a feature of `babel-loader` for webpack (not Babel itself).
-                // It enables caching results in ./node_modules/.cache/babel-loader/
-                // directory for faster rebuilds.
-                cacheDirectory: true,
-                cacheCompression: isEnvProduction,
-                compact: isEnvProduction,
-              },
+              options: babelOptions,
             },
             // Process any JS outside of the app with Babel.
             // Unlike the application JS, we only compile the standard ES features.
@@ -607,4 +631,8 @@ module.exports = function(webpackEnv) {
     // our own hints via the FileSizeReporter
     performance: false,
   };
+
+  // console.log(require('util').inspect(conf, { depth: null, colors: true }))
+
+  return conf;
 };

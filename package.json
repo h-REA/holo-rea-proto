@@ -1,17 +1,24 @@
 {
   "name": "holo-rea",
   "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "src/graphql-adapter",
+    "src/ui"
+  ],
   "description": "REA economic network coordination software implemented on top of a Holochain backend.",
   "main": "/dev/null",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
+    "preinstall": "npm run clean",
     "postinstall": "build/postinstall.sh",
     "start": "npm-run-all --parallel dev:frontend dev:dht",
     "dev:frontend": "cd src/ui && npm start",
     "dev:dht": "docker-compose up dht",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cd tests && chai",
+    "clean": "rm -Rf src/ui/node_modules; rm -Rf src/graphql-adapter/node_modules"
   },
   "repository": {
     "type": "git",

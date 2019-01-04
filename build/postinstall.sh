@@ -18,10 +18,3 @@ command -v docker-compose >/dev/null 2>&1 || {
 
 echo "Ensure base Docker container for HC development node..."
 docker pull holochain/holochain-proto:develop
-
-echo "Setup UI frontend..."
-pushd src/ui
-  npm i
-popd
-
-echo "Setup DHT..."

@@ -18,7 +18,7 @@
     "dev:frontend": "cd src/ui && npm start",
     "dev:dht": "docker-compose up dht",
     "test": "cd tests && chai",
-    "clean": "rm -Rf src/ui/node_modules; rm -Rf src/graphql-adapter/node_modules"
+    "clean": "rm -Rf node_modules; rm -Rf src/ui/node_modules; rm -Rf src/graphql-adapter/node_modules"
   },
   "repository": {
     "type": "git",

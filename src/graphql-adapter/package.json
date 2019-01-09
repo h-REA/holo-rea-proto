@@ -1,0 +1,32 @@
+{
+  "name": "@holorea/graphql-adapter",
+  "version": "0.0.1",
+  "description": "GraphQL query adapter for Holochain app zome REST APIs, for HoloREA project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holo-rea/holo-rea-proto.git"
+  },
+  "keywords": [
+    "Holochain",
+    "GraphQL"
+  ],
+  "author": "pospi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/holo-rea/holo-rea-proto/issues"
+  },
+  "homepage": "https://github.com/holo-rea/holo-rea-proto#readme",
+  "dependencies": {
+    "dataloader": "^1.4.0",
+    "fecha": "^3.0.2",
+    "graphql": "^14.0.2",
+    "ramda": "^0.26.1"
+  },
+  "devDependencies": {
+    "@types/graphql": "^14.0.4"
+  }
+}

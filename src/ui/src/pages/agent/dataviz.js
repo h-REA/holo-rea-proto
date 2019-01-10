@@ -105,7 +105,7 @@ export const Pie = (props) => (
   />
 )
 
-const CustomSymbol = ({ size, color, borderWidth, borderColor }) => (
+const CustomSymbol = ({ size, color, borderWidth, borderColor } /* eslint-disable-line */ ) => (
   <g>
     <circle fill="#fff" r={size / 2} strokeWidth={borderWidth} stroke={borderColor} />
     <circle

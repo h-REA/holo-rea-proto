@@ -369,7 +369,9 @@ module.exports = function (webpackEnv) {
                   loader: require.resolve('ts-loader'),
                   options: {
                     logLevel: 'info',
-                    configFile: path.resolve(__dirname, '../tsconfig.json'),
+                    onlyCompileBundledFiles: true,
+                    experimentalFileCaching: false,
+                    configFile: path.resolve(__dirname, '../tsconfig.json')
                   }
                 }
               ]

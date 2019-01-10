@@ -22,6 +22,6 @@
     "isolatedModules": true
   },
   "include": [
-    "src"
+    "src", "../graphql-adapter"
   ]
 }

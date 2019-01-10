@@ -1,5 +1,5 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react'
+import styled from 'styled-components'
 
 export default ({ title, value }) => (
   <Box>
@@ -9,19 +9,17 @@ export default ({ title, value }) => (
       {value}
     </BoxData>
   </Box>
-);
-
-
+)
 
 const Box = styled.div`
   margin-top: 10px;
-`;
+`
 const BoxTitle = styled.h3`
   color: #677b83;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-`;
+`
 const BoxData = styled.h2`
   margin-top: 10px;
   font-size: 26px;
@@ -30,4 +28,4 @@ const BoxData = styled.h2`
   & span {
     color: #677b83;
   }
-`;
+`

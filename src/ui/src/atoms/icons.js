@@ -1,21 +1,14 @@
-// @flow
+/* eslint-disable react/prop-types */
+
 import * as React from 'react'
 const browser = typeof window !== 'undefined'
 
 const nullServerComponent = () => <span />
 
-type IconProps = {
-  width: number,
-  height: number,
-  stroke?: string,
-  strokeWidth: number,
-  color: string,
-};
-
 // ACTIVITIES
 export const Activity = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -36,7 +29,7 @@ export const Activity = !browser
 // SIDEBAR
 export const Sidebar = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -82,7 +75,7 @@ export const Sidebar = !browser
 // GRID
 export const Grid = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -123,7 +116,7 @@ export const Grid = !browser
 // SIDEBAR
 export const Diary = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -145,7 +138,7 @@ export const Diary = !browser
 // CALENDAR
 export const Calendar = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -169,7 +162,7 @@ export const Calendar = !browser
 // LINK
 export const Link = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -191,7 +184,7 @@ export const Link = !browser
 // EYE
 export const Eye = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -213,7 +206,7 @@ export const Eye = !browser
 // INVENTORY
 export const Inventory = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -235,7 +228,7 @@ export const Inventory = !browser
 // GLOBE
 export const Globe = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -258,7 +251,7 @@ export const Globe = !browser
 // HOME
 export const Home = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -280,7 +273,7 @@ export const Home = !browser
 // WORK
 export const Work = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -303,7 +296,7 @@ export const Work = !browser
 // Search
 export const Search = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -325,7 +318,7 @@ export const Search = !browser
 // VALIDATE
 export const Validate = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -349,7 +342,7 @@ export const Validate = !browser
 // BELL
 export const Bell = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -370,7 +363,7 @@ export const Bell = !browser
 // User
 export const User = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -391,7 +384,7 @@ export const User = !browser
 // Settings
 export const Settings = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -419,7 +412,7 @@ export const Settings = !browser
 // Power
 export const Power = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -440,7 +433,7 @@ export const Power = !browser
 // Preferites
 export const Preferites = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -461,7 +454,7 @@ export const Preferites = !browser
 // MENU
 export const Menu = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       width={width}
@@ -484,7 +477,7 @@ export const Menu = !browser
 // CARD
 export const Card = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -506,7 +499,7 @@ export const Card = !browser
 // LEFT
 export const Left = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -527,7 +520,7 @@ export const Left = !browser
 // ArrowUP
 export const Arrowup = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -549,7 +542,7 @@ export const Arrowup = !browser
 // RIGHT
 export const ArrowRight = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -571,7 +564,7 @@ export const ArrowRight = !browser
 // CLOCK
 export const Clock = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -593,7 +586,7 @@ export const Clock = !browser
 // TEXT
 export const Text = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -617,7 +610,7 @@ export const Text = !browser
 // MESSAGE
 export const Message = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -644,7 +637,7 @@ export const Cross = !browser
     strokeWidth = 2,
     color = '#333',
     stroke = 2
-  }: IconProps) => (
+  }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -666,7 +659,7 @@ export const Cross = !browser
 // USERS
 export const Users = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -690,7 +683,7 @@ export const Users = !browser
 // CHECK
 export const Check = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -711,7 +704,7 @@ export const Check = !browser
 // SHIELD
 export const Shield = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -732,7 +725,7 @@ export const Shield = !browser
 // PLUS
 export const Plus = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -754,7 +747,7 @@ export const Plus = !browser
 // Inbox
 export const Inbox = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -776,7 +769,7 @@ export const Inbox = !browser
 // MORE
 export const More = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -799,7 +792,7 @@ export const More = !browser
 // EDIT
 export const Edit = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -820,7 +813,7 @@ export const Edit = !browser
 // SEND
 export const Send = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -842,7 +835,7 @@ export const Send = !browser
 // Reply
 export const Reply = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -864,7 +857,7 @@ export const Reply = !browser
 // Reply
 export const Right = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -885,7 +878,7 @@ export const Right = !browser
 // Down
 export const Down = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -906,7 +899,7 @@ export const Down = !browser
 // Share
 export const Share = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -930,7 +923,7 @@ export const Share = !browser
 // Share
 export const UpRight = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -952,7 +945,7 @@ export const UpRight = !browser
 // Share
 export const UpLeft = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -974,7 +967,7 @@ export const UpLeft = !browser
 // EDIT-2
 export const Edit2 = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -996,7 +989,7 @@ export const Edit2 = !browser
 // TRASH
 export const Trash = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1020,7 +1013,7 @@ export const Trash = !browser
 // FOLDER
 export const Folder = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1040,7 +1033,7 @@ export const Folder = !browser
 // UP
 export const Up = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1061,7 +1054,7 @@ export const Up = !browser
 // NEWFILE
 export const NewFile = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1085,7 +1078,7 @@ export const NewFile = !browser
 // STAR
 export const Star = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1106,7 +1099,7 @@ export const Star = !browser
 // TYPE
 export const Type = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1129,7 +1122,7 @@ export const Type = !browser
 // Dollar
 export const Dollar = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1151,7 +1144,7 @@ export const Dollar = !browser
 // LOCK
 export const Lock = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1173,7 +1166,7 @@ export const Lock = !browser
 // COPY
 export const Copy = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}
@@ -1195,7 +1188,7 @@ export const Copy = !browser
 // LOADING
 export const Loading = !browser
   ? nullServerComponent
-  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }: IconProps) => (
+  : ({ width = 24, height = 24, strokeWidth = 2, color = '#333' }) => (
     <svg
       xmlns='http://www.w3.org/2000/svg'
       color={color}

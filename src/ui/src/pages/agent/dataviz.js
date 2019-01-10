@@ -24,12 +24,12 @@ export const Line = (props) => (
       }
     ]}
     animate
-    curve="monotoneX"
+    curve='monotoneX'
     enableDotLabel
     dotSymbol={CustomSymbol}
     dotSize={14}
     dotBorderWidth={1}
-    dotBorderColor="inherit:darker(0.3)"
+    dotBorderColor='inherit:darker(0.3)'
     dotLabelYOffset={-20}
     enableGridX={false}
     colors={['rgb(97, 205, 187)', 'rgb(244, 117, 96)']}
@@ -107,7 +107,7 @@ export const Pie = (props) => (
 
 const CustomSymbol = ({ size, color, borderWidth, borderColor } /* eslint-disable-line */ ) => (
   <g>
-    <circle fill="#fff" r={size / 2} strokeWidth={borderWidth} stroke={borderColor} />
+    <circle fill='#fff' r={size / 2} strokeWidth={borderWidth} stroke={borderColor} />
     <circle
       r={size / 5}
       strokeWidth={borderWidth}

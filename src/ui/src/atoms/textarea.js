@@ -13,7 +13,7 @@ const TextArea = styled.textarea`
   background: #fff;
   padding: 5px;
   font-family: inherit;
-  background: '#fff'; 
+  background: '#fff';
   font-size: 14px;
   resize: none;
   border: 0;

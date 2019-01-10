@@ -1,9 +1,10 @@
 import React from 'react'
 import styled from 'styled-components'
-import Icons from '../atoms/icons'
+// import Icons from '../atoms/icons'
 import { clearFix } from 'polished'
 
 export default function ({
+  /* eslint-disable */
   image,
   id,
   primary,
@@ -18,6 +19,7 @@ export default function ({
   withDelete,
   providerId,
   loggedUserId
+  /* eslint-enable */
 }) {
   return (
     <FeedItem>
@@ -76,16 +78,16 @@ const Member = styled.div`
   vertical-align: top;
   margin-right: 14px;
 `
-const Validations = styled.div`
-  float: right;
-  margin-top: 5px;
-  vertical-align: sub;
-  margin-left: 5px;
-`
+// const Validations = styled.div`
+//   float: right;
+//   margin-top: 5px;
+//   vertical-align: sub;
+//   margin-left: 5px;
+// `
 
 const Sub = styled.div`
   ${clearFix()};
-  
+
 `
 
 const MemberItem = styled.span`
@@ -133,13 +135,13 @@ const Date = styled.div`
   margin: 0;
   float: left;
 `
-
+/*
 const Actions = styled.div`
   ${clearFix()};
   float: left;
   vertical-align: middle;
   margin-left: 0px;
-  
+
 `
 
 const ActionTitle = styled.h3`
@@ -172,3 +174,4 @@ const Span = styled.span`
     height: 30px;
   }
 `
+*/

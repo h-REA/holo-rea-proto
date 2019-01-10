@@ -15,7 +15,9 @@ export default props => {
   return (
     <Body>
       <Wrapper>
-        <Header image={props.providerImage} name={'Ivan Minutillo'} />
+        <Header image={
+          props.providerImage // eslint-disable-line
+        } name={'Ivan Minutillo'} />
         <Content>
           <Inside>
             <Overview>

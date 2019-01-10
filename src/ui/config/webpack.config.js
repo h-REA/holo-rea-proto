@@ -112,32 +112,6 @@ module.exports = function (webpackEnv) {
     return loaders
   }
 
-  const babelOptions = {
-    customize: require.resolve(
-      'babel-preset-react-app/webpack-overrides'
-    ),
-
-    plugins: [
-      [
-        require.resolve('babel-plugin-named-asset-import'),
-        {
-          loaderMap: {
-            svg: {
-              ReactComponent:
-                '@svgr/webpack?-prettier,-svgo![path]'
-            }
-          }
-        }
-      ]
-    ],
-    // This is a feature of `babel-loader` for webpack (not Babel itself).
-    // It enables caching results in ./node_modules/.cache/babel-loader/
-    // directory for faster rebuilds.
-    cacheDirectory: true,
-    cacheCompression: isEnvProduction,
-    compact: isEnvProduction
-  }
-
   const conf = {
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
     // Stop compilation early in production
@@ -304,7 +278,7 @@ module.exports = function (webpackEnv) {
         // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
         // please link the files into your node_modules/ and let module-resolution kick in.
         // Make sure your source files are compiled, as they will not be processed in any way.
-        new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson])
+        new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson, ...paths.appExtraTSModules])
       ]
     },
     resolveLoader: {
@@ -337,6 +311,7 @@ module.exports = function (webpackEnv) {
           ],
           include: paths.appSrc
         },
+        // :TODO: TS linter for paths.appExtraTSModules
         {
           // "oneOf" will traverse all following loaders until one will
           // match the requirements. When no loader matches it will fall
@@ -356,17 +331,47 @@ module.exports = function (webpackEnv) {
             // Process typescript with ts-loader in preference to Babel
             {
               test: /\.tsx?$/,
-              include: paths.appSrc,
+              include: paths.appSrc.concat(paths.appExtraTSModules),
               use: [
                 {
                   loader: require.resolve('babel-loader'),
-                  options: babelOptions
+                  options: {
+                    customize: require.resolve(
+                      'babel-preset-react-app/webpack-overrides'
+                    ),
+
+                    presets: [
+                      require.resolve('babel-preset-react-app')
+                    ],
+
+                    plugins: [
+                      [
+                        require.resolve('babel-plugin-named-asset-import'),
+                        {
+                          loaderMap: {
+                            svg: {
+                              ReactComponent:
+                                '@svgr/webpack?-prettier,-svgo![path]'
+                            }
+                          }
+                        }
+                      ],
+                    ],
+                    // This is a feature of `babel-loader` for webpack (not Babel itself).
+                    // It enables caching results in ./node_modules/.cache/babel-loader/
+                    // directory for faster rebuilds.
+                    cacheDirectory: false,
+                    cacheCompression: isEnvProduction,
+                    compact: isEnvProduction
+                  }
                 },
                 {
                   loader: require.resolve('ts-loader'),
                   options: {
                     logLevel: 'info',
-                    configFile: path.resolve(__dirname, '../tsconfig.json'),
+                    onlyCompileBundledFiles: true,
+                    experimentalFileCaching: false,
+                    configFile: path.resolve(__dirname, '../tsconfig.json')
                   }
                 }
               ]
@@ -377,7 +382,36 @@ module.exports = function (webpackEnv) {
               test: /\.(js|mjs|jsx)$/,
               include: paths.appSrc,
               loader: require.resolve('babel-loader'),
-              options: babelOptions
+              options: {
+                customize: require.resolve(
+                  'babel-preset-react-app/webpack-overrides'
+                ),
+
+                presets: [
+                  require.resolve('babel-preset-react-app')
+                ],
+
+                plugins: [
+                  [
+                    require.resolve('babel-plugin-named-asset-import'),
+                    {
+                      loaderMap: {
+                        svg: {
+                          ReactComponent:
+                            '@svgr/webpack?-prettier,-svgo![path]'
+                        }
+                      }
+                    }
+                  ],
+                  require.resolve('@babel/plugin-transform-flow-strip-types')
+                ],
+                // This is a feature of `babel-loader` for webpack (not Babel itself).
+                // It enables caching results in ./node_modules/.cache/babel-loader/
+                // directory for faster rebuilds.
+                cacheDirectory: true,
+                cacheCompression: isEnvProduction,
+                compact: isEnvProduction
+              }
             },
             // Process any JS outside of the app with Babel.
             // Unlike the application JS, we only compile the standard ES features.

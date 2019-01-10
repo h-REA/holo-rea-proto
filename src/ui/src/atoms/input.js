@@ -11,7 +11,7 @@ const InputCont = styled.input`
   margin: 0;
   ${placeholder({ 'color': '#757575' })}
   color: '#282c37';
-  background: '#fff'; 
+  background: '#fff';
   padding: 5px;
   font-family: inherit;
   font-size: 14px;
@@ -32,7 +32,7 @@ const InputCont = styled.input`
     `}
 `
 
-const Input = ({ onChange, type, name, placeholder, value }) => (
+const Input = ({ onChange, type, name, placeholder, value } /* eslint-disable-line */) => (
   <InputCont onChange={onChange} type={type} name={name} placeholder={placeholder} value={value} />
 )
 

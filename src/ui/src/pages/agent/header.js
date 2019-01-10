@@ -3,8 +3,10 @@ import styled from 'styled-components'
 import media from 'styled-media-query'
 import { clearFix } from 'polished'
 export default ({
+  /* eslint-disable */
   name,
   image
+  /* eslint-enable */
 }) => {
   return (
     <WrappedHeader>

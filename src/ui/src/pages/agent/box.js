@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 
-export default ({ title, value }) => (
+export default ({ title, value }/* eslint-disable-line */) => (
   <Box>
     <BoxTitle>{title}</BoxTitle>
     <BoxData>

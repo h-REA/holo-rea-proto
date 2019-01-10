@@ -34,7 +34,8 @@ const wrapperComponent = compose(
       )
     }),
     handleSubmit: (values, { props, resetForm, setErrors, setSubmitting }) => {
-      let date = moment(values.date).format('YYYY-MM-DD')
+      // :TODO:
+      // let date = moment(values.date).format('YYYY-MM-DD')
       return null
     }
   })

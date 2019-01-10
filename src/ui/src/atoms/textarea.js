@@ -13,7 +13,7 @@ const TextArea = styled.textarea`
   background: #fff;
   padding: 5px;
   font-family: inherit;
-  background: '#fff'; 
+  background: '#fff';
   font-size: 14px;
   resize: none;
   border: 0;
@@ -35,6 +35,8 @@ const TextArea = styled.textarea`
   })}
 `
 
-const Textarea = ({ placeholder, name, onChange, type, value }) => (<TextArea onChange={onChange} name={name} type={type} placeholder={placeholder} value={value} />)
+const Textarea = ({ placeholder, name, onChange, type, value }/* eslint-disable-line */) => (
+  <TextArea onChange={onChange} name={name} type={type} placeholder={placeholder} value={value} />
+)
 
 export default Textarea

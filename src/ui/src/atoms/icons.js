@@ -1,3 +1,5 @@
+/* eslint-disable react/prop-types */
+
 import * as React from 'react'
 const browser = typeof window !== 'undefined'
 

@@ -15,6 +15,7 @@ import AsyncSelect from 'react-select/lib/Async'
 require('react-datepicker/dist/react-datepicker-cssmodules.css')
 
 const LogEvent = ({
+  /* eslint-disable */
   values,
   setFieldValue,
   handleMenuSelection,
@@ -23,6 +24,7 @@ const LogEvent = ({
   closeLogEvent,
   setFieldTouched,
   menuSelected
+  /* eslint-enable */
 }) => (
   <Form>
     <Log.Module>
@@ -196,7 +198,7 @@ const NoteIcon = styled.div`
 
 const StartDate = props => {
   const handleChange = value => {
-    props.onChange('date', value)
+    props.onChange('date', value) // eslint-disable-line
   }
   return (
     <Log.ItemDate>
@@ -204,12 +206,16 @@ const StartDate = props => {
         <Icons.Calendar width='16' height='16' color='#b7bfc6' />
       </span>
       <DatePicker
-        selected={props.value}
+        selected={
+          props.value // eslint-disable-line
+        }
         onChange={handleChange}
         dateFormat={'DD MMM'}
         withPortal
       />
-      {props.error && props.touched && props.error}
+      {
+        props.error && props.touched && props.error // eslint-disable-line
+      }
     </Log.ItemDate>
   )
 }

@@ -8,7 +8,6 @@
  * @since:   2019-01-03
  */
 
-import { __, apply } from 'ramda'
 import fecha from 'fecha'
 
 import {
@@ -16,11 +15,13 @@ import {
   GraphQLList,
   GraphQLObjectType,
   GraphQLEnumType,
+  GraphQLScalarType,
   GraphQLString,
   GraphQLBoolean,
   GraphQLInt,
   GraphQLID
 } from 'graphql'
+import { Kind } from 'graphql/language'
 
 // import {
 //   VfObject, QuantityValue as coreQV, Hash, QVlike, notError, CrudResponse,
@@ -109,7 +110,7 @@ export const NotificationType = new GraphQLObjectType({
     display: { type: GraphQLString },
   })
 })
-
+/*
 export const ResourceClassification = new GraphQLObjectType({
 })
 
@@ -169,7 +170,7 @@ export const Validation = new GraphQLObjectType({
 
 export const AgentRelationship = new GraphQLObjectType({
 })
-
+*/
 export const Agent = new GraphQLObjectType({
   name: 'Agent',
   description: 'An agent in an REA-based economic network',
@@ -182,6 +183,7 @@ export const Agent = new GraphQLObjectType({
     primaryLocation: { type: GraphQLString },
     primaryPhone: { type: GraphQLString },
     email: { type: GraphQLString },
+/*
     ownedEconomicResources
     : { type: new GraphQLList(EconomicResource), resolve: (agent, args) => {
       //(category: EconomicResourceCategoryresourceClassificationId: Intpage: Int)
@@ -292,15 +294,16 @@ export const Agent = new GraphQLObjectType({
       //(year: Int, month: Int)
 
     } },
+*/
   }),
 });
-
+/*
 export const Organization = new GraphQLObjectType({
 })
 
 export const Person = new GraphQLObjectType({
 })
-
+*/
 export const NotificationSetting = new GraphQLObjectType({
   name: 'Notification setting',
   description: 'Controls user preferences as to whether to enable notifications for a particular subset of REA system functionality.',

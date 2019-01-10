@@ -22,27 +22,27 @@ import {
 
 import {
   Agent,
-  AgentRelationship,
-  AgentRelationshipRole,
-  AgentResourceClassification,
-  Organization,
-  OrganizationType,
-  OrganizationClassification,
-  Person,
-  EconomicResource,
-  Process,
-  ExchangeAgreement,
-  Transfer,
-  EconomicEvent,
+  // AgentRelationship,
+  // AgentRelationshipRole,
+  // AgentResourceClassification,
+  // Organization,
+  // OrganizationType,
+  // OrganizationClassification,
+  // Person,
+  // EconomicResource,
+  // Process,
+  // ExchangeAgreement,
+  // Transfer,
+  // EconomicEvent,
   QuantityValue,
   Unit,
-  ResourceClassification,
-  Facet,
-  ProcessClassification,
-  Commitment,
-  Plan,
-  Place,
-  Validation,
+  // ResourceClassification,
+  // Facet,
+  // ProcessClassification,
+  // Commitment,
+  // Plan,
+  // Place,
+  // Validation,
   NotificationSetting,
   NotificationType,
   StringDate
@@ -65,11 +65,11 @@ interface GraphQLFieldDef {
 }
 
 // network globals & configuration
-
+/*
 export const unit: GraphQLFieldDef = {
   resultType: Unit,
   args: { id: GraphQLID },
-  resolve(id: string): Unit {
+  resolve(id: string): typeof Unit {
   }
 }
 export const allUnits: GraphQLFieldDef = {
@@ -403,7 +403,7 @@ export const allPeople: GraphQLFieldDef = {
   resolve(): Person[] {
   }
 }
-
+*/
 export const notificationSetting: GraphQLFieldDef = {
   resultType: NotificationSetting,
   args: { id: GraphQLID },

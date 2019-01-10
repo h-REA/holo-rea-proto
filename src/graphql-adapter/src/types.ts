@@ -31,7 +31,7 @@ import { Kind } from 'graphql/language'
 // base types
 
 const isoDateRegex = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d\d:\d\d$/
-const parseDate = apply(fecha.parse, __, 'YYYY-MM-DDTHH:mm:ssZZ')
+const parseDate = (val: string) => fecha.parse(val, 'YYYY-MM-DDTHH:mm:ssZZ')
 
 // :TODO: check date field compat with ValueNetwork API
 

@@ -117,6 +117,10 @@ module.exports = function (webpackEnv) {
       'babel-preset-react-app/webpack-overrides'
     ),
 
+    presets: [
+      require.resolve('babel-preset-react-app')
+    ],
+
     plugins: [
       [
         require.resolve('babel-plugin-named-asset-import'),
@@ -128,7 +132,8 @@ module.exports = function (webpackEnv) {
             }
           }
         }
-      ]
+      ],
+      require.resolve('@babel/plugin-transform-flow-strip-types')
     ],
     // This is a feature of `babel-loader` for webpack (not Babel itself).
     // It enables caching results in ./node_modules/.cache/babel-loader/

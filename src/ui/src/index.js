@@ -1,9 +1,9 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import registerServiceWorker from "./registerServiceWorker";
-import AppTemplate from "./templates/AppTemplate";
-import  { createGlobalStyle, ThemeProvider } from "styled-components";
-import Dark from "./style/themeDark";
+import React from 'react'
+import ReactDOM from 'react-dom'
+import registerServiceWorker from './registerServiceWorker'
+import AppTemplate from './templates/AppTemplate'
+import { createGlobalStyle, ThemeProvider } from 'styled-components'
+import Dark from './style/themeDark'
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css?family=Fira+Sans:300,400,400i,500,500i,700');
@@ -83,7 +83,7 @@ const GlobalStyle = createGlobalStyle`
       border-radius: 0;
       background: rgba(0,0,0,.1);
   }
- 
+
 `
 
 ReactDOM.render(

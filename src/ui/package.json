@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@babel/core": "7.1.6",
+    "@holorea/graphql-adapter": "0.0.1",
     "@nivo/line": "0.51.0",
     "@nivo/pie": "0.51.0",
     "@svgr/webpack": "2.4.1",

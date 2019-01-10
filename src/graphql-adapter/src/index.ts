@@ -13,12 +13,12 @@ import {
   GraphQLObjectType,
   GraphQLString,
   GraphQLArgumentConfig,
-  GraphQLFieldConfigArgumentMap,
+  GraphQLFieldConfigArgumentMap
 } from 'graphql'
 
 import {
   GraphQLArgDef,
-  GraphQLArgumentConfigWithIndex,
+  GraphQLArgumentConfigWithIndex
 } from './queries'
 import * as queries from './queries'
 import * as types from './types'
@@ -40,20 +40,20 @@ interface ArgsDef {
   [arg: string]: GraphQLArgDef,
 }
 
-function isRawArgumentConfig(object: GraphQLArgDef): object is GraphQLArgumentConfigWithIndex {
+function isRawArgumentConfig (object: GraphQLArgDef): object is GraphQLArgumentConfigWithIndex {
   return 'type' in object
 }
 
-function isSimpleArgumentConfig(object: GraphQLArgDef): object is GraphQLInputType {
+function isSimpleArgumentConfig (object: GraphQLArgDef): object is GraphQLInputType {
   return !('type' in object)
 }
 
-function queryFieldsReducer(f: GraphQLFieldsDef, query: QueryId) {
-  const { resultType, args, resolve } = queries[query];
+function queryFieldsReducer (f: GraphQLFieldsDef, query: QueryId) {
+  const { resultType, args, resolve } = queries[query]
   // assign field / return value type and resolution logic
   f[query] = {
     type: resultType,
-    resolve: resolve,
+    resolve: resolve
   }
   if (args) {
     // inflate arg values to reduce verbosity in declaration
@@ -61,7 +61,7 @@ function queryFieldsReducer(f: GraphQLFieldsDef, query: QueryId) {
       const argData = args[arg]
       if (isRawArgumentConfig(argData)) {
         const typedArg: GraphQLArgumentConfig = argData
-        a[arg] = typedArg;  // may also have `defaultValue` and `description`
+        a[arg] = typedArg  // may also have `defaultValue` and `description`
       } else if (isSimpleArgumentConfig(argData)) {
         const typedArg: GraphQLArgumentConfig = { type: argData }
         a[arg] = typedArg  // simple type, inflate to `type` subkey
@@ -78,8 +78,8 @@ const QueryType = new GraphQLObjectType({
   fields: () => Object.keys(queries)
     .map((query: string): QueryId => query as QueryId)
     .reduce(queryFieldsReducer, {})
-});
+})
 
 export default new GraphQLSchema({
-  query: QueryType,
-});
+  query: QueryType
+})

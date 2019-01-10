@@ -39,18 +39,18 @@ export const StringDate = new GraphQLScalarType({
   name: 'Date (ISO8601)',
   serialize: parseDate,
   parseValue: parseDate,
-  parseLiteral(ast) {
+  parseLiteral (ast) {
     if (ast.kind === Kind.STRING && ast.value.match(isoDateRegex)) {
-      return parseDate(ast.value);
+      return parseDate(ast.value)
     }
-    return null;
+    return null
   }
 })
 
 // predefined (hardcoded) taxonomies
 
 export const Action = new GraphQLEnumType({
-  name: "Action",
+  name: 'Action',
   values: {
     NONE: { value: 0 },
     ACCEPT: { value: 1 },
@@ -62,7 +62,7 @@ export const Action = new GraphQLEnumType({
     PRODUCE: { value: 7 },
     TAKE: { value: 8 },
     USE: { value: 9 },
-    WORK: { value: 10 },
+    WORK: { value: 10 }
   }
 })
 
@@ -73,7 +73,7 @@ export const EconomicResourceProcessCategory = new GraphQLEnumType({
     CITED: { value: 1 },
     CONSUMED: { value: 2 },
     PRODUCED: { value: 3 },
-    USED: { value: 4 },
+    USED: { value: 4 }
   }
 })
 
@@ -86,7 +86,7 @@ export const Unit = new GraphQLObjectType({
     id: { type: GraphQLID },
     // :TODO: i18n
     name: { type: GraphQLString },
-    symbol: { type: GraphQLString },
+    symbol: { type: GraphQLString }
   })
 })
 
@@ -95,7 +95,7 @@ export const QuantityValue = new GraphQLObjectType({
   description: 'Some measured quantity, recorded against a particular measurement unit',
   fields: () => ({
     numericValue: { type: GraphQLID },
-    unit: { type: Unit },
+    unit: { type: Unit }
   })
 })
 
@@ -107,7 +107,7 @@ export const NotificationType = new GraphQLObjectType({
     // :TODO: i18n
     label: { type: GraphQLString },
     description: { type: GraphQLString },
-    display: { type: GraphQLString },
+    display: { type: GraphQLString }
   })
 })
 /*
@@ -182,7 +182,7 @@ export const Agent = new GraphQLObjectType({
     note: { type: GraphQLString },
     primaryLocation: { type: GraphQLString },
     primaryPhone: { type: GraphQLString },
-    email: { type: GraphQLString },
+    email: { type: GraphQLString }
 /*
     ownedEconomicResources
     : { type: new GraphQLList(EconomicResource), resolve: (agent, args) => {
@@ -295,8 +295,8 @@ export const Agent = new GraphQLObjectType({
 
     } },
 */
-  }),
-});
+  })
+})
 /*
 export const Organization = new GraphQLObjectType({
 })
@@ -312,6 +312,6 @@ export const NotificationSetting = new GraphQLObjectType({
     send: { type: GraphQLBoolean },
     agent: { type: Agent, resolve: (setting, args) => {
     } },
-    notificationType: NotificationType,
+    notificationType: NotificationType
   })
 })

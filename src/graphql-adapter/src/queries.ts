@@ -17,8 +17,8 @@ import {
   GraphQLString,
   GraphQLEnumType,
   GraphQLID,
-  GraphQLArgumentConfig,
-} from 'graphql';
+  GraphQLArgumentConfig
+} from 'graphql'
 
 import {
   Agent,
@@ -46,7 +46,7 @@ import {
   NotificationSetting,
   NotificationType,
   StringDate
-} from './types';
+} from './types'
 
 // shared types
 
@@ -407,11 +407,11 @@ export const allPeople: GraphQLFieldDef = {
 export const notificationSetting: GraphQLFieldDef = {
   resultType: NotificationSetting,
   args: { id: GraphQLID },
-  resolve(id: string): NotificationSetting {
+  resolve (id: string): NotificationSetting {
   }
 }
 export const allNotificationSettings: GraphQLFieldDef = {
   resultType: new GraphQLList(NotificationSetting),
-  resolve(): NotificationSetting[] {
+  resolve (): NotificationSetting[] {
   }
 }

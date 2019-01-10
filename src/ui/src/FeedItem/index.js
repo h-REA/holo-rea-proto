@@ -23,7 +23,7 @@ export default function ({
     <FeedItem>
       <Member>
         <MemberItem>
-          <Img alt="provider" src={image} />
+          <Img alt='provider' src={image} />
         </MemberItem>
       </Member>
       <Desc>

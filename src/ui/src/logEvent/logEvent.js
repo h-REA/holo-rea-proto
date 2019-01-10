@@ -44,7 +44,7 @@ const LogEvent = ({
                     options={Events}
                     // styles={customStyles}
                     value={field.value}
-                    placeholder="Select an event"
+                    placeholder='Select an event'
                   />
                 )
               }}
@@ -54,16 +54,16 @@ const LogEvent = ({
           </Action>
           <Qty>
             <Field
-              name="numericValue"
+              name='numericValue'
               render={({ field }) => (
                 <Input
                   name={field.name}
                   onChange={field.onChange}
-                  type="number"
-                  min="00.00"
-                  max="100.00"
-                  step="0.1"
-                  placeholder="00.00"
+                  type='number'
+                  min='00.00'
+                  max='100.00'
+                  step='0.1'
+                  placeholder='00.00'
                 />
               )}
             />
@@ -86,7 +86,7 @@ const LogEvent = ({
                     }
                     options={Units}
                     // styles={customStyles}
-                    placeholder="Select a unit"
+                    placeholder='Select a unit'
                     value={field.value}
                   />
                 )
@@ -96,10 +96,10 @@ const LogEvent = ({
           </Unit>
           <Resource>
             <Field
-              name="affectedResourceClassifiedAsId"
+              name='affectedResourceClassifiedAsId'
               render={({ field }) => (
                 <AsyncSelect
-                  placeholder="Select a classification..."
+                  placeholder='Select a classification...'
                   defaultOptions
                   cacheOptions
                   value={field.value}
@@ -120,7 +120,7 @@ const LogEvent = ({
       <Log.Note>
         <NoteIcon><Icons.Text width='16' height='16' color='#b7bfc6' /></NoteIcon>
         <Field
-          name="note"
+          name='note'
           render={({ field }) => (
             <Textarea
               value={field.value}
@@ -140,7 +140,7 @@ const LogEvent = ({
           error={errors.start}
           touched={touched.start}
         />
-        <Button type="submit">Publish</Button>
+        <Button type='submit'>Publish</Button>
         <Button outline onClick={closeLogEvent}>Cancel</Button>
       </Log.PublishActions>
     </Log.Module>

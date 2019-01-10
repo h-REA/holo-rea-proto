@@ -1,5 +1,5 @@
-import styled, {css} from "styled-components";
-import { clearFix, ellipsis } from "polished";
+import styled, { css } from 'styled-components'
+import { clearFix, ellipsis } from 'polished'
 
 export const Img = styled.div`
   float: left;
@@ -17,7 +17,7 @@ export const Img = styled.div`
   background-size: cover;
   background-position: center;
   background-color:  ${props => props.theme.color.p600};
-`;
+`
 
 export const AvatarTitle = styled.h3`
   float: left;
@@ -25,7 +25,7 @@ export const AvatarTitle = styled.h3`
   line-height: ${props => props.theme.avatar.size};
   font-weight: 400;
   ${ellipsis('200px')}
-`;
+`
 
 export const AvatarWrapper = styled.div`
   height: ${props => props.theme.avatar.size};
@@ -37,4 +37,4 @@ export const AvatarWrapper = styled.div`
     css`
       background: ${props => props.theme.color.b200};
     `};
-`;
+`

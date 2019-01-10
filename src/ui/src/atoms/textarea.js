@@ -1,6 +1,6 @@
 import React from 'react'
-import styled, {css} from 'styled-components'
-import {placeholder} from 'polished'
+import styled, { css } from 'styled-components'
+import { placeholder } from 'polished'
 
 const TextArea = styled.textarea`
   width: 100%;
@@ -20,13 +20,13 @@ const TextArea = styled.textarea`
   outline: 0;
   height: 100%;
   ${props =>
-    props.type === "dark" &&
+    props.type === 'dark' &&
     css`
       background: #1F2129;
       color: #9baec8;
     `}
   ${props =>
-    props.type === "gray" &&
+    props.type === 'gray' &&
     css`
       background: #efefef;
     `}
@@ -35,6 +35,6 @@ const TextArea = styled.textarea`
   })}
 `
 
-const Textarea = ({placeholder, name, onChange, type, value}) => (<TextArea onChange={onChange} name={name} type={type} placeholder={placeholder} value={value} />)
+const Textarea = ({ placeholder, name, onChange, type, value }) => (<TextArea onChange={onChange} name={name} type={type} placeholder={placeholder} value={value} />)
 
 export default Textarea

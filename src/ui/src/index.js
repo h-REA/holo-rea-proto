@@ -84,16 +84,15 @@ const GlobalStyle = createGlobalStyle`
       background: rgba(0,0,0,.1);
   }
  
-`;
-
+`
 
 ReactDOM.render(
   <ThemeProvider theme={Dark}>
-        <div>
-          <GlobalStyle />
-            <AppTemplate />
-        </div>
+    <div>
+      <GlobalStyle />
+      <AppTemplate />
+    </div>
   </ThemeProvider>,
-  document.getElementById("root")
-);
-registerServiceWorker();
+  document.getElementById('root')
+)
+registerServiceWorker()

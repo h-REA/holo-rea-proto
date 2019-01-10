@@ -26,6 +26,6 @@ const theme = {
     radius: '4px',
     mini: '28px'
   }
-};
+}
 
-export default theme;
+export default theme

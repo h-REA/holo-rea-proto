@@ -17,11 +17,14 @@ import {
   GraphQLEnumType,
   GraphQLScalarType,
   GraphQLString,
+  GraphQLFloat,
   GraphQLBoolean,
   GraphQLInt,
   GraphQLID
 } from 'graphql'
 import { Kind } from 'graphql/language'
+
+import zomes from './zomes'
 
 // import {
 //   VfObject, QuantityValue as coreQV, Hash, QVlike, notError, CrudResponse,
@@ -65,6 +68,17 @@ export const Action = new GraphQLEnumType({
     WORK: { value: 10 }
   }
 })
+
+export const EconomicResourceCategory = new GraphQLEnumType({
+  name: 'Economic resource categories',
+  values: {
+    NONE: { value: 0 },
+    CURRENCY: { value: 1 },
+    INVENTORY: { value: 2 },
+    WORK: { value: 3 }
+  }
+})
+export type IEconomicResourceCategory = "NONE" | "CURRENCY" | "INVENTORY" | "WORK"
 
 export const EconomicResourceProcessCategory = new GraphQLEnumType({
   name: 'Economic resource process categories',
@@ -116,10 +130,23 @@ export interface NotificationTypeInterface {
   description: string,
   display: string,
 }
-/*
+
 export const ResourceClassification = new GraphQLObjectType({
+  name: 'Resource classification',
+  description: 'A classification for a group of related resources within an economic network',
+  fields: () => ({
+    id: { type: GraphQLID },
+    name: { type: GraphQLString },
+    unit: { type: Unit },
+    image: { type: GraphQLString },
+    note: { type: GraphQLString },
+    category: { type: GraphQLString },
+    processCategory: { type: GraphQLString },
+    // classificationResources: [EconomicResource]
+  })
 })
 
+/*
 export const ProcessClassification = new GraphQLObjectType({
 })
 
@@ -137,10 +164,22 @@ export const OrganizationType = new GraphQLObjectType({
 
 export const Facet = new GraphQLObjectType({
 })
-
+*/
 export const Place = new GraphQLObjectType({
+  name: 'Place',
+  description: 'A physical location',
+  fields: () => ({
+    id: { type: GraphQLID },
+    name: { type: GraphQLString },
+    address: { type: GraphQLString },
+    latitude: { type: GraphQLFloat },
+    longitude: { type: GraphQLFloat },
+    note: { type: GraphQLString },
+    // placeResources: [EconomicResource]
+    // placeAgents: [Agent]
+  })
 })
-
+/*
 // planning layer
 
 export const Plan = new GraphQLObjectType({
@@ -156,10 +195,45 @@ export const ExchangeAgreement = new GraphQLObjectType({
 
 export const Process = new GraphQLObjectType({
 })
-
+*/
 export const EconomicResource = new GraphQLObjectType({
-})
+  name: 'Resource',
+  description: 'An economic resource in an REA-based economic network',
+  fields: () => ({
+    id: { type: GraphQLID },
+    url: { type: GraphQLString },
+    resourceClassifiedAs: { type: ResourceClassification },
+    trackingIdentifier: { type: GraphQLString },
+    image: { type: GraphQLString },
+    currentQuantity: { type: QuantityValue },
+    note: { type: GraphQLString },
+    category: { type: GraphQLString },
+    currentLocation: { type: Place },
+    createdDate: { type: GraphQLString },
+    // transfers: {
+    //   type: new GraphQLList(Transfer), resolve(resource, {
+    //   }: {
+    //   }) => {
 
+    //   }
+    // },
+    // resourceContacts: {
+    //   type: new GraphQLList(Agent), resolve(resource, {
+    //   }: {
+    //   }) => {
+
+    //   }
+    // },
+    // owners: {
+    //   type: new GraphQLList(Agent), resolve(resource, {
+    //   }: {
+    //   }) => {
+
+    //   }
+    // }
+  })
+})
+/*
 export const EconomicEvent = new GraphQLObjectType({
 })
 
@@ -188,13 +262,27 @@ export const Agent = new GraphQLObjectType({
     note: { type: GraphQLString },
     primaryLocation: { type: GraphQLString },
     primaryPhone: { type: GraphQLString },
-    email: { type: GraphQLString }
-/*
-    ownedEconomicResources
-    : { type: new GraphQLList(EconomicResource), resolve: (agent, args) => {
-      //(category: EconomicResourceCategoryresourceClassificationId: Intpage: Int)
+    email: { type: GraphQLString },
+    ownedEconomicResources: {
+      type: new GraphQLList(EconomicResource), resolve: (agent, {
+        category, resourceClassificationId, page
+      }: {
+        category?: IEconomicResourceCategory,
+        resourceClassificationId?: string,
+        page?: number
+      }) => {
+        // :TODO: externally-exposed resource classification IDs?
+        const resourceClassifications = {}
 
-    } },
+        return zomes.agents.getOwnedResources({
+          agents: [agent.id],
+          // types: [
+          //   await ResourceClassification.get(resourceClassificationId)
+          // ]
+        })
+      }
+    },
+/*
     searchOwnedInventoryResources
     : { type: new GraphQLList(EconomicResource), resolve: (agent, args) => {
       //(searchString: String)

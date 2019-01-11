@@ -45,7 +45,7 @@ import {
   // Place,
   // Validation,
   NotificationSetting,
-  NotificationSettingInterface,
+  INotificationSetting,
   NotificationType,
   StringDate
 } from './types'
@@ -419,14 +419,14 @@ const DUMMY_SETTING = {
 export const notificationSetting: GraphQLFieldDef = {
   resultType: NotificationSetting,
   args: { id: GraphQLID },
-  resolve (id: string): NotificationSettingInterface {
+  resolve (id: string): INotificationSetting {
     // :TODO: implement real data
     return DUMMY_SETTING
   }
 }
 export const allNotificationSettings: GraphQLFieldDef = {
   resultType: new GraphQLList(NotificationSetting),
-  resolve (): NotificationSettingInterface[] {
+  resolve (): INotificationSetting[] {
     // :TODO: implement real data
     return [DUMMY_SETTING]
   }

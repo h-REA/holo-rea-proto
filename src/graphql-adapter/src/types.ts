@@ -332,7 +332,7 @@ export const NotificationSetting = new GraphQLObjectType({
     notificationType: { type: NotificationType }
   })
 })
-export interface NotificationSettingInterface {
+export interface INotificationSetting {
   id: string,
   send: boolean,
   agent?: AgentInterface,

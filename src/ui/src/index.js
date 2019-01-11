@@ -5,6 +5,10 @@ import AppTemplate from './templates/AppTemplate'
 import { createGlobalStyle, ThemeProvider } from 'styled-components'
 import Dark from './style/themeDark'
 
+// for testing compilation only
+// :TODO: move into reducer
+import schema from '@holorea/graphql-adapter/src' // eslint-disable-line no-unused-vars
+
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css?family=Fira+Sans:300,400,400i,500,500i,700');
   * {box-sizing: border-box}

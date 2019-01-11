@@ -331,7 +331,7 @@ module.exports = function (webpackEnv) {
             // Process typescript with ts-loader in preference to Babel
             {
               test: /\.tsx?$/,
-              include: paths.appSrc.concat(paths.appExtraTSModules),
+              include: paths.appExtraTSModules.concat(paths.appSrc),
               use: [
                 {
                   loader: require.resolve('babel-loader'),

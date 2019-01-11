@@ -94,9 +94,9 @@ checkBrowsers(paths.appPath, isInteractive)
       if (err) {
         return console.log(err)
       }
-      if (isInteractive) {
-        clearConsole()
-      }
+      // if (isInteractive) {
+      //   clearConsole()
+      // }
       console.log(chalk.cyan('Starting the development server...'))
       console.log(chalk.cyan(`Server running at ${urls.localUrlForBrowser}\n`))
       // openBrowser(urls.localUrlForBrowser);

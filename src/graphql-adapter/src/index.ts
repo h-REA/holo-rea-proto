@@ -7,6 +7,8 @@
  */
 
 import {
+  GraphQLFieldConfig,
+  GraphQLType,
   GraphQLInputType,
   GraphQLSchema,
   GraphQLList,
@@ -26,14 +28,8 @@ import * as types from './types'
 type QueriesType = typeof queries
 type QueryId = keyof QueriesType
 
-interface QueryDef {
-  type: GraphQLObjectType,
-  resolve: (...values: any[]) => any,
-  args?: GraphQLFieldConfigArgumentMap
-}
-
 interface GraphQLFieldsDef {
-  [fieldName: string]: QueryDef
+  [fieldName: string]: GraphQLFieldConfig<any, any, any>
 }
 
 interface ArgsDef {

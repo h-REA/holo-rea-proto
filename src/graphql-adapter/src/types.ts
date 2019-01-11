@@ -110,6 +110,12 @@ export const NotificationType = new GraphQLObjectType({
     display: { type: GraphQLString }
   })
 })
+export interface NotificationTypeInterface {
+  id: string,
+  label: string,
+  description: string,
+  display: string,
+}
 /*
 export const ResourceClassification = new GraphQLObjectType({
 })
@@ -297,6 +303,17 @@ export const Agent = new GraphQLObjectType({
 */
   })
 })
+export interface AgentInterface {
+  id: string,
+  name: string,
+  type: string,
+  image: string,
+  note: string,
+  primaryLocation: string,
+  primaryPhone: string,
+  email: string,
+  // :TODO:
+}
 /*
 export const Organization = new GraphQLObjectType({
 })
@@ -312,6 +329,12 @@ export const NotificationSetting = new GraphQLObjectType({
     send: { type: GraphQLBoolean },
     agent: { type: Agent, resolve: (setting, args) => {
     } },
-    notificationType: NotificationType
+    notificationType: { type: NotificationType }
   })
 })
+export interface NotificationSettingInterface {
+  id: string,
+  send: boolean,
+  agent?: AgentInterface,
+  notificationType: NotificationTypeInterface
+}

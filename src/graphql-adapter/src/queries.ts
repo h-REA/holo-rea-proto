@@ -9,6 +9,7 @@
  */
 
 import {
+  GraphQLOutputType,
   GraphQLInputType,
   GraphQLObjectType,
   GraphQLList,
@@ -44,6 +45,7 @@ import {
   // Place,
   // Validation,
   NotificationSetting,
+  NotificationSettingInterface,
   NotificationType,
   StringDate
 } from './types'
@@ -57,7 +59,7 @@ export interface GraphQLArgumentConfigWithIndex extends GraphQLArgumentConfig {
 export type GraphQLArgDef = GraphQLInputType | GraphQLArgumentConfigWithIndex
 
 interface GraphQLFieldDef {
-  resultType: GraphQLObjectType,
+  resultType: GraphQLOutputType,
   resolve: (...args: any[]) => any,
   args?: {
     [id: string]: GraphQLInputType | GraphQLArgumentConfigWithIndex
@@ -404,14 +406,28 @@ export const allPeople: GraphQLFieldDef = {
   }
 }
 */
+const DUMMY_SETTING = {
+  id: 'decbdda',
+  send: true,
+  notificationType: {
+    id: 'nt001',
+    label: 'New resources',
+    description: 'Sends a notification when new resources are available that match your wants criteria',
+    display: 'Notify of new available resources',
+  }
+}
 export const notificationSetting: GraphQLFieldDef = {
   resultType: NotificationSetting,
   args: { id: GraphQLID },
-  resolve (id: string): NotificationSetting {
+  resolve (id: string): NotificationSettingInterface {
+    // :TODO: implement real data
+    return DUMMY_SETTING
   }
 }
 export const allNotificationSettings: GraphQLFieldDef = {
   resultType: new GraphQLList(NotificationSetting),
-  resolve (): NotificationSetting[] {
+  resolve (): NotificationSettingInterface[] {
+    // :TODO: implement real data
+    return [DUMMY_SETTING]
   }
 }

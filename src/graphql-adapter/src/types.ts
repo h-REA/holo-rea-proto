@@ -117,7 +117,7 @@ export const QuantityValue = new GraphQLObjectType({
   description: 'Some measured quantity, recorded against a particular measurement unit',
   fields: () => ({
     // :TODO: update NRP API, `numericValue` -> `quantity`
-    quantity: { type: GraphQLID },
+    quantity: { type: GraphQLFloat },
     unit: { type: Unit }
   })
 })

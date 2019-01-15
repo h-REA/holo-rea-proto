@@ -75,6 +75,7 @@ export const Action = new GraphQLEnumType({
   }
 })
 
+/*
 export const EconomicResourceCategory = new GraphQLEnumType({
   name: 'Economic resource categories',
   values: {
@@ -96,6 +97,7 @@ export const EconomicResourceProcessCategory = new GraphQLEnumType({
     USED: { value: 4 }
   }
 })
+*/
 
 // config / system layer
 
@@ -257,9 +259,11 @@ export const Agent = new GraphQLObjectType({
     // email: { type: GraphQLString },
     ownedEconomicResources: {
       type: new GraphQLList(EconomicResource), resolve: (agent, {
-        category, resourceClassificationId, page
+        // category,
+        resourceClassificationId,
+        page
       }: {
-        category?: IEconomicResourceCategory,
+        // category?: IEconomicResourceCategory,
         resourceClassificationId?: string,
         page?: number
       }) => {

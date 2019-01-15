@@ -9,8 +9,8 @@ A modular REA implementation for Holochain
 	- [Initialising for development](#initialising-for-development)
 - [Dev mode](#dev-mode)
 - [Useful development tools](#useful-development-tools)
-	- [Redux Devtools Extension](#redux-devtools-extension)
 - [Project structure](#project-structure)
+- [Known issues](#known-issues)
 
 <!-- /MarkdownTOC -->
 
@@ -40,9 +40,15 @@ If you wish to proceed with setting up a local Go toolchain and running `hcdev` 
 
 ## Useful development tools
 
-### [Redux Devtools Extension](https://github.com/zalmoxisus/redux-devtools-extension)
 
-For assisting with debugging application state.
+**1. [Apollo Client Developer Tools](https://github.com/apollographql/apollo-client-devtools)**
+
+For assisting with writing and debugging GraphQL queries.
+
+
+**2. [Redux Devtools Extension](https://github.com/zalmoxisus/redux-devtools-extension)**
+
+For assisting with debugging application state- both the Apollo cache and other UI state.
 
 - **Chrome:**
 	- Click on the Redux devtools icon in your toolbar
@@ -72,3 +78,11 @@ Note there are some platform-specific quirks, and you may be forced to use the C
 - `/src/ui/scripts`: shell commands for running development tasks
 - `/src/ui/public`: directory to serve alongside bundled JS files, incl. webpage template
 - `/src/ui/src`: bulk of the frontend app code
+
+
+## Known issues
+
+**"TypeScript emitted no output for [...]"** when running frontend:
+
+> This issue appears to be intermittent. If you simply open any project source file in your editor and save it, compilation appears to succeed.
+

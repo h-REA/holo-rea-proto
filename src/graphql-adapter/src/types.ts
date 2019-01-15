@@ -27,7 +27,12 @@ import {
 } from 'graphql'
 import { Kind } from 'graphql/language'
 
+// Frontend <> DHT REST API bindings
 import zomes from './zomes'
+
+// Types from DHT code, to bridge hardcoded code gaps
+// :TODO: get compilation working
+// import { getFixtures } from '../../HoloREA/dna/events/events'
 
 // import {
 //   VfObject, QuantityValue as coreQV, Hash, QVlike, notError, CrudResponse,
@@ -55,21 +60,24 @@ export const StringDate = new GraphQLScalarType({
 
 // predefined (hardcoded) taxonomies
 
+// :TODO: wire up frontend and backend to same values
+// const eventFixtures = getFixtures(null)
+
 export const Action = new GraphQLEnumType({
   name: 'Action',
   values: {
     // :TODO: update NRP API, remove `NONE`
     // NONE: { value: 0 },
 
-    // :TODO: not implemented yet
+    // :TODO: commented ones are not implemented yet
     // ACCEPT: { value: 1 },
-    ADJUST: { value: 2 },
+    ADJUST: { value: 'Adjust' },
     // CITE: { value: 3 },
-    CONSUME: { value: 4 },
-    GIVE: { value: 5 },
+    CONSUME: { value: 'Consume' },
+    GIVE: { value: 'Give' },
     // IMPROVE: { value: 6 },
-    PRODUCE: { value: 7 },
-    TAKE: { value: 8 },
+    PRODUCE: { value: 'Produce' },
+    TAKE: { value: 'Take' },
     // USE: { value: 9 },
     // WORK: { value: 10 },
   }

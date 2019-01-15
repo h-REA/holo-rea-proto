@@ -22,6 +22,7 @@ import {
 } from 'graphql'
 
 import {
+  Action,
   Agent,
   // AgentRelationship,
   // AgentRelationshipRole,
@@ -202,7 +203,19 @@ export const userIsAuthorizedToCreate: GraphQLFieldDef = {
   resolve(scopeId: string): Boolean {
   }
 }
+*/
 
+// introspection
+
+export const allActionTypes: GraphQLFieldDef = {
+  resultType: new GraphQLList(Action),
+  resolve(): string[] {
+    console.info('allActionTypes queried!')
+    return Action.getValues().map(v => v.value)
+  }
+}
+
+/*
 // planning layer
 
 export const allRecipes: GraphQLFieldDef = {

@@ -10,7 +10,6 @@ A modular REA implementation for Holochain
 - [Dev mode](#dev-mode)
 - [Useful development tools](#useful-development-tools)
 - [Project structure](#project-structure)
-- [Known issues](#known-issues)
 
 <!-- /MarkdownTOC -->
 
@@ -36,6 +35,8 @@ If you wish to proceed with setting up a local Go toolchain and running `hcdev` 
 ## Dev mode
 
 - `npm start` gets you both a webserver pointing to `src/ui` and a Holochain 0.0.1 Prototype DHT running for your backend. If you wish to run these commands separately (useful when troubleshooting the DHT code), see the scripts in `package.json` prefixed with `dev:`.
+
+**PLEASE NOTE:** you will see the error **"TypeScript emitted no output for [...]"** when running the frontend. This issue appears to be intermittent. If you simply open any project source file in your editor and save it, compilation appears to succeed in subsequent rounds.
 
 
 ## Useful development tools
@@ -78,11 +79,3 @@ Note there are some platform-specific quirks, and you may be forced to use the C
 - `/src/ui/scripts`: shell commands for running development tasks
 - `/src/ui/public`: directory to serve alongside bundled JS files, incl. webpage template
 - `/src/ui/src`: bulk of the frontend app code
-
-
-## Known issues
-
-**"TypeScript emitted no output for [...]"** when running frontend:
-
-> This issue appears to be intermittent. If you simply open any project source file in your editor and save it, compilation appears to succeed.
-

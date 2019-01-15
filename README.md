@@ -20,7 +20,7 @@ A modular REA implementation for Holochain
 
 The simplest setup is with Yarn, Docker and Docker Compose.
 
-- Install latest versions of Docker & Docker Compose from their respective websites.
+- Install latest versions of [Docker](https://docs.docker.com/install/) & [Docker Compose](https://docs.docker.com/compose/install/) from their respective websites.
 - If you don't have Yarn- `npm i -g yarn` using the version of node you plan on developing this project against *(for recommended, see `.nvmrc`)*. You can setup your modules manually using `npm link` if you prefer, but Yarn's workspaces feature will save you a lot of time.
 
 If you wish to proceed with setting up a local Go toolchain and running `hcdev` locally, feel free to add instructions on this method here.

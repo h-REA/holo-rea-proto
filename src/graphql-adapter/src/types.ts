@@ -120,24 +120,6 @@ export const QuantityValue = new GraphQLObjectType({
   })
 })
 
-export const NotificationType = new GraphQLObjectType({
-  name: 'Notification type',
-  description: 'A definition for a notification type, which can be configured to fire in response to various system actions.',
-  fields: () => ({
-    id: { type: GraphQLID },
-    // :TODO: i18n
-    label: { type: GraphQLString },
-    description: { type: GraphQLString },
-    display: { type: GraphQLString }
-  })
-})
-export interface NotificationTypeInterface {
-  id: string,
-  label: string,
-  description: string,
-  display: string,
-}
-
 export const ResourceClassification = new GraphQLObjectType({
   name: 'Resource classification',
   description: 'A classification for a group of related resources within an economic network',
@@ -358,10 +340,6 @@ export const Agent = new GraphQLObjectType({
     } },
     // :TODO: rethink account addresses & standardise FreedomCoop additions in valuenetwork
     // faircoinAddress: { type: GraphQLString },
-    agentNotificationSettings
-    : { type: new GraphQLList(NotificationSetting), resolve: agent => {
-
-    } },
     memberRelationships
     : { type: new GraphQLList(AgentRelationship), resolve: agent => {
 
@@ -419,20 +397,3 @@ export const Organization = new GraphQLObjectType({
 export const Person = new GraphQLObjectType({
 })
 */
-export const NotificationSetting = new GraphQLObjectType({
-  name: 'Notification setting',
-  description: 'Controls user preferences as to whether to enable notifications for a particular subset of REA system functionality.',
-  fields: () => ({
-    id: { type: GraphQLID },
-    send: { type: GraphQLBoolean },
-    agent: { type: Agent, resolve: (setting, args) => {
-    } },
-    notificationType: { type: NotificationType }
-  })
-})
-export interface INotificationSetting {
-  id: string,
-  send: boolean,
-  agent?: AgentInterface,
-  notificationType: NotificationTypeInterface
-}

@@ -44,9 +44,6 @@ import {
   // Plan,
   // Place,
   // Validation,
-  NotificationSetting,
-  INotificationSetting,
-  NotificationType,
   StringDate
 } from './types'
 
@@ -84,18 +81,6 @@ export const quantityValue: GraphQLFieldDef = {
   resultType: QuantityValue,
   args: { id: GraphQLID },
   resolve(id: string): QuantityValue {
-  }
-}
-
-export const notificationType: GraphQLFieldDef = {
-  resultType: NotificationType,
-  args: { id: GraphQLID },
-  resolve(id: string): NotificationType {
-  }
-}
-export const allNotificationTypes: GraphQLFieldDef = {
-  resultType: new GraphQLList(NotificationType),
-  resolve(): NotificationType[] {
   }
 }
 
@@ -406,28 +391,3 @@ export const allPeople: GraphQLFieldDef = {
   }
 }
 */
-const DUMMY_SETTING = {
-  id: 'decbdda',
-  send: true,
-  notificationType: {
-    id: 'nt001',
-    label: 'New resources',
-    description: 'Sends a notification when new resources are available that match your wants criteria',
-    display: 'Notify of new available resources',
-  }
-}
-export const notificationSetting: GraphQLFieldDef = {
-  resultType: NotificationSetting,
-  args: { id: GraphQLID },
-  resolve (id: string): INotificationSetting {
-    // :TODO: implement real data
-    return DUMMY_SETTING
-  }
-}
-export const allNotificationSettings: GraphQLFieldDef = {
-  resultType: new GraphQLList(NotificationSetting),
-  resolve (): INotificationSetting[] {
-    // :TODO: implement real data
-    return [DUMMY_SETTING]
-  }
-}

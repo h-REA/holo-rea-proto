@@ -1,13 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import registerServiceWorker from './registerServiceWorker'
-import AppTemplate from './templates/AppTemplate'
+import { Provider } from 'react-redux'
 import { createGlobalStyle, ThemeProvider } from 'styled-components'
-import Dark from './style/themeDark'
 
-// for testing compilation only
-// :TODO: move into reducer
-import schema from '@holorea/graphql-adapter/src' // eslint-disable-line no-unused-vars
+import registerServiceWorker from './registerServiceWorker'
+import store from './store'
+
+import AppTemplate from './templates/AppTemplate'
+import Dark from './style/themeDark'
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css?family=Fira+Sans:300,400,400i,500,500i,700');
@@ -91,12 +91,14 @@ const GlobalStyle = createGlobalStyle`
 `
 
 ReactDOM.render(
-  <ThemeProvider theme={Dark}>
-    <div>
-      <GlobalStyle />
-      <AppTemplate />
-    </div>
-  </ThemeProvider>,
+  <Provider store={store}>
+    <ThemeProvider theme={Dark}>
+      <div>
+        <GlobalStyle />
+        <AppTemplate />
+      </div>
+    </ThemeProvider>
+  </Provider>,
   document.getElementById('root')
 )
 registerServiceWorker()

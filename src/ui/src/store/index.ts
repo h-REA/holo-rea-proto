@@ -15,7 +15,7 @@ import { ApolloClient } from 'apollo-client'
 import { SchemaLink } from 'apollo-link-schema'
 import { ReduxCache, apolloReducer } from 'apollo-cache-redux'
 import thunk from 'redux-thunk'
-import { composeWithDevTools } from 'remote-redux-devtools'
+// import { composeWithDevTools } from 'remote-redux-devtools'
 
 import schema from '@holorea/graphql-adapter/src' // eslint-disable-line no-unused-vars
 
@@ -24,7 +24,7 @@ import schema from '@holorea/graphql-adapter/src' // eslint-disable-line no-unus
 
 const initialState = {}
 
-const composeEnhancers = composeWithDevTools({ realtime: true, hostname: 'localhost', port: 7999 })
+// const composeEnhancers = composeWithDevTools({ realtime: true, hostname: 'localhost', port: 7999 })
 
 const store = createStore(
   combineReducers({
@@ -32,11 +32,11 @@ const store = createStore(
     // ...reducer
   }),
   initialState,
-  composeEnhancers(
+  // composeEnhancers(
     applyMiddleware(
       thunk
     )
-  )
+  // )
 )
 
 const cache = new ReduxCache({ store })

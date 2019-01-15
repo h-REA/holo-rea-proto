@@ -45,5 +45,8 @@ const client = new ApolloClient({
   link: new SchemaLink({ schema }),
   cache
 })
+// Fix issue with devtools
+// @see https://github.com/apollographql/apollo-client-devtools/issues/104
+client.initQueryManager()
 
 export default store

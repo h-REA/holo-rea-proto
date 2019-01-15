@@ -3,6 +3,9 @@
  *
  * @see https://github.com/FreedomCoop/valuenetwork/tree/71b0868/valuenetwork/api/types
  *
+ * Incompatibilities with the above API (fork of Sensorica's NRP) are noted in
+ * the comments as :TODO: items to resolve in order to resolve discrepancies in future.
+ *
  * @package: HoloREA
  * @author:  pospi <pospi@spadgos.com>
  * @since:   2019-01-03
@@ -55,17 +58,20 @@ export const StringDate = new GraphQLScalarType({
 export const Action = new GraphQLEnumType({
   name: 'Action',
   values: {
-    NONE: { value: 0 },
-    ACCEPT: { value: 1 },
+    // :TODO: update NRP API, remove `NONE`
+    // NONE: { value: 0 },
+
+    // :TODO: not implemented yet
+    // ACCEPT: { value: 1 },
     ADJUST: { value: 2 },
-    CITE: { value: 3 },
+    // CITE: { value: 3 },
     CONSUME: { value: 4 },
     GIVE: { value: 5 },
-    IMPROVE: { value: 6 },
+    // IMPROVE: { value: 6 },
     PRODUCE: { value: 7 },
     TAKE: { value: 8 },
-    USE: { value: 9 },
-    WORK: { value: 10 }
+    // USE: { value: 9 },
+    // WORK: { value: 10 },
   }
 })
 
@@ -108,7 +114,8 @@ export const QuantityValue = new GraphQLObjectType({
   name: 'Quantity value',
   description: 'Some measured quantity, recorded against a particular measurement unit',
   fields: () => ({
-    numericValue: { type: GraphQLID },
+    // :TODO: update NRP API, `numericValue` -> `quantity`
+    quantity: { type: GraphQLID },
     unit: { type: Unit }
   })
 })
@@ -137,10 +144,12 @@ export const ResourceClassification = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    unit: { type: Unit },
+    // :TODO: update NRP API, `unit` -> `defaultUnits`
+    // unit: { type: Unit },
+    defaultUnits: { type: Unit },
     image: { type: GraphQLString },
     note: { type: GraphQLString },
-    category: { type: GraphQLString },
+    // category: { type: GraphQLString },
     processCategory: { type: GraphQLString },
     // classificationResources: [EconomicResource]
   })
@@ -261,8 +270,9 @@ export const Agent = new GraphQLObjectType({
     image: { type: GraphQLString },
     note: { type: GraphQLString },
     primaryLocation: { type: GraphQLString },
-    primaryPhone: { type: GraphQLString },
-    email: { type: GraphQLString },
+    // :TODO: confirm & implement if desired
+    // primaryPhone: { type: GraphQLString },
+    // email: { type: GraphQLString },
     ownedEconomicResources: {
       type: new GraphQLList(EconomicResource), resolve: (agent, {
         category, resourceClassificationId, page

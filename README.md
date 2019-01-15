@@ -8,6 +8,8 @@ A modular REA implementation for Holochain
 	- [Prerequisites](#prerequisites)
 	- [Initialising for development](#initialising-for-development)
 - [Dev mode](#dev-mode)
+- [Useful development tools](#useful-development-tools)
+	- [Redux Devtools Extension](#redux-devtools-extension)
 - [Project structure](#project-structure)
 
 <!-- /MarkdownTOC -->
@@ -34,6 +36,25 @@ If you wish to proceed with setting up a local Go toolchain and running `hcdev` 
 ## Dev mode
 
 - `npm start` gets you both a webserver pointing to `src/ui` and a Holochain 0.0.1 Prototype DHT running for your backend. If you wish to run these commands separately (useful when troubleshooting the DHT code), see the scripts in `package.json` prefixed with `dev:`.
+
+
+## Useful development tools
+
+### [Redux Devtools Extension](https://github.com/zalmoxisus/redux-devtools-extension)
+
+For assisting with debugging application state.
+
+- **Chrome:**
+	- Click on the Redux devtools icon in your toolbar
+	- Click the *'remote'* button in the bottom right, which should pop up a screen
+	- Navigate to "settings", enable *"Use custom (local) server"*, set to `localhost`, port `7999`
+- **Firefox:**
+	- If you see an empty screen with an error when opening the devtools panel, you will need to navigate to a Redux app ([like this one](http://zalmoxisus.github.io/examples/counter/)) to get it to load, after which you can...
+	- Click the *'remote'* button in the bottom right, which should pop up a screen (Firefox seems to currently be broken here, you'll probably have to use Chrome)
+	- Navigate to "settings", enable *"Use custom (local) server"*, set to `localhost`, port `7999`
+- **VSCode**: check out [vscode-redux-devtools](https://github.com/jkzing/vscode-redux-devtools).
+
+Note there are some platform-specific quirks, and you may be forced to use the Chrome version as the Firefox extension has some bugs.
 
 
 

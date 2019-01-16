@@ -35,13 +35,25 @@ function Zome(name, fnTypes) {
         'Content-Type': `application/${t}`
       },
       body: data
-    }).then(res => {
-      if (!res.ok) {
-        const resultErr = new Error(`HTTP error ${res.status}`);
-        resultErr.context = res;
+    }).then(response => {
+      // handle HTTP errors
+      if (!response.ok) {
+        const resultErr = new Error(`HTTP error ${response.status}`);
+        resultErr.context = response;
         return Promise.reject(resultErr);
       }
-      return res;
+
+      // clone response and attempt decoding JSON
+      const responseCopy = response.clone();
+      try {
+        return responseCopy.json();
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          return responseCopy.text();
+        } else {
+          throw err;
+        }
+      }
     });
   }
 

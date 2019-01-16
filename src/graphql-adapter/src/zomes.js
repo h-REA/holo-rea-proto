@@ -41,18 +41,16 @@ function Zome(name, fnTypes) {
   }
 }
 
-const agents = new Zome(`agents`, [`createAgent`, `getOwnedResources`]);
+export const agents = new Zome(`agents`, [`createAgent`, `getOwnedResources`]);
 
-const resources = new Zome(`resources`, [
+export const resources = new Zome(`resources`, [
   `createResourceClassification`, `createResource`, `getFixtures`,
   `getResourcesInClass`, `getAffectingEvents`, `affect`
 ]);
 
-const events = new Zome(`events`, [
+export const events = new Zome(`events`, [
   `createEvent`, `createAction`, `createTransfer`, `createTransferClass`,
   `getFixtures`, `traceEvents`, `trackEvents`, `traceTransfers`, `trackTransfers`,
   `eventSubtotals`, `eventsStartedAfter`, `eventsStartedBefore`, `eventsEndedAfter`,
   `eventsEndedBefore`, `sortEvents`, `resourceCreationEvent`
 ]);
-
-export default {agents, resources, events};

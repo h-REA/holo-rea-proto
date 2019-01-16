@@ -1,23 +1,31 @@
+/**
+ * Zome API helper
+ *
+ * @package: HoloREA
+ * @author:  David Hand <sqykly@users.noreply.github.com>
+ * @since:   2018-12-17
+ * @flow
+ */
 
-declare type Hash<T> = string;
+export type Hash<T> = string;
 
-declare interface QuantityValue {
+export interface QuantityValue {
   units: string;
   quantity: number;
 }
 
-declare type IntDate = number;
+export type IntDate = number;
 
-declare type PhysicalLocation = string[];
+export type PhysicalLocation = string[];
 
-declare interface VfObject {
+export interface VfObject {
   name?: string;
   note?: string;
   url?: string;
   image?: string;
 }
 
-declare type CrudResponse<T> = {
+export type CrudResponse<T> = {
   error: {
     name: string;
     message: string;
@@ -33,11 +41,11 @@ declare type CrudResponse<T> = {
   type: string;
 };
 
-declare type Anything<T> = T | Hash<T> | CrudResponse<T>;
+export type Anything<T> = T | Hash<T> | CrudResponse<T>;
 
-declare type ZomeFn<Arg, Ret> = (args: Arg) => Promise<Ret>;
+export type ZomeFn<Arg, Ret> = (args: Arg) => Promise<Ret>;
 
-declare namespace agents {
+export namespace agents {
   export interface Agent extends VfObject {
     primaryLocation?: PhysicalLocation;
     name: string;
@@ -62,7 +70,7 @@ declare namespace agents {
 
 }
 
-declare namespace resources {
+export namespace resources {
   export interface ResourceClassification extends VfObject {
     defaultUnits: string;
   }
@@ -121,7 +129,7 @@ declare namespace resources {
   }>
 }
 
-declare namespace events {
+export namespace events {
   export interface TransferClassification extends VfObject {
     name: string;
   }

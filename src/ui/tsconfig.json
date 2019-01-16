@@ -3,6 +3,8 @@
     "outDir": "./dist/",
     "sourceMap": true,
     "noImplicitAny": false,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
     "module": "esnext",
     "target": "es5",
     "jsx": "preserve",

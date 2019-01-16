@@ -33,6 +33,13 @@ function Zome(name, fnTypes) {
         'Content-Type': `application/${t}`
       },
       body: data
+    }).then(res => {
+      if (!res.ok) {
+        const resultErr = new Error(`HTTP error ${res.status}`);
+        resultErr.context = res;
+        return Promise.reject(resultErr);
+      }
+      return res;
     });
   }
 

@@ -121,7 +121,7 @@ export const QuantityValue = new GraphQLObjectType({
 })
 
 export const ResourceClassification = new GraphQLObjectType({
-  name: 'Resource classification',
+  name: 'ResourceClassification',
   description: 'A classification for a group of related resources within an economic network',
   fields: () => ({
     id: { type: GraphQLID },

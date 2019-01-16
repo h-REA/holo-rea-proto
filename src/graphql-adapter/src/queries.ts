@@ -12,10 +12,10 @@ import {
   GraphQLOutputType,
   GraphQLInputType,
   GraphQLObjectType,
-  // GraphQLList,
+  GraphQLList,
   // GraphQLInt,
   // GraphQLBoolean,
-  // GraphQLString,
+  GraphQLString,
   // GraphQLEnumType,
   // GraphQLID,
   GraphQLArgumentConfig
@@ -23,7 +23,7 @@ import {
 
 import {
   CrudResponse,
-  // resources,
+  resources,
   events,
   // agents
 } from '@holorea/zome-api-wrapper'
@@ -45,7 +45,7 @@ import {
   // EconomicEvent,
   // QuantityValue,
   // Unit,
-  // ResourceClassification,
+  ResourceClassification,
   // Facet,
   // ProcessClassification,
   // Commitment,
@@ -91,20 +91,37 @@ export const quantityValue: GraphQLFieldDef = {
   resolve(id: string): QuantityValue {
   }
 }
+*/
+
+type ResourceClassificationId = keyof resources.ResourceClassificationFixture
+type ResourceClassificationResponse = { [k in ResourceClassificationId]?: CrudResponse<resources.ResourceClassification> }
 
 export const resourceClassification: GraphQLFieldDef = {
   resultType: ResourceClassification,
-  args: { id: GraphQLID },
-  resolve(id: string): ResourceClassification {
+  args: { id: GraphQLString },
+  async resolve(_1, { id }: { id: string }): Promise<CrudResponse<resources.ResourceClassification>> {
+    const records = await resources.readResourceClasses([id])
+    return records[0]
   }
 }
 // :TODO: merge these and other filtering methods with different names
 // into single method with more flexible filter args
 export const allResourceClassifications: GraphQLFieldDef = {
   resultType: new GraphQLList(ResourceClassification),
-  resolve(): ResourceClassification[] {
+  async resolve(): Promise<ResourceClassificationResponse> {
+    const { ResourceClassification: classifications } = await resources.getFixtures()
+
+    const classificationIds = Object.keys(classifications) as ResourceClassificationId[]
+    const records = await resources.readResourceClasses(Object.values(classifications))
+
+    return classificationIds.reduce((res: ActionTypesResponse, id: ResourceClassificationId, idx: number) => {
+      res[id] = records[idx]
+      return res
+    }, {})
+
   }
 }
+/*
 export const resourceClassificationsByProcessCategory: GraphQLFieldDef = {
   resultType: new GraphQLList(ResourceClassification),
   args: { category: EconomicResourceProcessCategory },

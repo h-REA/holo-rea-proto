@@ -118,14 +118,16 @@ export namespace resources {
     args: {resource:Hash<EconomicResource>}
   ): Promise<Hash<events.EconomicEvent>[]>
 
+  export interface ResourceClassificationFixture {
+    Thing: Hash<ResourceClassification>;
+    Currency: Hash<ResourceClassification>;
+    Work: Hash<ResourceClassification>;
+  }
+
   export function getFixtures(
-    dontCare: object
+    dontCare?: object
   ): Promise<{
-    ResourceClassification: {
-      Thing: Hash<ResourceClassification>;
-      Currency: Hash<ResourceClassification>;
-      Work: Hash<ResourceClassification>;
-    }
+    ResourceClassification: ResourceClassificationFixture
   }>
 }
 

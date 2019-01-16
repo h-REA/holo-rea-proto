@@ -15,7 +15,7 @@ import {
   events,
 } from '@holorea/zome-api-wrapper'
 
-import { GraphQLFieldDef } from '../queries'
+import { GraphQLFieldDef } from './'
 import { Action } from '../types'
 
 type ActionTypeId = keyof events.ActionsFixture

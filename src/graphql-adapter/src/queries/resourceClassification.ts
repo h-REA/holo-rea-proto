@@ -11,7 +11,7 @@ import {
   GraphQLString,
 } from 'graphql'
 
-import { GraphQLFieldDef } from '../queries'
+import { GraphQLFieldDef } from './'
 import { ResourceClassification } from '../types'
 
 import {

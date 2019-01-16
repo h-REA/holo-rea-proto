@@ -9,25 +9,35 @@
 
 const HTTP_HOST = `${process.env.DHT_HOSTNAME}`;
 
+// clone response and attempt decoding JSON
+// (needed in both success and error cases)
+function tryParseJson(response) {
+  const responseCopy = response.clone();
+  try {
+    return responseCopy.json();
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      return responseCopy.text();
+    } else {
+      throw err;
+    }
+  }
+}
+
 function Zome(name, fnTypes) {
   function send(fnName, data) {
     // all HC functions take and return the same type: either string or json.
     let t;
     switch (typeof data) {
-
       case "string":
         t = "text";
-      break;
-
-      case "object":
-        t = "json";
-      break;
-
+        break;
       default:
-      t = "json";
-      data = JSON.stringify(data);
-
+        t = "json";
+        data = JSON.stringify(data);
+        break;
     }
+
     return fetch(`${HTTP_HOST}/fn/${name}/${fnName}`, {
       method: 'post',
       headers: {
@@ -35,25 +45,24 @@ function Zome(name, fnTypes) {
         'Content-Type': `application/${t}`
       },
       body: data
-    }).then(response => {
-      // handle HTTP errors
+    }).then(async response => {
       if (!response.ok) {
+        // handle Zome API handler errors
+        let content = null
+        try {
+          content = await tryParseJson(response)
+        } catch (e) { /* swallow unhandled parse errors, server msg is not always required */ }
+        if (content && content.errorMessage) {
+          return Promise.reject(new Error(`[DHT] ${content.errorMessage}`));
+        }
+
+        // handle HTTP errors
         const resultErr = new Error(`HTTP error ${response.status}`);
         resultErr.context = response;
         return Promise.reject(resultErr);
       }
 
-      // clone response and attempt decoding JSON
-      const responseCopy = response.clone();
-      try {
-        return responseCopy.json();
-      } catch (err) {
-        if (err instanceof SyntaxError) {
-          return responseCopy.text();
-        } else {
-          throw err;
-        }
-      }
+      return tryParseJson(response)
     });
   }
 

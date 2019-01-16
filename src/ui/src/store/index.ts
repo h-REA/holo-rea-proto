@@ -8,7 +8,9 @@
  * @since:   2019-01-15
  */
 
-import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
+import { createStore, combineReducers, applyMiddleware } from 'redux'
+import { parse } from 'graphql'
+import { execute } from 'apollo-link'
 import { ApolloClient } from 'apollo-client'
 // :NOTE: `SchemaLink` means including GraphQL on the client, which will increase bundle size significantly!
 // Exact impact unknown (tree shaking), for max expected overhead see https://www.apollographql.com/docs/link/links/schema.html
@@ -41,8 +43,15 @@ const store = createStore(
 
 const cache = new ReduxCache({ store })
 
+const link = new SchemaLink({ schema })
+
+export const graphQLFetcher = (operation) => {
+  operation.query = parse(operation.query)
+  return execute(link, operation)
+}
+
 const client = new ApolloClient({
-  link: new SchemaLink({ schema }),
+  link,
   cache
 })
 // Fix issue with devtools

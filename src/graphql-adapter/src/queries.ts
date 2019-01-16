@@ -214,11 +214,32 @@ export const userIsAuthorizedToCreate: GraphQLFieldDef = {
 
 // introspection
 
+type ActionTypeId = keyof events.ActionsFixture
+type ActionTypesResponse = { [k in ActionTypeId]?: CrudResponse<events.Action> }
+
 export const allActionTypes: GraphQLFieldDef = {
-  resultType: new GraphQLList(Action),
-  resolve(): string[] {
-    console.info('allActionTypes queried!')
-    return Action.getValues().map(v => v.value)
+  resultType: new GraphQLObjectType({
+    name: 'AllActionTypes',
+    description: 'All available action type descriptions, keyed by type ID',
+    fields: () => ({
+      // :TODO: make this dynamic somehow
+      give: { type: Action },
+      receive: { type: Action },
+      adjust: { type: Action },
+      produce: { type: Action },
+      consume: { type: Action }
+    })
+  }),
+  async resolve(): Promise<ActionTypesResponse> {
+    const { Action } = await events.getFixtures()
+
+    const actionTypes = Object.keys(Action) as ActionTypeId[]
+    const actionRecords = await events.readActions(Object.values(Action))
+
+    return actionTypes.reduce((res: ActionTypesResponse, type: ActionTypeId, idx: number) => {
+      res[type] = actionRecords[idx]
+      return res
+    }, {})
   }
 }
 

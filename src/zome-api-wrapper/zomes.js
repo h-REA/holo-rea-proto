@@ -7,6 +7,8 @@
  * @flow
  */
 
+const HTTP_HOST = `${process.env.DHT_HOSTNAME}`;
+
 function Zome(name, fnTypes) {
   function send(fnName, data) {
     // all HC functions take and return the same type: either string or json.
@@ -26,7 +28,7 @@ function Zome(name, fnTypes) {
       data = JSON.stringify(data);
 
     }
-    return fetch(`fn/${name}/${fnName}`, {
+    return fetch(`${HTTP_HOST}/fn/${name}/${fnName}`, {
       method: 'post',
       headers: {
         'Accept': 'application/json',

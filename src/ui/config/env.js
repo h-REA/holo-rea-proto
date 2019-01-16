@@ -69,6 +69,9 @@ function getClientEnvironment (publicUrl) {
         return env
       },
       {
+        // Set to the localhost URL for running a local DHT by default.
+        // If you want to override, set `REACT_APP_DHT_HOSTNAME`
+        DHT_HOSTNAME: 'http://localhost:3141',
         // Useful for determining whether we’re running in production mode.
         // Most importantly, it switches React into the correct mode.
         NODE_ENV: process.env.NODE_ENV || 'development',

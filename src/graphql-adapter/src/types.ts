@@ -64,29 +64,6 @@ export const StringDate = new GraphQLScalarType({
 
 // predefined (hardcoded) taxonomies
 
-// :TODO: wire up frontend and backend to same values
-// const eventFixtures = getFixtures(null)
-
-export const Action = new GraphQLEnumType({
-  name: 'Action',
-  values: {
-    // :TODO: update NRP API, remove `NONE`
-    // NONE: { value: 0 },
-
-    // :TODO: commented ones are not implemented yet
-    // ACCEPT: { value: 1 },
-    ADJUST: { value: 'Adjust' },
-    // CITE: { value: 3 },
-    CONSUME: { value: 'Consume' },
-    GIVE: { value: 'Give' },
-    // IMPROVE: { value: 6 },
-    PRODUCE: { value: 'Produce' },
-    TAKE: { value: 'Take' },
-    // USE: { value: 9 },
-    // WORK: { value: 10 },
-  }
-})
-
 /*
 export const EconomicResourceCategory = new GraphQLEnumType({
   name: 'Economic resource categories',
@@ -112,6 +89,15 @@ export const EconomicResourceProcessCategory = new GraphQLEnumType({
 */
 
 // config / system layer
+
+export const Action = new GraphQLObjectType({
+  name: 'Action',
+  description: 'Defines an action type and what "kind" of action it is.',
+  fields: () => ({
+    name: { type: GraphQLString },
+    behavior: { type: GraphQLString }, // :TODO: indicate allowable options of '+'|'-'|'0'
+  })
+})
 
 export const Unit = new GraphQLObjectType({
   name: 'Unit',

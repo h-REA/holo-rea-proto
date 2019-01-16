@@ -57,7 +57,7 @@ export namespace agents {
   export function getOwnedResources(
     args: {
       agents: Hash<Agent>[],
-      types: Hash<resources.ResourceClassification>[]
+      types?: Hash<resources.ResourceClassification>[]
     }
   ): Promise<{
     [k:string]: {

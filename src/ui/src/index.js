@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
 import { createGlobalStyle, ThemeProvider } from 'styled-components'
@@ -93,10 +93,10 @@ const GlobalStyle = createGlobalStyle`
 ReactDOM.render(
   <Provider store={store}>
     <ThemeProvider theme={Dark}>
-      <div>
+      <Fragment>
         <GlobalStyle />
         <AppTemplate />
-      </div>
+      </Fragment>
     </ThemeProvider>
   </Provider>,
   document.getElementById('root')

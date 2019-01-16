@@ -28,7 +28,7 @@ import {
 import { Kind } from 'graphql/language'
 
 // Frontend <> DHT REST API bindings
-import { resources, events, agents } from './zomes'
+import { resources, events, agents } from '@holorea/zome-api-wrapper'
 
 // Types from DHT code, to bridge hardcoded code gaps
 // :TODO: get compilation working

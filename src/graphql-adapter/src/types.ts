@@ -28,7 +28,7 @@ import {
 import { Kind } from 'graphql/language'
 
 // Frontend <> DHT REST API bindings
-import zomes from './zomes'
+import { resources, events, agents } from './zomes'
 
 // Types from DHT code, to bridge hardcoded code gaps
 // :TODO: get compilation working
@@ -266,7 +266,7 @@ export const Agent = new GraphQLObjectType({
     // primaryPhone: { type: GraphQLString },
     // email: { type: GraphQLString },
     ownedEconomicResources: {
-      type: new GraphQLList(EconomicResource), resolve: (agent, {
+      type: new GraphQLList(EconomicResource), resolve: (agent: IAgent, {
         // category,
         resourceClassificationId,
         page
@@ -278,7 +278,7 @@ export const Agent = new GraphQLObjectType({
         // :TODO: externally-exposed resource classification IDs?
         const resourceClassifications = {}
 
-        return zomes.agents.getOwnedResources({
+        return agents.getOwnedResources({
           agents: [agent.id],
           // types: [
           //   await ResourceClassification.get(resourceClassificationId)
@@ -391,7 +391,7 @@ export const Agent = new GraphQLObjectType({
 */
   })
 })
-export interface AgentInterface {
+export interface IAgent {
   id: string,
   name: string,
   type: string,

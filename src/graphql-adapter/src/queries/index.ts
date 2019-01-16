@@ -11,51 +11,12 @@
 import {
   GraphQLOutputType,
   GraphQLInputType,
-  GraphQLObjectType,
-  GraphQLList,
   // GraphQLInt,
   // GraphQLBoolean,
-  GraphQLString,
   // GraphQLEnumType,
   // GraphQLID,
   GraphQLArgumentConfig
 } from 'graphql'
-
-import {
-  CrudResponse,
-  resources,
-  events,
-  // agents
-} from '@holorea/zome-api-wrapper'
-
-import {
-  Action,
-  // Agent,
-  // AgentRelationship,
-  // AgentRelationshipRole,
-  // AgentResourceClassification,
-  // Organization,
-  // OrganizationType,
-  // OrganizationClassification,
-  // Person,
-  // EconomicResource,
-  // Process,
-  // ExchangeAgreement,
-  // Transfer,
-  // EconomicEvent,
-  // QuantityValue,
-  // Unit,
-  ResourceClassification,
-  // Facet,
-  // ProcessClassification,
-  // Commitment,
-  // Plan,
-  // Place,
-  // Validation,
-  // StringDate
-} from './types'
-
-// shared types
 
 export interface GraphQLArgumentConfigWithIndex extends GraphQLArgumentConfig {
   [key: string]: any,
@@ -63,13 +24,22 @@ export interface GraphQLArgumentConfigWithIndex extends GraphQLArgumentConfig {
 
 export type GraphQLArgDef = GraphQLInputType | GraphQLArgumentConfigWithIndex
 
-interface GraphQLFieldDef {
+export interface GraphQLFieldDef {
   resultType: GraphQLOutputType,
   resolve: (...args: any[]) => any,
   args?: {
     [id: string]: GraphQLInputType | GraphQLArgumentConfigWithIndex
   }
 }
+
+// network configuration
+
+export * from './actionType'
+
+// classifications & taxonomies
+
+export * from './resourceClassification'
+
 
 // network globals & configuration
 /*
@@ -89,55 +59,6 @@ export const quantityValue: GraphQLFieldDef = {
   resultType: QuantityValue,
   args: { id: GraphQLID },
   resolve(id: string): QuantityValue {
-  }
-}
-*/
-
-type ResourceClassificationId = keyof resources.ResourceClassificationFixture
-type ResourceClassificationResponse = { [k in ResourceClassificationId]?: CrudResponse<resources.ResourceClassification> }
-
-export const resourceClassification: GraphQLFieldDef = {
-  resultType: ResourceClassification,
-  args: { id: GraphQLString },
-  async resolve(_1, { id }: { id: string }): Promise<CrudResponse<resources.ResourceClassification>> {
-    const records = await resources.readResourceClasses([id])
-    return records[0]
-  }
-}
-// :TODO: merge these and other filtering methods with different names
-// into single method with more flexible filter args
-export const allResourceClassifications: GraphQLFieldDef = {
-  resultType: new GraphQLList(ResourceClassification),
-  async resolve(): Promise<ResourceClassificationResponse> {
-    const { ResourceClassification: classifications } = await resources.getFixtures()
-
-    const classificationIds = Object.keys(classifications) as ResourceClassificationId[]
-    const records = await resources.readResourceClasses(Object.values(classifications))
-
-    return classificationIds.reduce((res: ActionTypesResponse, id: ResourceClassificationId, idx: number) => {
-      res[id] = records[idx]
-      return res
-    }, {})
-
-  }
-}
-/*
-export const resourceClassificationsByProcessCategory: GraphQLFieldDef = {
-  resultType: new GraphQLList(ResourceClassification),
-  args: { category: EconomicResourceProcessCategory },
-  resolve(category: EconomicResourceProcessCategory): ResourceClassification[] {
-  }
-}
-export const resourceClassificationsByAction: GraphQLFieldDef = {
-  resultType: new GraphQLList(),
-  args: { action: Action },
-  resolve(action: Action): ResourceClassification[] {
-  }
-}
-export const resourceClassificationsByFacetValues: GraphQLFieldDef = {
-  resultType: new GraphQLList(ResourceClassification),
-  args: { facetValues: GraphQLString },
-  resolve(facetValues: String): ResourceClassification[] {
   }
 }
 
@@ -227,40 +148,7 @@ export const userIsAuthorizedToCreate: GraphQLFieldDef = {
   resolve(scopeId: string): Boolean {
   }
 }
-*/
 
-// introspection
-
-type ActionTypeId = keyof events.ActionsFixture
-type ActionTypesResponse = { [k in ActionTypeId]?: CrudResponse<events.Action> }
-
-export const allActionTypes: GraphQLFieldDef = {
-  resultType: new GraphQLObjectType({
-    name: 'AllActionTypes',
-    description: 'All available action type descriptions, keyed by type ID',
-    fields: () => ({
-      // :TODO: make this dynamic somehow
-      give: { type: Action },
-      receive: { type: Action },
-      adjust: { type: Action },
-      produce: { type: Action },
-      consume: { type: Action }
-    })
-  }),
-  async resolve(): Promise<ActionTypesResponse> {
-    const { Action } = await events.getFixtures()
-
-    const actionTypes = Object.keys(Action) as ActionTypeId[]
-    const actionRecords = await events.readActions(Object.values(Action))
-
-    return actionTypes.reduce((res: ActionTypesResponse, type: ActionTypeId, idx: number) => {
-      res[type] = actionRecords[idx]
-      return res
-    }, {})
-  }
-}
-
-/*
 // planning layer
 
 export const allRecipes: GraphQLFieldDef = {

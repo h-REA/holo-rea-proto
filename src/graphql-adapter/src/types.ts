@@ -14,21 +14,25 @@
 import fecha from 'fecha'
 
 import {
-  GraphQLSchema,
+  // GraphQLSchema,
   GraphQLList,
   GraphQLObjectType,
-  GraphQLEnumType,
+  // GraphQLEnumType,
   GraphQLScalarType,
   GraphQLString,
   GraphQLFloat,
-  GraphQLBoolean,
-  GraphQLInt,
+  // GraphQLBoolean,
+  // GraphQLInt,
   GraphQLID
 } from 'graphql'
 import { Kind } from 'graphql/language'
 
 // Frontend <> DHT REST API bindings
-import { resources, events, agents } from '@holorea/zome-api-wrapper'
+import {
+  // resources,
+  // events,
+  agents
+} from '@holorea/zome-api-wrapper'
 
 // Types from DHT code, to bridge hardcoded code gaps
 // :TODO: get compilation working
@@ -268,15 +272,15 @@ export const Agent = new GraphQLObjectType({
     ownedEconomicResources: {
       type: new GraphQLList(EconomicResource), resolve: (agent: IAgent, {
         // category,
-        resourceClassificationId,
-        page
+        // resourceClassificationId,
+        // page
       }: {
         // category?: IEconomicResourceCategory,
-        resourceClassificationId?: string,
-        page?: number
+        // resourceClassificationId?: string,
+        // page?: number
       }) => {
         // :TODO: externally-exposed resource classification IDs?
-        const resourceClassifications = {}
+        // const resourceClassifications = {}
 
         return agents.getOwnedResources({
           agents: [agent.id],

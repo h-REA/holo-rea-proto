@@ -7,15 +7,11 @@
  */
 
 import {
-  GraphQLFieldConfig,
-  GraphQLType,
   GraphQLInputType,
   GraphQLSchema,
-  GraphQLList,
   GraphQLObjectType,
-  GraphQLString,
-  GraphQLArgumentConfig,
-  GraphQLFieldConfigArgumentMap
+  GraphQLFieldConfig,
+  GraphQLArgumentConfig
 } from 'graphql'
 
 import {
@@ -23,7 +19,6 @@ import {
   GraphQLArgumentConfigWithIndex
 } from './queries'
 import * as queries from './queries'
-import * as types from './types'
 
 type QueriesType = typeof queries
 type QueryId = keyof QueriesType

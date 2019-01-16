@@ -12,18 +12,25 @@ import {
   GraphQLOutputType,
   GraphQLInputType,
   GraphQLObjectType,
-  GraphQLList,
-  GraphQLInt,
-  GraphQLBoolean,
-  GraphQLString,
-  GraphQLEnumType,
-  GraphQLID,
+  // GraphQLList,
+  // GraphQLInt,
+  // GraphQLBoolean,
+  // GraphQLString,
+  // GraphQLEnumType,
+  // GraphQLID,
   GraphQLArgumentConfig
 } from 'graphql'
 
 import {
+  CrudResponse,
+  // resources,
+  events,
+  // agents
+} from '@holorea/zome-api-wrapper'
+
+import {
   Action,
-  Agent,
+  // Agent,
   // AgentRelationship,
   // AgentRelationshipRole,
   // AgentResourceClassification,
@@ -36,8 +43,8 @@ import {
   // ExchangeAgreement,
   // Transfer,
   // EconomicEvent,
-  QuantityValue,
-  Unit,
+  // QuantityValue,
+  // Unit,
   // ResourceClassification,
   // Facet,
   // ProcessClassification,
@@ -45,7 +52,7 @@ import {
   // Plan,
   // Place,
   // Validation,
-  StringDate
+  // StringDate
 } from './types'
 
 // shared types

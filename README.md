@@ -8,6 +8,7 @@ A modular REA implementation for Holochain
 	- [Prerequisites](#prerequisites)
 	- [Initialising for development](#initialising-for-development)
 - [Dev mode](#dev-mode)
+	- [Service entrypoints](#service-entrypoints)
 - [Useful development tools](#useful-development-tools)
 - [Project structure](#project-structure)
 
@@ -37,6 +38,15 @@ If you wish to proceed with setting up a local Go toolchain and running `hcdev` 
 - `npm start` gets you both a webserver pointing to `src/ui` and a Holochain 0.0.1 Prototype DHT running for your backend. If you wish to run these commands separately (useful when troubleshooting the DHT code), see the scripts in `package.json` prefixed with `dev:`.
 
 **PLEASE NOTE:** you will see the error **"TypeScript emitted no output for [...]"** when running the frontend. This issue appears to be intermittent. If you simply open any project source file in your editor and save it, compilation appears to succeed in subsequent rounds.
+
+
+### Service entrypoints
+
+When running in development mode, these are the services which will be booted up:
+
+- A test REPL for the Holochain app at `http://localhost:3141`
+- The Holochain app Zome APIs at subpaths of `http://localhost:3141/fn/*`
+- Our demo UI and GraphQL query interface at `http://localhost:3000`
 
 
 ## Useful development tools

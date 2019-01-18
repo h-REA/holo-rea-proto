@@ -29,6 +29,9 @@
   },
   "devDependencies": {
     "@types/graphql": "^14.0.4",
-    "@types/ramda": "^0.25.46"
+    "@types/ramda": "^0.25.46",
+    "tslint": "^5.12.0",
+    "tslint-config-standard": "^8.0.1",
+    "typescript": "^3.2.2"
   }
 }

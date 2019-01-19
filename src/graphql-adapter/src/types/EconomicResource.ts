@@ -12,9 +12,16 @@ import {
   GraphQLID
 } from 'graphql'
 
+import { DHTResponse, resources } from '@holorea/zome-api-wrapper'
+
 import { Place } from './Place'
 import { QuantityValue } from './QuantityValue'
 import { ResourceClassification } from './ResourceClassification'
+
+async function resolveResourceClassification (res: DHTResponse<resources.EconomicResource>) {
+  const records = await resources.readResourceClasses([res.entry.resourceClassifiedAs])
+  return records[0]
+}
 
 export const EconomicResource = new GraphQLObjectType({
   name: 'Resource',
@@ -22,7 +29,7 @@ export const EconomicResource = new GraphQLObjectType({
   fields: () => ({
     id: { type: GraphQLID },
     url: { type: GraphQLString },
-    resourceClassifiedAs: { type: ResourceClassification },
+    resourceClassifiedAs: { type: ResourceClassification, resolve: resolveResourceClassification },
     trackingIdentifier: { type: GraphQLString },
     image: { type: GraphQLString },
     currentQuantity: { type: QuantityValue },

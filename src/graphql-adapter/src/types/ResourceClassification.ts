@@ -14,7 +14,11 @@ import {
 
 import { DHTResponse, resources } from '@holorea/zome-api-wrapper'
 
-import { Unit, IUnit, inflateUnit } from './Unit'
+import { Unit, inflateUnit } from './Unit'
+
+function resolveDefaultUnits (classification: DHTResponse<resources.ResourceClassification>) {
+  return inflateUnit(classification.entry.defaultUnits)
+}
 
 export const ResourceClassification = new GraphQLObjectType({
   name: 'ResourceClassification',
@@ -24,14 +28,7 @@ export const ResourceClassification = new GraphQLObjectType({
     name: { type: GraphQLString },
     // :TODO: update NRP API, `unit` -> `defaultUnits`
     // unit: { type: Unit },
-    defaultUnits: {
-      type: Unit,
-      async resolve (
-        classification: DHTResponse<resources.ResourceClassification>
-      ): Promise<IUnit> {
-        return inflateUnit(classification.entry.defaultUnits)
-      }
-    },
+    defaultUnits: { type: Unit, resolve: resolveDefaultUnits },
     image: { type: GraphQLString },
     note: { type: GraphQLString },
     // category: { type: GraphQLString },

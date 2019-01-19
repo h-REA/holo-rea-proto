@@ -15,17 +15,17 @@ import { GraphQLFieldDef } from './'
 import { ResourceClassification } from '../types'
 
 import {
-  CrudResponse,
+  DHTResponse,
   resources
 } from '@holorea/zome-api-wrapper'
 
 type ResourceClassificationId = keyof resources.ResourceClassificationFixture
-type ResourceClassificationResponse = { [k in ResourceClassificationId]?: CrudResponse<resources.ResourceClassification> }
+type ResourceClassificationResponse = { [k in ResourceClassificationId]?: DHTResponse<resources.ResourceClassification> }
 
 export const resourceClassification: GraphQLFieldDef = {
   resultType: ResourceClassification,
   args: { id: GraphQLString },
-  async resolve (_1, { id }: { id: string }): Promise<CrudResponse<resources.ResourceClassification>> {
+  async resolve (_1, { id }: { id: string }): Promise<DHTResponse<resources.ResourceClassification>> {
     const records = await resources.readResourceClasses([id])
     return records[0]
   }

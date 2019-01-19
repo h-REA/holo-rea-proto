@@ -15,17 +15,17 @@ import { GraphQLFieldDef } from './'
 import { ProcessClassification } from '../types'
 
 import {
-  CrudResponse,
+  DHTResponse,
   events
 } from '@holorea/zome-api-wrapper'
 
 type ProcessClassificationId = keyof events.ProcessClassificationFixture
-type ProcessClassificationResponse = { [k in ProcessClassificationId]?: CrudResponse<events.ProcessClassification> }
+type ProcessClassificationResponse = { [k in ProcessClassificationId]?: DHTResponse<events.ProcessClassification> }
 
 export const processClassification: GraphQLFieldDef = {
   resultType: ProcessClassification,
   args: { id: GraphQLString },
-  async resolve (_1, { id }: { id: string }): Promise<CrudResponse<events.ProcessClassification>> {
+  async resolve (_1, { id }: { id: string }): Promise<DHTResponse<events.ProcessClassification>> {
     const records = await events.readProcessClasses([id])
     return records[0]
   }

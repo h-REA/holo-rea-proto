@@ -25,7 +25,14 @@ export interface VfObject {
   image?: string;
 }
 
-export type CrudResponse<T> = {
+export type DHTResponse<T> = {  // success only
+  error?: null;
+  hash: Hash<T>;
+  entry: T;
+  type: string;
+}
+
+export type CrudResponse<T> = {  // success or error
   error: {
     name: string;
     message: string;
@@ -34,12 +41,7 @@ export type CrudResponse<T> = {
   hash?: Hash<T>;
   entry?: T;
   type?: string
-} | {
-  error?: null;
-  hash: Hash<T>;
-  entry: T;
-  type: string;
-};
+} | DHTResponse<T>;
 
 export type Anything<T> = T | Hash<T> | CrudResponse<T>;
 
@@ -66,7 +68,7 @@ export namespace agents {
   }>;
 
   export function readAgents(which: Hash<Agent>[]):
-    Promise<CrudResponse<Agent>[]>;
+    Promise<DHTResponse<Agent>[]>;
 
 }
 
@@ -90,7 +92,7 @@ export namespace resources {
 
   export function readResourceClasses(
     which: Hash<ResourceClassification>[]
-  ): Promise<CrudResponse<ResourceClassification>[]>
+  ): Promise<DHTResponse<ResourceClassification>[]>
 
   export function createResource(
     props: {
@@ -108,7 +110,7 @@ export namespace resources {
 
   export function readResources(
     which: Hash<EconomicResource>[]
-  ): Promise<CrudResponse<EconomicResource>[]>
+  ): Promise<DHTResponse<EconomicResource>[]>
 
   export function getResourcesInClass(
     args: {classification: Hash<EconomicResource>}
@@ -204,7 +206,7 @@ export namespace events {
 
   export function readTransferClasses(
     which: Hash<TransferClassification>[]
-  ): Promise<CrudResponse<TransferClassification>[]>
+  ): Promise<DHTResponse<TransferClassification>[]>
 
   export function createTransfer(
     props: Transfer | TransferInitializer
@@ -212,7 +214,7 @@ export namespace events {
 
   export function readTransfers(
     which: Hash<Transfer>[]
-  ): Promise<CrudResponse<Transfer>[]>
+  ): Promise<DHTResponse<Transfer>[]>
 
   export function createProcessClass(
     props: ProcessClassification
@@ -220,7 +222,7 @@ export namespace events {
 
   export function readProcessClasses(
     which: Hash<ProcessClassification>[]
-  ): Promise<CrudResponse<ProcessClassification>[]>
+  ): Promise<DHTResponse<ProcessClassification>[]>
 
   export function createProcess(
     props: Process
@@ -228,7 +230,7 @@ export namespace events {
 
   export function readProcesses(
     which: Hash<Process>[]
-  ): Promise<CrudResponse<Process>[]>
+  ): Promise<DHTResponse<Process>[]>
 
   export function createAction(
     props: Action
@@ -236,7 +238,7 @@ export namespace events {
 
   export function readActions(
     which: Hash<Action>[]
-  ): Promise<CrudResponse<Action>[]>
+  ): Promise<DHTResponse<Action>[]>
 
   export function createEvent(
     props: EconomicEvent
@@ -244,7 +246,7 @@ export namespace events {
 
   export function readEvents(
     which: Hash<EconomicEvent>[]
-  ): Promise<CrudResponse<EconomicEvent>[]>
+  ): Promise<DHTResponse<EconomicEvent>[]>
 
   export function traceEvents(
     eventHashes: Hash<EconomicEvent>[]
@@ -270,23 +272,23 @@ export namespace events {
       start?: IntDate,
       end?: IntDate
     }
-  ): Promise<CrudResponse<EconomicEvent>[]>
+  ): Promise<DHTResponse<EconomicEvent>[]>
 
   export function eventsStartedBefore(
     when: TimeFilter
-  ): Promise<CrudResponse<EconomicEvent>[]>
+  ): Promise<DHTResponse<EconomicEvent>[]>
 
   export function eventsStartedAfter(
     when: TimeFilter
-  ): Promise<CrudResponse<EconomicEvent>>
+  ): Promise<DHTResponse<EconomicEvent>>
 
   export function eventsEndedBefore(
     when: TimeFilter
-  ): Promise<CrudResponse<EconomicEvent>>
+  ): Promise<DHTResponse<EconomicEvent>>
 
   export function eventsEndedAfter(
     when: TimeFilter
-  ): Promise<CrudResponse<EconomicEvent>>
+  ): Promise<DHTResponse<EconomicEvent>>
 
   export function eventSubtotals(
     events: Hash<EconomicEvent>[]

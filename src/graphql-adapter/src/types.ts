@@ -29,7 +29,8 @@ import { Kind } from 'graphql/language'
 
 // Frontend <> DHT REST API bindings
 import {
-  // resources,
+  DHTResponse,
+  resources,
   // events,
   agents
 } from '@holorea/zome-api-wrapper'
@@ -110,6 +111,19 @@ export const Unit = new GraphQLObjectType({
   })
 })
 
+export interface IUnit {
+  id: string,
+  name: string,
+  symbol: string
+}
+
+export function inflateUnit (GFDunit: string): IUnit {
+  switch (GFDunit) {
+    default:
+      throw new Error(`Unit ${GFDunit} not implemented!`)
+  }
+}
+
 export const QuantityValue = new GraphQLObjectType({
   name: 'QuantityValue',
   description: 'Some measured quantity, recorded against a particular measurement unit',
@@ -128,11 +142,18 @@ export const ResourceClassification = new GraphQLObjectType({
     name: { type: GraphQLString },
     // :TODO: update NRP API, `unit` -> `defaultUnits`
     // unit: { type: Unit },
-    defaultUnits: { type: Unit },
+    defaultUnits: {
+      type: Unit,
+      async resolve (
+        classification: DHTResponse<resources.ResourceClassification>
+      ): Promise<IUnit> {
+        return inflateUnit(classification.entry.defaultUnits)
+      }
+    },
     image: { type: GraphQLString },
     note: { type: GraphQLString },
     // category: { type: GraphQLString },
-    processCategory: { type: GraphQLString },
+    processCategory: { type: GraphQLString }
     // classificationResources: [EconomicResource]
   })
 })

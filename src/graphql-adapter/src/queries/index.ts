@@ -39,6 +39,7 @@ export * from './actionType'
 // classifications & taxonomies
 
 export * from './resourceClassification'
+export * from './processClassification'
 
 
 // network globals & configuration
@@ -59,18 +60,6 @@ export const quantityValue: GraphQLFieldDef = {
   resultType: QuantityValue,
   args: { id: GraphQLID },
   resolve(id: string): QuantityValue {
-  }
-}
-
-export const processClassification: GraphQLFieldDef = {
-  resultType: ProcessClassification,
-  args: { id: GraphQLID },
-  resolve(id: string): ProcessClassification {
-  }
-}
-export const allProcessClassifications: GraphQLFieldDef = {
-  resultType: new GraphQLList(ProcessClassification),
-  resolve(): ProcessClassification[] {
   }
 }
 

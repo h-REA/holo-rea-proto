@@ -137,10 +137,19 @@ export const ResourceClassification = new GraphQLObjectType({
   })
 })
 
-/*
 export const ProcessClassification = new GraphQLObjectType({
+  name: 'ProcessClassification',
+  description: 'A classification for grouping types of processes within an economic network',
+  fields: () => ({
+    id: { type: GraphQLID },
+    name: { type: GraphQLString },
+    note: { type: GraphQLString },
+    // scope: { type: Agent },
+    estimatedDuration: { type: GraphQLString }
+  })
 })
 
+/*
 export const AgentResourceClassification = new GraphQLObjectType({
 })
 

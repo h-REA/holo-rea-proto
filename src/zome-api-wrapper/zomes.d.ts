@@ -305,12 +305,13 @@ export namespace events {
   type Fixture<T, K extends string> = { [P in K]: Hash<T> };
 
   export type ActionsFixture = Fixture<Action, "give"|"receive"|"adjust"|"produce"|"consume">
+  export type ProcessClassificationFixture = Fixture<ProcessClassification, "stub">
 
   export function getFixtures(
     dontCare?: any
   ): Promise<{
     Action: ActionsFixture;
     TransferClassification: Fixture<TransferClassification, "stub">;
-    ProcessClassification: Fixture<ProcessClassification, "stub">;
+    ProcessClassification: ProcessClassificationFixture;
   }>
 }

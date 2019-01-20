@@ -28,3 +28,20 @@ export const resolveSingleEntry = <T extends {}, R extends DHTResponse<any>>
         }
         return readSingleEntry(reader)(inputObj.entry[refField])
       }
+
+export const readNamedEntries = <T extends {}, K extends string>
+  (reader: DHTReadFn<T>) =>
+    async (entryIds: { [k in K]: string }): Promise<{ [k in K]?: DHTResponse<T> } | null> => {
+      const recordIds = Object.keys(entryIds)
+      if (!recordIds.length) {
+        return null
+      }
+
+      const records = await reader(Object.values(entryIds))
+
+      return recordIds.reduce((res: { [k in K]?: DHTResponse<T> }, id: string, idx: number) => {
+        const rId = id as K
+        res[rId] = records[idx]
+        return res
+      }, {})
+    }

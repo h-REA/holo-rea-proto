@@ -1,20 +1,23 @@
 "use strict";
-exports.__esModule = true;
-var path = require("path");
-var fs = require("fs");
-var console = require("console");
-var PROJECT = path.resolve("../..");
-var SRC_DNA = path.join(PROJECT, "/src/HoloREA/dna/");
-var BIN_DNA = path.join(PROJECT, "/bin/HoloREA/dna/");
-var STAGING = path.join(PROJECT, "/build/json/staging/");
-console.log("Started ref inliner");
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const path = __importStar(require("path"));
+const fs = __importStar(require("fs"));
+const console = __importStar(require("console"));
+const PROJECT = path.resolve(`../..`);
+const SRC_DNA = path.join(PROJECT, `/src/HoloREA/dna/`);
+const BIN_DNA = path.join(PROJECT, `/bin/HoloREA/dna/`);
+const STAGING = path.join(PROJECT, `/build/json/staging/`);
+console.log(`Started ref inliner`);
 function p(fn, t) {
-    return new Promise(function (resolve, reject) {
-        function a(err) {
-            var more = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                more[_i - 1] = arguments[_i];
-            }
+    return new Promise((resolve, reject) => {
+        function a(err, ...more) {
             if (err) {
                 reject(err);
             }
@@ -26,94 +29,77 @@ function p(fn, t) {
             fn(a);
         }
         catch (e) {
-            console.log("problem calling function " + fn + ": " + e);
+            console.log(`problem calling function ${fn}: ${e}`);
         }
     });
 }
 function fail(prefix) {
-    return function (e) {
-        var msg = "FAIL " + prefix + ": " + e;
+    return (e) => {
+        let msg = `FAIL ${prefix}: ${e}`;
         console.log(msg);
         throw new Error(msg);
     };
 }
 // There should be 4 folders in here with all the schemas.  Collect them in a
 // path-keyed map to the objects themselves
-var pathToObj = new Map();
+const pathToObj = new Map();
 function main() {
-    console.log("running main");
-    p(function (cb) { return fs.readdir(SRC_DNA, "utf8", cb); })
-        .then(function (_a) {
-        var files = _a[0];
-        return [SRC_DNA].concat(files);
-    })
-        .then(function gatherJson(_a) {
-        var base = _a[0], files = _a.slice(1);
+    console.log(`running main`);
+    p((cb) => fs.readdir(SRC_DNA, `utf8`, cb))
+        .then(([files]) => [SRC_DNA, ...files])
+        .then(function gatherJson([base, ...files]) {
         //fs.readdir(SRC_DNA, {encoding: `utf8`}, function gatherJson(err,files) {
-        var mine = [];
-        console.log("gathering JSON from [" + files + "] in " + base);
-        var _loop_1 = function (file) {
-            var full = path.join(base, file);
-            var objPath = path.parse(full);
-            var dir = objPath.dir, name_1 = objPath.name, ext = objPath.ext;
-            console.log("checking file " + name_1 + ", extension " + ext);
+        let mine = [];
+        console.log(`gathering JSON from [${files}] in ${base}`);
+        for (let file of files) {
+            let full = path.join(base, file);
+            let objPath = path.parse(full);
+            let { dir, name, ext } = objPath;
+            console.log(`checking file ${name}, extension ${ext}`);
             if (!ext) {
-                console.log("reading subdirectory " + name_1);
-                mine.push(p(function (a) { return fs.readdir(path.join(dir, name_1), "utf8", a); })
-                    .then(function (_a) {
-                    var files = _a[0];
-                    return [path.join(dir, name_1)].concat(files);
-                })
-                    .then(gatherJson, fail("Reading subdirectory " + name_1)));
+                console.log(`reading subdirectory ${name}`);
+                mine.push(p(a => fs.readdir(path.join(dir, name), `utf8`, a))
+                    .then(([files]) => [path.join(dir, name), ...files])
+                    .then(gatherJson, fail(`Reading subdirectory ${name}`)));
             }
-            else if (ext === ".json" && name_1 !== "tsconfig" && name_1 !== "package") {
-                var stageDir_1 = path.relative(SRC_DNA, full);
-                console.log("found JSON " + name_1 + ", maps to " + stageDir_1);
-                mine.push(p(function (a) { return fs.copyFile(full, path.join(STAGING, stageDir_1), a); })
-                    .then(function () {
-                    console.log("copied " + name_1 + " to " + path.join(STAGING, stageDir_1) + ".  Reading data.");
-                    return p(function (a) { return fs.readFile(path.join(STAGING, stageDir_1), a); })
-                        .then(function (_a) {
-                        var data = _a[0];
-                        console.log("parsing " + name_1 + " as JSON");
-                        var str = data.toString("utf8");
-                        var json = JSON.parse(str);
-                        pathToObj.set(stageDir_1, json);
-                    }, fail("Reading & parsing JSON file"));
-                }, fail("Copying JSON file")));
+            else if (ext === `.json` && name !== `tsconfig` && name !== `package`) {
+                let stageDir = path.relative(SRC_DNA, full);
+                console.log(`found JSON ${name}, maps to ${stageDir}`);
+                mine.push(p((a) => fs.copyFile(full, path.join(STAGING, stageDir), a))
+                    .then(() => {
+                    console.log(`copied ${name} to ${path.join(STAGING, stageDir)}.  Reading data.`);
+                    return p((a) => fs.readFile(path.join(STAGING, stageDir), a))
+                        .then(([data]) => {
+                        console.log(`parsing ${name} as JSON`);
+                        const str = data.toString(`utf8`);
+                        const json = JSON.parse(str);
+                        pathToObj.set(stageDir, json);
+                    }, fail(`Reading & parsing JSON file`));
+                }, fail(`Copying JSON file`)));
             }
-        };
-        for (var _i = 0, files_1 = files; _i < files_1.length; _i++) {
-            var file = files_1[_i];
-            _loop_1(file);
         }
         return Promise.all(mine);
-    }, fail("Reading files from source")).then(function () {
-        function deepAssign(dest, src) {
-            var more = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                more[_i - 2] = arguments[_i];
-            }
-            for (var _a = 0, _b = Object.keys(src); _a < _b.length; _a++) {
-                var p_1 = _b[_a];
-                var v = void 0;
-                if (typeof src[p_1] == "object") {
-                    if (src[p_1] instanceof Array) {
-                        dest[p_1] = mergeArrays(dest[p_1] || [], src[p_1]);
+    }, fail(`Reading files from source`)).then(() => {
+        function deepAssign(dest, src, ...more) {
+            for (let p of Object.keys(src)) {
+                let v;
+                if (typeof src[p] == `object`) {
+                    if (src[p] instanceof Array) {
+                        dest[p] = mergeArrays(dest[p] || [], src[p]);
                         continue;
                     }
                     else {
-                        v = deepAssign(dest[p_1] || {}, src[p_1]);
+                        v = deepAssign(dest[p] || {}, src[p]);
                     }
                 }
                 else {
-                    v = src[p_1];
+                    v = src[p];
                 }
-                dest[p_1] = v;
+                dest[p] = v;
             }
             if (more.length) {
-                var u = more[0], rest = more.slice(1);
-                return deepAssign.apply(void 0, [dest, u].concat(rest));
+                let [u, ...rest] = more;
+                return deepAssign(dest, u, ...rest);
             }
             else {
                 return dest;
@@ -121,9 +107,9 @@ function main() {
         }
         function mergeArrays(a1, a2) {
             if (!a1)
-                return a2.slice();
+                return [...a2];
             if (!a2)
-                return a1.slice();
+                return [...a1];
             if (!(a1 instanceof Array)) {
                 a1 = [a1];
             }
@@ -132,99 +118,88 @@ function main() {
             }
             return a1.concat(a2);
         }
-        function deepExtend(dest, src) {
-            var more = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                more[_i - 2] = arguments[_i];
-            }
-            for (var _a = 0, _b = Object.keys(src); _a < _b.length; _a++) {
-                var key = _b[_a];
+        function deepExtend(dest, src, ...more) {
+            for (let key of Object.keys(src)) {
                 if (dest.hasOwnProperty(key)) {
-                    var t = dest[key];
-                    var u = src[key];
-                    if ((typeof t === "object" && t instanceof Array) ||
-                        (typeof u === "object" && u instanceof Array)) {
-                        console.log("merging array property " + key);
+                    let t = dest[key];
+                    let u = src[key];
+                    if ((typeof t === `object` && t instanceof Array) ||
+                        (typeof u === `object` && u instanceof Array)) {
+                        console.log(`merging array property ${key}`);
                         dest[key] = mergeArrays(t, u);
                     }
-                    else if (typeof t === "object" && typeof u === "object") {
-                        console.log("deep extending property " + key);
-                        var vt = t, vu = u;
+                    else if (typeof t === `object` && typeof u === `object`) {
+                        console.log(`deep extending property ${key}`);
+                        let vt = t, vu = u;
                         dest[key] = deepExtend(vt, vu);
                     }
                 }
-                else if (typeof src[key] === "object") {
-                    console.log("deep cloning super property " + key);
+                else if (typeof src[key] === `object`) {
+                    console.log(`deep cloning super property ${key}`);
                     dest[key] = deepAssign({}, src[key]);
                 }
                 else {
-                    console.log("adding super property " + key);
+                    console.log(`adding super property ${key}`);
                     dest[key] = src[key];
                 }
             }
             return dest;
         }
-        function prop(fname, val) {
-            var keys = [];
-            for (var _i = 2; _i < arguments.length; _i++) {
-                keys[_i - 2] = arguments[_i];
-            }
-            var change = false;
-            if (val && typeof val === "object") {
+        function prop(fname, val, ...keys) {
+            let change = false;
+            if (val && typeof val === `object`) {
                 if (val instanceof Array) {
-                    var len = val.length;
-                    for (var i = 0; i < len; i++) {
-                        change = prop.apply(void 0, [fname, val[i]].concat(keys, [i])) || change;
+                    const len = val.length;
+                    for (let i = 0; i < len; i++) {
+                        change = prop(fname, val[i], ...keys, i) || change;
                     }
                 }
                 else if (val.$ref) {
-                    console.log("(" + fname + ")." + keys.join('.') + " has a $ref to " + val.$ref);
+                    console.log(`(${fname}).${keys.join('.')} has a $ref to ${val.$ref}`);
                     change = true;
-                    var $ref = val.$ref;
+                    let { $ref } = val;
                     if (!path.extname($ref))
-                        $ref = $ref + ".json";
-                    prop.apply(void 0, [fname, replace.apply(void 0, [fname, $ref, pathToObj.get(fname)].concat(keys))].concat(keys));
+                        $ref = `${$ref}.json`;
+                    prop(fname, replace(fname, $ref, pathToObj.get(fname), ...keys), ...keys);
                 }
                 else if (val.$extends) {
-                    var $extends = val.$extends;
+                    let { $extends } = val;
                     if (!path.extname($extends))
-                        $extends = $extends + ".json";
-                    console.log("(" + fname + ")." + keys.join('.') + " extends " + $extends);
-                    extend.apply(void 0, [fname, $extends, val].concat(keys));
-                    return prop.apply(void 0, [fname, val].concat(keys)) || true;
+                        $extends = `${$extends}.json`;
+                    console.log(`(${fname}).${keys.join('.')} extends ${$extends}`);
+                    extend(fname, $extends, val, ...keys);
+                    return prop(fname, val, ...keys) || true;
                 }
                 else {
-                    for (var _a = 0, _b = Object.keys(val); _a < _b.length; _a++) {
-                        var key = _b[_a];
-                        change = prop.apply(void 0, [fname, val[key]].concat(keys, [key])) || change;
+                    for (let key of Object.keys(val)) {
+                        change = prop(fname, val[key], ...keys, key) || change;
                     }
                 }
             }
             return change;
         }
         function stripForImport(mapName) {
-            var obj;
+            let obj;
             if (done.has(mapName)) {
-                console.log("stripping cached copy of finished " + mapName);
+                console.log(`stripping cached copy of finished ${mapName}`);
                 obj = deepAssign({}, done.get(mapName));
             }
             else {
                 obj = deepAssign({}, pathToObj.get(mapName));
             }
-            console.log("Stripping " + mapName + " of unnecessary metadata");
+            console.log(`Stripping ${mapName} of unnecessary metadata`);
             function strip(obj) {
-                var foundImport = false;
-                for (var _i = 0, _a = Object.keys(obj); _i < _a.length; _i++) {
-                    var key = _a[_i];
-                    if (key === "$ref" || key === "$extends") {
-                        console.log("leaving " + key + " alone in " + mapName);
+                let foundImport = false;
+                for (let key of Object.keys(obj)) {
+                    if (key === `$ref` || key === `$extends`) {
+                        console.log(`leaving ${key} alone in ${mapName}`);
                         foundImport = true;
                     }
                     else if (/^\$/.test(key)) {
-                        console.log("stripping " + key + " from " + mapName);
+                        console.log(`stripping ${key} from ${mapName}`);
                         delete obj[key];
                     }
-                    else if (typeof obj[key] === "object") {
+                    else if (typeof obj[key] === `object`) {
                         foundImport = strip(obj[key]) || foundImport;
                     }
                 }
@@ -232,75 +207,65 @@ function main() {
             }
             if (!strip(obj)) {
                 stripped.set(mapName, obj);
-                console.log("cached stripped " + mapName);
+                console.log(`cached stripped ${mapName}`);
             }
             return obj;
         }
-        var done = new Map();
-        var stripped = new Map();
-        var changed = new Map();
-        function replace(inFile, fromFile, obj) {
-            var keys = [];
-            for (var _i = 3; _i < arguments.length; _i++) {
-                keys[_i - 3] = arguments[_i];
-            }
-            var inDir = path.dirname(inFile);
-            var fromDir = path.dirname(fromFile);
-            var mapPath = path.join(inDir, fromFile);
-            console.log("Replacing $ref in (" + inFile + ")." + keys.join('.') + " with " + mapPath);
-            var it;
+        let done = new Map();
+        let stripped = new Map();
+        let changed = new Map();
+        function replace(inFile, fromFile, obj, ...keys) {
+            const inDir = path.dirname(inFile);
+            const fromDir = path.dirname(fromFile);
+            const mapPath = path.join(inDir, fromFile);
+            console.log(`Replacing $ref in (${inFile}).${keys.join('.')} with ${mapPath}`);
+            let it;
             if (!stripped.has(mapPath)) {
                 it = stripForImport(mapPath);
             }
             else {
                 it = stripped.get(mapPath);
             }
-            var lastKey = keys.pop();
-            var target = keys.reduce((function (obj, key) { return obj[key]; }), obj);
+            const lastKey = keys.pop();
+            const target = keys.reduce(((obj, key) => obj[key]), obj);
             target[lastKey] = it;
             return it;
         }
-        function extend(inFile, fromFile, obj) {
-            var keys = [];
-            for (var _i = 3; _i < arguments.length; _i++) {
-                keys[_i - 3] = arguments[_i];
-            }
-            var mapKey = path.join(path.dirname(inFile), fromFile);
-            console.log("(" + inFile + ")." + keys.join('.') + " inherits from " + mapKey);
+        function extend(inFile, fromFile, obj, ...keys) {
+            const mapKey = path.join(path.dirname(inFile), fromFile);
+            console.log(`(${inFile}).${keys.join('.')} inherits from ${mapKey}`);
             delete obj.$extends;
-            var src;
+            let src;
             if (!stripped.has(mapKey)) {
                 src = stripForImport(mapKey);
             }
             else {
-                console.log("using cached " + mapKey);
+                console.log(`using cached ${mapKey}`);
                 src = stripped.get(mapKey);
             }
             return deepExtend(obj, src);
         }
-        pathToObj.forEach(function (json, fname) {
-            console.log("working on " + fname);
+        pathToObj.forEach((json, fname) => {
+            console.log(`working on ${fname}`);
             if (prop(fname, json)) {
                 changed.set(fname, json);
             }
             done.set(fname, json);
         });
-        var finished = [];
-        changed.forEach(function (obj, fname) {
-            var json = JSON.stringify(obj);
-            finished.push(p(function (a) {
-                return fs.writeFile(path.join(BIN_DNA, fname), json, { encoding: "utf8" }, a);
-            })["catch"](function (e) {
-                var msg = "problem writing files: " + e;
+        let finished = [];
+        changed.forEach((obj, fname) => {
+            let json = JSON.stringify(obj);
+            finished.push(p((a) => fs.writeFile(path.join(BIN_DNA, fname), json, { encoding: `utf8` }, a)).catch((e) => {
+                let msg = `problem writing files: ${e}`;
                 console.log(msg);
                 throw new Error(msg);
             }));
         });
         return Promise.all(finished);
-    }).then(function () {
-        console.log("inlining complete");
-    }, function (e) {
-        console.log("something went wrong: " + e);
+    }).then(() => {
+        console.log(`inlining complete`);
+    }, (e) => {
+        console.log(`something went wrong: ${e}`);
     });
 }
 main();

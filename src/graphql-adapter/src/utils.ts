@@ -22,6 +22,9 @@ export const readSingleEntry = <T extends {}>
 export const resolveSingleEntry = <T extends {}, R extends DHTResponse<any>>
   (reader: DHTReadFn<T>) =>
     (refField: string) =>
-      async (inputObj: R): Promise<DHTResponse<T>> => {
+      async (inputObj: R): Promise<DHTResponse<T> | null> => {
+        if (!inputObj.entry[refField]) {
+          return null
+        }
         return readSingleEntry(reader)(inputObj.entry[refField])
       }

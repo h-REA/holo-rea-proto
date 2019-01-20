@@ -1,12 +1,13 @@
-import React from "react";
-import styled from "styled-components";
-import media from "styled-media-query";
-import { clearFix } from "polished";
+import React from 'react'
+import styled from 'styled-components'
+import media from 'styled-media-query'
+import { clearFix } from 'polished'
 export default ({
+  /* eslint-disable */
   name,
   image
+  /* eslint-enable */
 }) => {
- 
   return (
     <WrappedHeader>
       <Header>
@@ -17,14 +18,14 @@ export default ({
       </Header>
 
     </WrappedHeader>
-  );
-};
+  )
+}
 
 const WrappedHeader = styled.div`
   ${clearFix()};
   background: #36393F;
   position: relative;
-`;
+`
 
 const Header = styled.div`
   position: relative;
@@ -35,17 +36,16 @@ const Header = styled.div`
   box-shadow: 0 1px 0 #373d45;
   z-index: 9999;
   ${clearFix()};
-  ${media.lessThan("medium")`
+  ${media.lessThan('medium')`
     width: 100%;
   `};
-`;
+`
 
 const HeaderLeft = styled.div`
   float: left;
   margin-left: 8px;
   ${clearFix()};
-`;
-
+`
 
 const Img = styled.div`
   float: left;
@@ -57,10 +57,9 @@ const Img = styled.div`
   margin-left: 0px;
   background-size: cover;
   background-color: ${props => props.theme.color.p600};
-`;
+`
 const Title = styled.h2`
   float: left;
   margin-left: 8px;
   line-height: 50px;
-`;
-
+`

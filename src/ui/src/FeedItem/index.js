@@ -1,9 +1,10 @@
-import React from "react";
-import styled from "styled-components";
-import Icons from "../atoms/icons";
-import { clearFix } from "polished";
+import React from 'react'
+import styled from 'styled-components'
+// import Icons from '../atoms/icons'
+import { clearFix } from 'polished'
 
-export default function({
+export default function ({
+  /* eslint-disable */
   image,
   id,
   primary,
@@ -18,12 +19,13 @@ export default function({
   withDelete,
   providerId,
   loggedUserId
+  /* eslint-enable */
 }) {
   return (
     <FeedItem>
       <Member>
         <MemberItem>
-          <Img alt="provider" src={image} />
+          <Img alt='provider' src={image} />
         </MemberItem>
       </Member>
       <Desc>
@@ -32,11 +34,11 @@ export default function({
           <Secondary light={light}>{secondary}</Secondary>
         </Primary>
         <Sub>
-        <Date>{date}</Date>
+          <Date>{date}</Date>
         </Sub>
       </Desc>
     </FeedItem>
-  );
+  )
 }
 
 const FeedItem = styled.div`
@@ -51,7 +53,7 @@ const FeedItem = styled.div`
   color: ${props => props.theme.color.p800};
   ${clearFix()};
   transition: background 0.5s ease;
-`;
+`
 
 const Primary = styled.div`
   line-height: 20px;
@@ -60,7 +62,7 @@ const Primary = styled.div`
   background: #f0f8ff0f;
   border-radius: 56px;
   position: relative;
-`;
+`
 
 const Secondary = styled.div`
   font-weight: 400;
@@ -69,24 +71,24 @@ const Secondary = styled.div`
   line-height: 20px;
   font-size: 14px;
   color: #36393fb0;
-`;
+`
 
 const Member = styled.div`
   float: left;
   vertical-align: top;
   margin-right: 14px;
-`;
-const Validations = styled.div`
-  float: right;
-  margin-top: 5px;
-  vertical-align: sub;
-  margin-left: 5px;
-`;
+`
+// const Validations = styled.div`
+//   float: right;
+//   margin-top: 5px;
+//   vertical-align: sub;
+//   margin-left: 5px;
+// `
 
 const Sub = styled.div`
   ${clearFix()};
-  
-`;
+
+`
 
 const MemberItem = styled.span`
   background-color: #d6dadc;
@@ -100,13 +102,13 @@ const MemberItem = styled.span`
   width: 24px;
   user-select: none;
   z-index: 0;
-`;
+`
 
 const Desc = styled.div`
   position: relative;
   min-height: 30px;
   padding-left: 40px;
-`;
+`
 
 const Img = styled.img`
   width: 32px;
@@ -120,7 +122,7 @@ const Img = styled.img`
   max-width: 32px;
   max-height: 32px;
   text-overflow: ellipsis;
-`;
+`
 
 const Date = styled.div`
   font-weight: 400;
@@ -132,15 +134,15 @@ const Date = styled.div`
   letter-spacing: 1px;
   margin: 0;
   float: left;
-`;
-
+`
+/*
 const Actions = styled.div`
   ${clearFix()};
   float: left;
   vertical-align: middle;
   margin-left: 0px;
-  
-`;
+
+`
 
 const ActionTitle = styled.h3`
   font-weight: 400;
@@ -151,7 +153,7 @@ const ActionTitle = styled.h3`
   font-size: 12px;
   letter-spacing: 1px;
   color: ${props => props.theme.color.p200};
-`;
+`
 
 const Action = styled.div`
   cursor: pointer;
@@ -160,15 +162,16 @@ const Action = styled.div`
   padding-right: 8px;
   margin-right: 24px;
   position: relative;
-`;
+`
 
 const Span = styled.span`
   vertical-align: sub;
-  margin-right: ${props => (props.withText ? "8px" : 0)}
+  margin-right: ${props => (props.withText ? '8px' : 0)}
   float: left;
   height: 30px;
   line-height: 30px;
   & svg {
     height: 30px;
   }
-`;
+`
+*/

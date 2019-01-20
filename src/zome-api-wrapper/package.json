@@ -1,0 +1,31 @@
+{
+  "name": "@holorea/zome-api-wrapper",
+  "version": "0.0.1",
+  "description": "Holochain Zome REST API wrapper for HoloREA project",
+  "main": "zomes.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holo-rea/holo-rea-proto.git"
+  },
+  "keywords": [
+    "REA",
+    "Holochain",
+    "'Open",
+    "Value",
+    "Network'",
+    "OpenValueNetwork",
+    "OVN",
+    "economic",
+    "cooperative",
+    "coordination"
+  ],
+  "author": "sqykly",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/holo-rea/holo-rea-proto/issues"
+  },
+  "homepage": "https://github.com/holo-rea/holo-rea-proto#readme"
+}

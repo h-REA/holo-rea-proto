@@ -1,6 +1,6 @@
 import React from 'react'
-import styled, {css} from 'styled-components'
-import {placeholder} from 'polished'
+import styled, { css } from 'styled-components'
+import { placeholder } from 'polished'
 
 const InputCont = styled.input`
   width: 100%;
@@ -9,9 +9,9 @@ const InputCont = styled.input`
   display: block;
   box-sizing: border-box;
   margin: 0;
-  ${placeholder({'color': '#757575'})}
+  ${placeholder({ 'color': '#757575' })}
   color: '#282c37';
-  background: '#fff'; 
+  background: '#fff';
   padding: 5px;
   font-family: inherit;
   font-size: 14px;
@@ -20,21 +20,20 @@ const InputCont = styled.input`
   outline: 0;
   height: 34px;
   ${props =>
-    props.type === "dark" &&
+    props.type === 'dark' &&
     css`
       background: #1F2129;
       color: #9baec8;
     `}
   ${props =>
-    props.type === "gray" &&
+    props.type === 'gray' &&
     css`
       background: #efefef;
     `}
 `
 
-const Input = ({ onChange, type, name, placeholder, value }) => (
+const Input = ({ onChange, type, name, placeholder, value } /* eslint-disable-line */) => (
   <InputCont onChange={onChange} type={type} name={name} placeholder={placeholder} value={value} />
 )
-
 
 export default Input

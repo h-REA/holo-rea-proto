@@ -1,0 +1,9 @@
+{
+  "parser": "babel-eslint",
+  "extends": ["standard", "standard-react"],
+  "plugins": ["flowtype"],
+  "rules": {
+    "no-unused-vars": 1,
+    "react/no-unused-prop-types": 0
+  }
+}

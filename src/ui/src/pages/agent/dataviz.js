@@ -1,9 +1,9 @@
 import React from 'react'
-import { ResponsivePie } from "@nivo/pie";
+import { ResponsivePie } from '@nivo/pie'
 import { ResponsiveLine } from '@nivo/line'
 
 export const Line = (props) => (
-    <ResponsiveLine
+  <ResponsiveLine
     margin={{
       top: 20,
       right: 20,
@@ -12,30 +12,30 @@ export const Line = (props) => (
     }}
     data={[
       {
-        id: "positive :)",
+        id: 'positive :)',
         data: [
           { x: 0, y: 0.7 },
           { x: 1, y: 0.9 },
           { x: 2, y: 0.8 },
           { x: 3, y: 0.8 },
           { x: 4, y: 0.9 },
-          { x: 6, y: 0.4 },
+          { x: 6, y: 0.4 }
         ]
       }
     ]}
     animate
-    curve="monotoneX"
+    curve='monotoneX'
     enableDotLabel
     dotSymbol={CustomSymbol}
     dotSize={14}
     dotBorderWidth={1}
-    dotBorderColor="inherit:darker(0.3)"
+    dotBorderColor='inherit:darker(0.3)'
     dotLabelYOffset={-20}
     enableGridX={false}
-    colors={["rgb(97, 205, 187)", "rgb(244, 117, 96)"]}
-    xScale={{ type: "linear" }}
+    colors={['rgb(97, 205, 187)', 'rgb(244, 117, 96)']}
+    xScale={{ type: 'linear' }}
     yScale={{
-      type: "linear",
+      type: 'linear',
       stacked: false,
       min: 0,
       max: 1
@@ -46,7 +46,7 @@ export const Line = (props) => (
 )
 
 export const Pie = (props) => (
-    <ResponsivePie
+  <ResponsivePie
     margin={{
       top: 20,
       right: 40,
@@ -55,48 +55,48 @@ export const Pie = (props) => (
     }}
     data={[
       {
-        id: "lisp",
-        label: "lisp",
+        id: 'lisp',
+        label: 'lisp',
         value: 391
       },
       {
-        id: "stylus",
-        label: "stylus",
+        id: 'stylus',
+        label: 'stylus',
         value: 512
       },
       {
-        id: "php",
-        label: "php",
+        id: 'php',
+        label: 'php',
         value: 45
       },
       {
-        id: "make",
-        label: "make",
+        id: 'make',
+        label: 'make',
         value: 225
       },
       {
-        id: "go",
-        label: "go",
+        id: 'go',
+        label: 'go',
         value: 11
       },
       {
-        id: "c",
-        label: "c",
+        id: 'c',
+        label: 'c',
         value: 373
       },
       {
-        id: "javascript",
-        label: "javascript",
+        id: 'javascript',
+        label: 'javascript',
         value: 440
       },
       {
-        id: "python",
-        label: "python",
+        id: 'python',
+        label: 'python',
         value: 536
       },
       {
-        id: "java",
-        label: "java",
+        id: 'java',
+        label: 'java',
         value: 232
       }
     ]}
@@ -105,17 +105,15 @@ export const Pie = (props) => (
   />
 )
 
-
-const CustomSymbol = ({ size, color, borderWidth, borderColor }) => (
-    <g>
-        <circle fill="#fff" r={size / 2} strokeWidth={borderWidth} stroke={borderColor} />
-        <circle
-            r={size / 5}
-            strokeWidth={borderWidth}
-            stroke={borderColor}
-            fill={color}
-            fillOpacity={0.35}
-        />
-    </g>
-  )
-  
+const CustomSymbol = ({ size, color, borderWidth, borderColor } /* eslint-disable-line */ ) => (
+  <g>
+    <circle fill='#fff' r={size / 2} strokeWidth={borderWidth} stroke={borderColor} />
+    <circle
+      r={size / 5}
+      strokeWidth={borderWidth}
+      stroke={borderColor}
+      fill={color}
+      fillOpacity={0.35}
+    />
+  </g>
+)

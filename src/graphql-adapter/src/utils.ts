@@ -35,24 +35,36 @@ const normaliseRecord = <T extends {}>(response: DHTResponse<T>): GraphRecord<T>
  */
 export const readSingleEntry = <T extends {}>
   (reader: DHTReadFn<T>) =>
-    async (id: string): Promise<DHTResponse<T>> => {
+    async (id: string): Promise<GraphRecord<T>> => {
       const records = await reader([id])
-      return records[0]
+      return normaliseRecord(records[0])
     }
 
-export const resolveSingleEntry = <T extends {}, R extends DHTResponse<any>>
+/**
+ * Entry reader wrapper for loading record fields. Creates a two-step curried
+ * function which takes an entry reader function followed by a field ID.
+ * Upon executing the final step, accepts input records which are expected to contain
+ * the identified field and retrieves the referenced DHT record for the field.
+ */
+export const resolveSingleEntry = <T extends {}, R extends GraphRecord<any>>
   (reader: DHTReadFn<T>) =>
     (refField: string) =>
-      async (inputObj: R): Promise<DHTResponse<T> | null> => {
-        if (!inputObj.entry[refField]) {
+      async (inputObj: R): Promise<GraphRecord<T> | null> => {
+        if (!inputObj[refField]) {
           return null
         }
-        return readSingleEntry(reader)(inputObj.entry[refField])
+        return readSingleEntry(reader)(inputObj[refField])
       }
 
+/**
+ * Higher-order function for wrapping zome entry reader functions for key/value
+ * queries. The returned function accepts a mapping of keys -> DHT IDs; and
+ * performs retrieval of all referenced IDs as full records before returning
+ * results in a HashMap of the same shape.
+ */
 export const readNamedEntries = <T extends {}, K extends string>
   (reader: DHTReadFn<T>) =>
-    async (entryIds: { [k in K]: string }): Promise<{ [k in K]?: DHTResponse<T> } | null> => {
+    async (entryIds: { [k in K]: string }): Promise<{ [k in K]?: GraphRecord<T> } | null> => {
       const recordIds = Object.keys(entryIds)
       if (!recordIds.length) {
         return null
@@ -60,9 +72,9 @@ export const readNamedEntries = <T extends {}, K extends string>
 
       const records = await reader(Object.values(entryIds))
 
-      return recordIds.reduce((res: { [k in K]?: DHTResponse<T> }, id: string, idx: number) => {
+      return recordIds.reduce((res: { [k in K]?: GraphRecord<T> }, id: string, idx: number) => {
         const rId = id as K
-        res[rId] = records[idx]
+        res[rId] = normaliseRecord(records[idx])
         return res
       }, {})
     }

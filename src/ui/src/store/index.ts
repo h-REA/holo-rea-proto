@@ -45,6 +45,7 @@ const cache = new ReduxCache({ store })
 
 const link = new SchemaLink({ schema })
 
+// @ts-ignore
 export const graphQLFetcher = (operation) => {
   operation.query = parse(operation.query)
   return execute(link, operation)

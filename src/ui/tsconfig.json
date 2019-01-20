@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist/",
     "sourceMap": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "module": "esnext",
@@ -18,7 +18,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "strictBindCallApply": false,
+    "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,

@@ -1,35 +1,33 @@
 <html>
-  <head>
+<head>
+    <title>HoloREA GFD REPL</title>
+    <link rel="stylesheet" type="text/css" href="index.css"/>
+</head>
+<body>
 
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script type="text/javascript" src="hc.js"></script>
+<h3>HoloREA GFD REPL</h3>
 
-    <title>chatter</title>
 
-    <style type="text/css">
-      .panic {
-        background-color: red;
-      }
-    </style>
-  </head>
-  <body>
+<div class="outputWrapper">
+    <output id="output">
+        <span class="put-stuff-above-me"></span>
+    </output>
+</div>
 
-    <h1>A perfectly useless chat</h1>
+<div class="inputWrapper">
+    <textarea cols="80" rows="6" autocomplete="off" autofocus id="input" class="commandInputBox">zome.help</textarea>
+    <button onclick="repl($(`#input`).val())">Run Command</button>
+</div>
 
-    <div id="chat-text"></div>
 
-    <div class="data-entry">
-      <textarea id="text-input">
-      </textarea>
-      <button id="send-button" type="button" onclick="send()">
-        Send
-      </button>
-    </div>
 
-    <script type="text/javascript">
-      start();
-    </script>
 
-  </body>
 
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="./repl.js"></script>
+<!--<script type="module" src="./zomes.js" async></script>-->
+<!--<script type="module" src="./scenario.js" async></script>-->
+<script type="module" src="./load-scenario.js"></script>
+
+</body>
 </html>

@@ -41,6 +41,9 @@ export * from './actionType'
 export * from './resourceClassification'
 export * from './processClassification'
 
+// actuals layer
+
+export * from './economicResource'
 
 // network globals & configuration
 /*
@@ -193,18 +196,6 @@ export const process: GraphQLFieldDef = {
 export const allProcesses: GraphQLFieldDef = {
   resultType: new GraphQLList(Process),
   resolve(): Process[] {
-  }
-}
-
-export const economicResource: GraphQLFieldDef = {
-  resultType: EconomicResource,
-  args: { id: GraphQLID },
-  resolve(id: string): EconomicResource {
-  }
-}
-export const allEconomicResources: GraphQLFieldDef = {
-  resultType: new GraphQLList(EconomicResource),
-  resolve(): EconomicResource[] {
   }
 }
 

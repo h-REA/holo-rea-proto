@@ -9,9 +9,30 @@
 import { DHTResponse, Hash } from '@holorea/zome-api-wrapper'
 
 // what the zome APIs provide
+
 type DHTReadFn<T> = (which: Hash<T>[]) => Promise<DHTResponse<T>[]>
 
 // abstractions that these helpers provide
+
+type GraphRecord<T extends {}> = T & { [id: string]: string }
+
+/**
+ * Takes a raw response from the DHT (with separate hash / entry)
+ * and combines it into a single record object for GraphQL.
+ *
+ * In this process we lose `type`, but that's OK because GraphQL adds its *own* types.
+ */
+const normaliseRecord = <T extends {}>(response: DHTResponse<T>): GraphRecord<T> => {
+  return {
+    id: response.hash,
+    ...response.entry
+  }
+}
+
+/**
+ * Given an entry reader function from zomes.js, returns a function which
+ * queries DHT records by ID.
+ */
 export const readSingleEntry = <T extends {}>
   (reader: DHTReadFn<T>) =>
     async (id: string): Promise<DHTResponse<T>> => {

@@ -64,10 +64,10 @@ export const resolveSingleEntry = <T extends {}, R extends GraphRecord<any>>
  */
 export const readNamedEntries = <T extends {}, K extends string>
   (reader: DHTReadFn<T>) =>
-    async (entryIds: { [k in K]: string }): Promise<{ [k in K]?: GraphRecord<T> } | null> => {
+    async (entryIds: { [k in K]: string }): Promise<{ [k in K]?: GraphRecord<T> }> => {
       const recordIds = Object.keys(entryIds)
       if (!recordIds.length) {
-        return null
+        return {}
       }
 
       const records = await reader(Object.values(entryIds))

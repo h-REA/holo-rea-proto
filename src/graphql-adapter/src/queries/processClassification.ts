@@ -12,36 +12,26 @@ import {
 } from 'graphql'
 
 import { GraphQLFieldDef } from './'
+import { readSingleEntry, readNamedEntries } from '../utils'
 import { ProcessClassification } from '../types'
 
-import {
-  DHTResponse,
-  events
-} from '@holorea/zome-api-wrapper'
+import { events } from '@holorea/zome-api-wrapper'
 
-type ProcessClassificationId = keyof events.ProcessClassificationFixture
-type ProcessClassificationResponse = { [k in ProcessClassificationId]?: DHTResponse<events.ProcessClassification> }
+const readProcessClassification = readSingleEntry(events.readProcessClasses)
+const readProcessClassifications = readNamedEntries(events.readProcessClasses)
 
 export const processClassification: GraphQLFieldDef = {
   resultType: ProcessClassification,
   args: { id: GraphQLString },
-  async resolve (_1, { id }: { id: string }): Promise<DHTResponse<events.ProcessClassification>> {
-    const records = await events.readProcessClasses([id])
-    return records[0]
+  async resolve (_1, { id }: { id: string }) {
+    return readProcessClassification(id)
   }
 }
 
 export const allProcessClassifications: GraphQLFieldDef = {
   resultType: new GraphQLList(ProcessClassification),
-  async resolve (): Promise<ProcessClassificationResponse> {
+  async resolve () {
     const { ProcessClassification: classifications } = await events.getFixtures()
-
-    const classificationIds = Object.keys(classifications) as ProcessClassificationId[]
-    const records = await events.readProcessClasses(Object.values(classifications))
-
-    return classificationIds.reduce((res: ProcessClassificationResponse, id: ProcessClassificationId, idx: number) => {
-      res[id] = records[idx]
-      return res
-    }, {})
+    return readProcessClassifications(classifications)
   }
 }

@@ -10,19 +10,26 @@
 
 import {
   GraphQLObjectType,
+  GraphQLInputObjectType,
   GraphQLString,
   GraphQLID
 } from 'graphql'
 
-export const Unit = new GraphQLObjectType({
+const fieldDef = {
   name: 'Unit',
   description: 'A measurement unit for quantifying resources',
-  fields: () => ({
+  fields: ({
     id: { type: GraphQLID },
     // :TODO: i18n
     name: { type: GraphQLString },
     symbol: { type: GraphQLString }
   })
+}
+
+export const Unit = new GraphQLObjectType(fieldDef)
+export const UnitInput = new GraphQLInputObjectType({
+  ...fieldDef,
+  name: 'InputUnit'
 })
 
 // temporary interface, should come from zome API types in a final implementation

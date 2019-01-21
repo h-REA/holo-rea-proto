@@ -8,23 +8,34 @@
 
 import {
   GraphQLObjectType,
+  GraphQLInputObjectType,
   GraphQLFloat
 } from 'graphql'
 
 import { QuantityValue as IQuantityValue } from '@holorea/zome-api-wrapper'
 
-import { Unit, inflateUnit } from './Unit'
+import { Unit, UnitInput, inflateUnit } from './Unit'
 
 function resolveUnit (qv: IQuantityValue) {
   return inflateUnit(qv.units)
 }
 
-export const QuantityValue = new GraphQLObjectType({
+const baseFieldDef = {
   name: 'QuantityValue',
   description: 'Some measured quantity, recorded against a particular measurement unit',
-  fields: () => ({
+  fields: ({
     // :TODO: update NRP API, `numericValue` -> `quantity`
     quantity: { type: GraphQLFloat },
     unit: { type: Unit, resolve: resolveUnit }
   })
+}
+
+export const QuantityValue = new GraphQLObjectType(baseFieldDef)
+export const QuantityValueInput = new GraphQLInputObjectType({
+  ...baseFieldDef,
+  name: 'InputQuantityValue',
+  fields: {
+    ...baseFieldDef.fields,
+    unit: { type: UnitInput }
+  }
 })

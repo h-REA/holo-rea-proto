@@ -45,6 +45,7 @@ export * from './processClassification'
 
 export * from './agent'
 export * from './economicResource'
+export * from './economicEvent'
 
 // network globals & configuration
 /*
@@ -197,38 +198,6 @@ export const process: GraphQLFieldDef = {
 export const allProcesses: GraphQLFieldDef = {
   resultType: new GraphQLList(Process),
   resolve(): Process[] {
-  }
-}
-
-export const economicEvent: GraphQLFieldDef = {
-  resultType: EconomicEvent,
-  args: { id: GraphQLID },
-  resolve(id: string): EconomicEvent {
-  }
-}
-export const allEconomicEvents: GraphQLFieldDef = {
-  resultType: new GraphQLList(EconomicEvent),
-  resolve(): EconomicEvent[] {
-  }
-}
-export const filteredEconomicEvents: GraphQLFieldDef = {
-  resultType: new GraphQLList(EconomicEvent),
-  args: {
-    providerId: GraphQLID,
-    receiverId: GraphQLID,
-    resourceClassifiedAsId: GraphQLID,
-    action: GraphQLString,
-    startDate: StringDate,
-    endDate: StringDate
-  },
-  resolve(
-    providerId: string,
-    receiverId: string,
-    resourceClassifiedAsId: string,
-    action: string,
-    startDate: Date,
-    endDate: Date
-  ): EconomicEvent[] {
   }
 }
 

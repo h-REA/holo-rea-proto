@@ -53,6 +53,7 @@ export * from './ProcessClassification'
 
 export * from './Agent'
 export * from './EconomicResource'
+export * from './EconomicEvent'
 
 // [unstarted types follow]
 
@@ -112,9 +113,6 @@ export const ExchangeAgreement = new GraphQLObjectType({
 // actuals layer
 
 export const Process = new GraphQLObjectType({
-})
-
-export const EconomicEvent = new GraphQLObjectType({
 })
 
 export const Exchange = new GraphQLObjectType({

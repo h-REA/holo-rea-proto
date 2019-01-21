@@ -42,6 +42,18 @@ export interface IUnit {
 // temporary method to translate GFD string values into NRP-compatible unit objects
 export function inflateUnit (GFDunit: string): IUnit {
   switch (GFDunit) {
+    case '':
+      return {
+        id: 'each',
+        name: 'each',
+        symbol: ''
+      }
+    case 'hours':
+      return {
+        id: 'hours',
+        name: 'hours',
+        symbol: 'hrs'
+      }
     default:
       throw new Error(`Unit ${GFDunit} not implemented!`)
   }

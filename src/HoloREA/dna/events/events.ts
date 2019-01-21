@@ -1119,19 +1119,28 @@ let fixtures: {
 function getFixtures(dontCare: any): typeof fixtures {
   return {
     Action: {
-      give: new Action({name: `Give`, behavior: '-'}).commit(),
-      receive: new Action({name: `Receive`, behavior: '+'}).commit(),
-      adjust: new Action({name: `Adjust`, behavior: '+'}).commit(),
-      produce: new Action({name: `Produce`, behavior: '+'}).commit(),
-      consume: new Action({name: `Consume`, behavior: '-'}).commit()
+      give: Action.create({name: `give`, behavior: '-'}).commit(),
+      receive: Action.create({name: `receive`, behavior: '+'}).commit(),
+      adjust: Action.create({name: `adjust`, behavior: '+'}).commit(),
+      produce: Action.create({name: `produce`, behavior: '+'}).commit(),
+      consume: Action.create({name: `consume`, behavior: '-'}).commit(),
+      increment: Action.create({name: `increment`, behavior: '+'}).commit(),
+      decrement: Action.create({name: `decrement`, behavior: '-'}).commit(),
+      load: Action.create({name: `load`, behavior: '-'}).commit(),
+      unload: Action.create({name: `unload`, behavior: '+'}).commit(),
+      use: Action.create({name: `use`, behavior: '0'}).commit(),
+      work: Action.create({name: `work`, behavior: '0'}).commit(),
+      cite: Action.create({name: `cite`, behavior: '0'}).commit(),
+      accept: Action.create({name: `accept`, behavior: '0'}).commit(),
+      improve: Action.create({name: `improve`, behavior: '0'}).commit()
     },
     TransferClassification: {
-      stub: new TransferClassification({
+      stub: TransferClassification.create({
         name: `Transfer Classification Stub`
       }).commit()
     },
     ProcessClassification: {
-      stub: new ProcessClassification({label: `Process Class Stub`}).commit()
+      stub: ProcessClassification.create({label: `Process Class Stub`}).commit()
     }
   };
 }

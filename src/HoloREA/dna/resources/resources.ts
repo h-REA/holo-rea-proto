@@ -5,7 +5,7 @@
 //import { LinkRepo, VfObject, QuantityValue, Hash, QVlike, notError, CrudResponse, PhysicalLocation, HoloThing, entryOf, hashOf } from "../../../lib/ts/common";
 import {
   VfObject, QuantityValue, Hash, QVlike, notError, CrudResponse,
-  PhysicalLocation, HoloThing, entryOf, hashOf, deepAssign, Initializer, Fixture, reader
+  PhysicalLocation, HoloThing, entryOf, hashOf, deepAssign, Initializer, Fixture, reader, creator
 } from "../common/common";
 import {LinkRepo} from "../common/LinkRepo";
 import events from "../events/events";
@@ -482,6 +482,9 @@ function createResource(
 
 const readResources = reader(EconomicResource);
 
+const createResourceClassification = creator(ResourceClassification);
+
+/*
 function createResourceClassification(props?: typeof ResourceClassification.entryType): CrudResponse<typeof ResourceClassification.entryType> {
   let it: ResourceClassification, err: Error;
   try {
@@ -496,16 +499,17 @@ function createResourceClassification(props?: typeof ResourceClassification.entr
     type: err ? "error" : it.className
   };
 }
+*/
 
 const readResourceClasses = reader(ResourceClassification);
 
 function getFixtures(dontCare: {}): {ResourceClassification: Fixture<ResourceClassification>} {
   return {
     ResourceClassification: {
-      thing: new ResourceClassification({name: `Thing`, defaultUnits: ``}).commit(),
-      currency: new ResourceClassification({name: `Currency`, defaultUnits: ``}).commit(),
-      work: new ResourceClassification({name: `Work`, defaultUnits: `hours`}).commit(),
-      idea: new ResourceClassification({name: `Idea`, defaultUnits: `citations`}).commit()
+      thing: ResourceClassification.create({name: `Thing`, defaultUnits: ``}).commit(),
+      currency: ResourceClassification.create({name: `Currency`, defaultUnits: ``}).commit(),
+      work: ResourceClassification.create({name: `Work`, defaultUnits: `hours`}).commit(),
+      idea: ResourceClassification.create({name: `Idea`, defaultUnits: `citations`}).commit()
     }
   }
 }

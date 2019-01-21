@@ -134,11 +134,7 @@ function repl(code) {
       } else {
         tail.addClass(`error`);
         div.addClass(`fail`);
-        tail.append(
-          el(`<div>`).text(`${response.error.name}: ${response.error.message}`)
-        ).append(
-          el(`<div>`).text(response.error.stack)
-        );
+        tail.append(putJson(response.error));
       }
     }
 

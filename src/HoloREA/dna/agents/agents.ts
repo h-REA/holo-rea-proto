@@ -33,7 +33,7 @@ class Agent<T = {}> extends VfObject<T & AgentEntry & typeof VfObject.entryType>
   className = "Agent";
   static entryType: AgentEntry & typeof VfObject.entryType;
   static entryDefaults = deepAssign({}, VfObject.entryDefaults, <AgentEntry> {
-      primaryLocation: [`middle of nowhere`, `placeville, XX 12345`]
+      primaryLocation: []
     });
 
   static get(hash: Hash<Agent>): Agent {

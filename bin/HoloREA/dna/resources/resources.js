@@ -889,8 +889,7 @@ var LinkRepo = /** @class */ (function () {
 /* IMPORT
 //import "./es6";
 import "./holochain-proto";
-import { LinkRepo, LinkSet, LinkReplace, LinkReplacement } from "./LinkRepo";
-
+import "./LinkRepo";
 /*/
 /**/
 var __extends = (this && this.__extends) || (function () {
@@ -1007,7 +1006,6 @@ export /**/ function deepAssign(dest, src) {
         return dest;
     }
 }
-var foo = function () { return "baz"; };
 /* EXPORT
 export/**/ function deepInit(target) {
     var inits = [];
@@ -1025,12 +1023,18 @@ export/**/ function deepInit(target) {
             }
             if (typeof val === "object") {
                 var over = target[key];
-                if (over instanceof Array) {
-                    val = over.concat(val);
+                if (val instanceof Array) {
+                    val = (over && over instanceof Array) ? over : [over];
                 }
-                else if (!(val instanceof Array)) {
+                else if (over && typeof over === "object") {
                     val = deepInit(over || {}, val);
                 }
+                else if (over !== undefined) {
+                    val = over;
+                }
+            }
+            else if (key in target) {
+                val = target[key];
             }
             target[key] = val;
         }
@@ -1346,11 +1350,11 @@ export /**/ var HoloObject = /** @class */ (function () {
             throw new Error("use either entry or hash arguments; can't use both or none");
         if (entry) {
             this.myEntry = entry;
+            // can't do any makeHash here because the subclass constructor hasn't yet
+            // assigned className.  It has to be moved into create() and get()
         }
         else {
             this.myEntry = notError(get(hash));
-            this.isCommitted = true;
-            this.myHash = hash;
         }
     }
     /**
@@ -1359,7 +1363,7 @@ export /**/ var HoloObject = /** @class */ (function () {
      */
     HoloObject.prototype.hasChanged = function () {
         if (this.myHash) {
-            return this.myHash === this.makeHash();
+            return this.lastHash !== this.makeHash();
         }
         else {
             return true;
@@ -1369,8 +1373,10 @@ export /**/ var HoloObject = /** @class */ (function () {
      * Subclasses may call committed() to determine whether any version of the entry
      * is in the DHT.
      */
-    HoloObject.prototype.commited = function () {
-        return this.isCommitted;
+    HoloObject.prototype.committed = function () {
+        if (this.isCommitted)
+            return true;
+        return !!this.myHash || !!this.lastHash || !!this.originalHash;
     };
     /**
      * Create a brand new entry and return the HoloObject that handles it.
@@ -1382,12 +1388,20 @@ export /**/ var HoloObject = /** @class */ (function () {
      * @returns {HoloObject}
      */
     HoloObject.create = function (entryProps) {
-        var entry = {};
+        //let entry: typeof entryProps = {};
         var defs = this.entryDefaults;
-        deepInit(entry, defs);
-        if (entryProps)
-            deepAssign(entry, entryProps);
-        return new this(entry);
+        var entry = deepInit({}, entryProps, defs);
+        var it = new this(entry);
+        // must test for existing entry here.
+        var hash = notError(it.makeHash());
+        var old = get(hash);
+        if (old && !isErr(old)) {
+            it.originalHash = hash;
+            it.myHash = hash;
+            it.lastHash = notError(makeHash(it.className, old));
+            it.isCommitted = true;
+        }
+        return it;
     };
     Object.defineProperty(HoloObject.prototype, "entry", {
         /**
@@ -1414,8 +1428,14 @@ export /**/ var HoloObject = /** @class */ (function () {
      * @returns {this} an instance of this class
      */
     HoloObject.get = function (hash) {
-        var obj = new this(null, hash);
-        return obj;
+        var it = new this(null, hash);
+        if (it && it.myEntry) {
+            it.isCommitted = true;
+            it.myHash = hash;
+            it.originalHash = hash;
+            it.lastHash = notError(makeHash(this.className, it.myEntry));
+        }
+        return it;
     };
     Object.defineProperty(HoloObject.prototype, "hash", {
         /**
@@ -1453,6 +1473,9 @@ export /**/ var HoloObject = /** @class */ (function () {
         }
         else {
             this.isCommitted = true;
+            this.originalHash = this.originalHash || hash;
+            this.lastHash = hash;
+            this.myHash = hash;
             return hash;
         }
     };
@@ -1467,7 +1490,7 @@ export /**/ var HoloObject = /** @class */ (function () {
             return this.myHash;
         if (this.openError)
             throw this.openError;
-        if (this.isCommitted) {
+        if (this.committed() && this.hasChanged()) {
             return this._update();
         }
         else {
@@ -1487,7 +1510,7 @@ export /**/ var HoloObject = /** @class */ (function () {
             return this.myHash;
         if (this.openError)
             throw this.openError;
-        if (!this.isCommitted) {
+        if (!this.committed()) {
             return this._commit();
         }
         else if (this.hasChanged()) {
@@ -1505,8 +1528,10 @@ export /**/ var HoloObject = /** @class */ (function () {
      */
     HoloObject.prototype.remove = function (msg) {
         if (msg === void 0) { msg = ""; }
-        if (!!this.myHash && this.isCommitted) {
+        if (!!this.myHash && this.committed()) {
             remove(this.myHash, msg);
+            this.isCommitted = false;
+            this.myHash = null;
             return this;
         }
         return this;
@@ -1553,7 +1578,7 @@ export /**/ var HoloObject = /** @class */ (function () {
      */
     HoloObject.prototype.close = function (fn) {
         var shouldUpdate = !this.openError;
-        if (this.openError) {
+        if (this.openError && fn) {
             shouldUpdate = fn(this.openError) && !!this.openCount--;
         }
         if (shouldUpdate) {
@@ -1646,6 +1671,11 @@ export /**/ var VfObject = /** @class */ (function (_super) {
     VfObject.entryDefaults = {};
     return VfObject;
 }(HoloObject));
+//* HOLO-SCOPE
+function wtf(crud) {
+    return [];
+}
+/**/
 // <reference path="../common/common"/>
 // <reference path="../agents/agents"/>
 // <reference path="../events/events"/>
@@ -1653,7 +1683,7 @@ export /**/ var VfObject = /** @class */ (function (_super) {
 //import { LinkRepo, VfObject, QuantityValue, Hash, QVlike, notError, CrudResponse, PhysicalLocation, HoloThing, entryOf, hashOf } from "../../../lib/ts/common";
 import {
   VfObject, QuantityValue, Hash, QVlike, notError, CrudResponse,
-  PhysicalLocation, HoloThing, entryOf, hashOf, deepAssign, Initializer, Fixture, reader
+  PhysicalLocation, HoloThing, entryOf, hashOf, deepAssign, Initializer, Fixture, reader, creator
 } from "../common/common";
 import {LinkRepo} from "../common/LinkRepo";
 import events from "../events/events";
@@ -1976,7 +2006,7 @@ var EconomicResource = /** @class */ (function (_super) {
     EconomicResource.className = "EconomicResource";
     EconomicResource.entryDefaults = Object.assign({}, VfObject.entryDefaults, {
         currentQuantity: { units: '', quantity: 0 },
-        resourceClassifiedAs: function () { return getFixtures(null).ResourceClassification.Currency; },
+        resourceClassifiedAs: function () { return getFixtures(null).ResourceClassification.currency; },
         quantityLastCalculated: 0,
         owner: ""
     });
@@ -2087,29 +2117,31 @@ function createResource(_a) {
     };
 }
 var readResources = reader(EconomicResource);
-function createResourceClassification(props) {
-    var it, err;
-    try {
-        it = notError(ResourceClassification.create(props));
-    }
-    catch (e) {
-        err = e;
-    }
-    return {
-        error: err,
-        hash: err ? null : it.commit(),
-        entry: err ? null : it.entry,
-        type: err ? "error" : it.className
-    };
+var createResourceClassification = creator(ResourceClassification);
+/*
+function createResourceClassification(props?: typeof ResourceClassification.entryType): CrudResponse<typeof ResourceClassification.entryType> {
+  let it: ResourceClassification, err: Error;
+  try {
+    it = notError<ResourceClassification>(ResourceClassification.create(props));
+  } catch (e) {
+    err = e;
+  }
+  return {
+    error: err,
+    hash: err ? null : it.commit(),
+    entry: err ? null : it.entry,
+    type: err ? "error" : it.className
+  };
 }
+*/
 var readResourceClasses = reader(ResourceClassification);
 function getFixtures(dontCare) {
     return {
         ResourceClassification: {
-            Thing: new ResourceClassification({ name: "Thing", defaultUnits: "" }).commit(),
-            Currency: new ResourceClassification({ name: "Currency", defaultUnits: "" }).commit(),
-            Work: new ResourceClassification({ name: "Work", defaultUnits: "hours" }).commit(),
-            Idea: new ResourceClassification({ name: "Idea", defaultUnits: "citations" }).commit()
+            thing: ResourceClassification.create({ name: "Thing", defaultUnits: "" }).commit(),
+            currency: ResourceClassification.create({ name: "Currency", defaultUnits: "" }).commit(),
+            work: ResourceClassification.create({ name: "Work", defaultUnits: "hours" }).commit(),
+            idea: ResourceClassification.create({ name: "Idea", defaultUnits: "citations" }).commit()
         }
     };
 }

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 ROOT=..
 STAGING=$ROOT/build/staging
 SRCDNA=$ROOT/src/HoloREA/dna

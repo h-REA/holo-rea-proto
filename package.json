@@ -15,6 +15,7 @@
   "scripts": {
     "preinstall": "npm run clean",
     "postinstall": "build/postinstall.sh",
+    "build:dht": "cd build; ./bin.sh",
     "start": "npm-run-all --parallel dev:frontend dev:dht",
     "dev:frontend": "cd src/ui && npm start",
     "dev:dht": "docker-compose up dht",

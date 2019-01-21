@@ -43,6 +43,7 @@ export * from './processClassification'
 
 // actuals layer
 
+export * from './agent'
 export * from './economicResource'
 
 // network globals & configuration
@@ -260,17 +261,6 @@ export const allValidations: GraphQLFieldDef = {
 export const myAgent: GraphQLFieldDef = {
   resultType: Agent,
   resolve(): Agent {
-  }
-}
-export const agent: GraphQLFieldDef = {
-  resultType: Agent,
-  args: { id: GraphQLID },
-  resolve(id: string): Agent {
-  }
-}
-export const allAgents: GraphQLFieldDef = {
-  resultType: new GraphQLList(Agent),
-  resolve(): Agent[] {
   }
 }
 

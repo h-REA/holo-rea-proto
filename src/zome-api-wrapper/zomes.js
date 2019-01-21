@@ -84,7 +84,7 @@ export const resources = new Zome(`resources`, [
 
 export const events = new Zome(`events`, [
   `createEvent`, `createAction`, `createTransfer`, `createTransferClass`,
-  `getFixtures`, `readActions`, 'readProcessClasses',
+  `getFixtures`, `readActions`, 'readProcessClasses', 'readEvents',
   `traceEvents`, `trackEvents`, `traceTransfers`, `trackTransfers`,
   `eventSubtotals`, `eventsStartedAfter`, `eventsStartedBefore`, `eventsEndedAfter`,
   `eventsEndedBefore`, `sortEvents`, `resourceCreationEvent`

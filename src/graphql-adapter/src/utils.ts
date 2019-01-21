@@ -6,7 +6,7 @@
  * @since:   2019-01-19
  */
 
-import { DHTResponse, Hash } from '@holorea/zome-api-wrapper'
+import { DHTResponse, VfObject, Hash } from '@holorea/zome-api-wrapper'
 
 // what the zome APIs provide
 
@@ -14,7 +14,7 @@ type DHTReadFn<T> = (which: Hash<T>[]) => Promise<DHTResponse<T>[]>
 
 // abstractions that these helpers provide
 
-export type GraphRecord<T extends {}> = T & { [id: string]: string }
+export type GraphRecord<T extends VfObject> = T | { [id: string]: string }
 
 /**
  * Takes a raw response from the DHT (with separate hash / entry)

@@ -78,3 +78,20 @@ export const readNamedEntries = <T extends {}, K extends string>
         return res
       }, {})
     }
+
+/**
+ * Higher-order function for reading lists of zome entries and normalizing them.
+ * The returned function from the first curry accepts an array of DHT record hashes
+ * and returns an array of records.
+ * Note that the order of returned records may not match the input query order.
+ */
+export const readMultipleEntries = <T extends {}>
+  (reader: DHTReadFn<T>) =>
+    async (entryIds: Hash<T>[]): Promise<GraphRecord<T>[]> => {
+      if (!entryIds.length) {
+        return []
+      }
+
+      const records = await reader(entryIds)
+      return records.map(normaliseRecord)
+    }

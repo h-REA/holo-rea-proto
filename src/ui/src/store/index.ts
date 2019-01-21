@@ -10,11 +10,12 @@
 
 import { createStore, combineReducers, applyMiddleware } from 'redux'
 import { parse } from 'graphql'
-import { execute } from 'apollo-link'
+import { ApolloLink, execute } from 'apollo-link'
 import { ApolloClient } from 'apollo-client'
 // :NOTE: `SchemaLink` means including GraphQL on the client, which will increase bundle size significantly!
 // Exact impact unknown (tree shaking), for max expected overhead see https://www.apollographql.com/docs/link/links/schema.html
 import { SchemaLink } from 'apollo-link-schema'
+import { onError } from 'apollo-link-error'
 import { ReduxCache, apolloReducer } from 'apollo-cache-redux'
 import thunk from 'redux-thunk'
 // import { composeWithDevTools } from 'remote-redux-devtools'
@@ -43,7 +44,17 @@ const store = createStore(
 
 const cache = new ReduxCache({ store })
 
-const link = new SchemaLink({ schema })
+const link = ApolloLink.from([
+  onError(({ graphQLErrors, networkError }) => {
+    if (graphQLErrors) {
+      graphQLErrors.map((e) =>
+        console.error(e)
+      )
+    }
+    if (networkError) console.error(networkError)
+  }),
+  new SchemaLink({ schema })
+])
 
 // @ts-ignore
 export const graphQLFetcher = (operation) => {

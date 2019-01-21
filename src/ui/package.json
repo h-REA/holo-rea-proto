@@ -15,6 +15,7 @@
     "@svgr/webpack": "2.4.1",
     "apollo-cache-redux": "^0.1.2",
     "apollo-client": "^2.4.8",
+    "apollo-link-error": "^1.1.5",
     "apollo-link-schema": "^1.1.4",
     "babel-core": "7.0.0-bridge.0",
     "babel-eslint": "9.0.0",

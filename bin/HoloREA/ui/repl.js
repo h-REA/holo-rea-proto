@@ -127,18 +127,14 @@ function repl(code) {
 
       let crud = response;
       tail = el(`<div.server.status-message.head>`).text(msg);
-      if (!response.error) {
+      if (!crud.error) {
         tail.addClass(`ok`);
         div.addClass(`success`);
         tail.text(`ok`);
       } else {
         tail.addClass(`error`);
         div.addClass(`fail`);
-        tail.append(
-          el(`<div>`).text(`${response.error.name}: ${response.error.message}`)
-        ).append(
-          el(`<div>`).text(response.error.stack)
-        );
+        tail.append(putJson(response.error));
       }
     }
 

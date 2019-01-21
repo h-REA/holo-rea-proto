@@ -12,7 +12,10 @@ function Zome(name, fnTypes) {
           if (xhr.status === 200) {
             resolve(xhr.response);
           } else {
-            reject(xhr.statusText);
+            let response = xhr.response;
+
+            let statusText = `${xhr.status} ${xhr.statusText} (in ${response.function}: ${response.errorMessage})`
+            reject(statusText);//xhr.statusText);
           }
         }
       };

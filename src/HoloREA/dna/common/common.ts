@@ -564,7 +564,7 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
    */
   protected hasChanged(): boolean {
     if (this.myHash) {
-      return this.lastHash === this.makeHash();
+      return this.lastHash !== this.makeHash();
     } else {
       return true;
     }
@@ -751,7 +751,7 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
     if (!!this.openCount) return this.myHash;
     if (this.openError) throw this.openError;
 
-    if (this.committed()) {
+    if (this.committed() && this.hasChanged()) {
       return this._update();
     } else {
       return this._commit();

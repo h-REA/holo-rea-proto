@@ -1,5 +1,5 @@
 
-import { VfObject, Hash, deepAssign } from "common";
+import { VfObject, Hash, deepAssign } from "./common";
 import { LinkRepo, Set } from "./LinkRepo";
 
 const superClass: LinkRepo<

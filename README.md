@@ -37,7 +37,7 @@ If you wish to proceed with setting up a local Go toolchain and running `hcdev` 
 
 - `npm start` gets you both a webserver pointing to `src/ui` and a Holochain 0.0.1 Prototype DHT running for your backend. If you wish to run these commands separately (useful when troubleshooting the DHT code), see the scripts in `package.json` prefixed with `dev:`.
 
-**PLEASE NOTE:** you will see the error **"TypeScript emitted no output for [...]"** when running the frontend. This issue appears to be intermittent. If you simply open any project source file in your editor and save it, compilation appears to succeed in subsequent rounds.
+**PLEASE NOTE:** you will see the error **"TypeScript emitted no output for [...]"** when running the frontend. This issue appears to be intermittent. If you simply open the source file experiencing the issue in your editor and re-save it, compilation appears to succeed in subsequent rounds.
 
 
 ### Service entrypoints

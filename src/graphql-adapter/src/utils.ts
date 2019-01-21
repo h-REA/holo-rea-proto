@@ -14,7 +14,7 @@ type DHTReadFn<T> = (which: Hash<T>[]) => Promise<DHTResponse<T>[]>
 
 // abstractions that these helpers provide
 
-type GraphRecord<T extends {}> = T & { [id: string]: string }
+export type GraphRecord<T extends {}> = T & { [id: string]: string }
 
 /**
  * Takes a raw response from the DHT (with separate hash / entry)

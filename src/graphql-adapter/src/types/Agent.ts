@@ -30,7 +30,7 @@ export interface IAgent {
   // email: string,
 }
 
-const readResourceClassifications = readMultipleEntries(resources.readResourceClasses)
+const readResources = readMultipleEntries(resources.readResources)
 
 export const Agent = new GraphQLObjectType({
   name: 'Agent',
@@ -72,7 +72,7 @@ export const Agent = new GraphQLObjectType({
         }, [])
 
         // read ref'd records
-        return readResourceClassifications(hashes)
+        return readResources(hashes)
       }
     },
 /*

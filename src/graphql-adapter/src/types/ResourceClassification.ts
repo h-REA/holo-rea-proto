@@ -12,12 +12,13 @@ import {
   GraphQLID
 } from 'graphql'
 
-import { DHTResponse, resources } from '@holorea/zome-api-wrapper'
+import { GraphRecord } from '../utils'
+import { resources } from '@holorea/zome-api-wrapper'
 
 import { Unit, inflateUnit } from './Unit'
 
-function resolveDefaultUnits (classification: DHTResponse<resources.ResourceClassification>) {
-  return inflateUnit(classification.entry.defaultUnits)
+function resolveDefaultUnits (classification: GraphRecord<resources.ResourceClassification>) {
+  return inflateUnit(classification.defaultUnits)
 }
 
 export const ResourceClassification = new GraphQLObjectType({

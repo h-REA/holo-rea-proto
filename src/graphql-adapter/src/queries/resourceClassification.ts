@@ -12,22 +12,22 @@ import {
 } from 'graphql'
 
 import { GraphQLFieldDef } from './'
+import {
+  GraphRecord,  // :NOTE: you don't REALLY need to define return types on these functions, the helpers will handle it for you
+  readSingleEntry, readMultipleEntries
+} from '../utils'
 import { ResourceClassification } from '../types'
 
-import {
-  DHTResponse,
-  resources
-} from '@holorea/zome-api-wrapper'
+import { resources } from '@holorea/zome-api-wrapper'
 
-type ResourceClassificationId = keyof resources.ResourceClassificationFixture
-type ResourceClassificationResponse = { [k in ResourceClassificationId]?: DHTResponse<resources.ResourceClassification> }
+const readResourceClassification = readSingleEntry(resources.readResourceClasses)
+const readResourceClassifications = readMultipleEntries(resources.readResourceClasses)
 
 export const resourceClassification: GraphQLFieldDef = {
   resultType: ResourceClassification,
   args: { id: GraphQLString },
-  async resolve (_1, { id }: { id: string }): Promise<DHTResponse<resources.ResourceClassification>> {
-    const records = await resources.readResourceClasses([id])
-    return records[0]
+  async resolve (_1, { id }: { id: string }): Promise<GraphRecord<resources.ResourceClassification>> {
+    return readResourceClassification(id)
   }
 }
 
@@ -35,16 +35,10 @@ export const resourceClassification: GraphQLFieldDef = {
 // into single method with more flexible filter args
 export const allResourceClassifications: GraphQLFieldDef = {
   resultType: new GraphQLList(ResourceClassification),
-  async resolve (): Promise<ResourceClassificationResponse> {
+  async resolve (): Promise<GraphRecord<resources.ResourceClassification>[]> {
     const { ResourceClassification: classifications } = await resources.getFixtures()
 
-    const classificationIds = Object.keys(classifications) as ResourceClassificationId[]
-    const records = await resources.readResourceClasses(Object.values(classifications))
-
-    return classificationIds.reduce((res: ResourceClassificationResponse, id: ResourceClassificationId, idx: number) => {
-      res[id] = records[idx]
-      return res
-    }, {})
+    return readResourceClassifications(Object.values(classifications))
   }
 }
 /*

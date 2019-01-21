@@ -1,6 +1,8 @@
 /**
  * Agent schema type
  *
+ * Partial implementation for GFD, various fields and criteria from NRP missing
+ *
  * @package: HoloREA
  * @author:  pospi <pospi@spadgos.com>
  * @since:   2019-01-19
@@ -13,8 +15,8 @@ import {
   GraphQLID
 } from 'graphql'
 
-import { agents } from '@holorea/zome-api-wrapper'
-
+import { agents, resources } from '@holorea/zome-api-wrapper'
+import { readMultipleEntries } from '../utils'
 import { EconomicResource } from './EconomicResource'
 
 export interface IAgent {
@@ -24,10 +26,11 @@ export interface IAgent {
   image: string,
   note: string,
   primaryLocation: string,
-  primaryPhone: string,
-  email: string,
-  // :TODO:
+  // primaryPhone: string,
+  // email: string,
 }
+
+const readResourceClassifications = readMultipleEntries(resources.readResourceClasses)
 
 export const Agent = new GraphQLObjectType({
   name: 'Agent',
@@ -43,24 +46,33 @@ export const Agent = new GraphQLObjectType({
     // primaryPhone: { type: GraphQLString },
     // email: { type: GraphQLString },
     ownedEconomicResources: {
-      type: new GraphQLList(EconomicResource), resolve: (agent: IAgent, {
+      type: new GraphQLList(EconomicResource),
+      args: {
+        // category: {},
+        resourceClassificationId: { type: new GraphQLList(GraphQLString) }
+        // page: {}
+      },
+      resolve: async (agent: IAgent, {
         // category,
-        // resourceClassificationId,
+        resourceClassificationId
         // page
       }: {
         // category?: IEconomicResourceCategory,
-        // resourceClassificationId?: string,
+        resourceClassificationId?: string[],
         // page?: number
       }) => {
-        // :TODO: externally-exposed resource classification IDs?
-        // const resourceClassifications = {}
-
-        return agents.getOwnedResources({
+        const res = await agents.getOwnedResources({
           agents: [agent.id],
-          // types: [
-          //   await ResourceClassification.get(resourceClassificationId)
-          // ]
+          types: resourceClassificationId
         })
+
+        // flatten response
+        const hashes = Object.values(res).reduce((hashes: string[], group: { [l: string]: string }) => {
+          return hashes.concat(Object.values(group))
+        }, [])
+
+        // read ref'd records
+        return readResourceClassifications(hashes)
       }
     },
 /*

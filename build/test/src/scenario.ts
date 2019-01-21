@@ -1,4 +1,4 @@
-import "./chai/chai";
+import * as chai from "./chai/chai";
 import "./zomes";
 
 const expect = chai.expect;

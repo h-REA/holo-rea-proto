@@ -4,7 +4,9 @@ services:
   dht:
     image: holochain/holochain-proto:develop
     command: ["hcdev", "--verbose", "--path", "/dna", "web", "3141"]
-    # environment:
+    environment:
+      HCDEBUG: 1
+      HCLOG_DEBUG_ENABLE: 1
     ports:
       - 3141:3141
     networks:

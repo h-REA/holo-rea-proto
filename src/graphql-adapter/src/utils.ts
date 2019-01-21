@@ -95,3 +95,21 @@ export const readMultipleEntries = <T extends {}>
       const records = await reader(entryIds)
       return records.map(normaliseRecord)
     }
+
+/**
+ * Entry reader wrapper for loading record fields which reference arrays of DHT
+ * hashes. Creates a two-step curried function which takes an entry reader
+ * function followed by a field ID.
+ * Upon executing the final step, accepts input records which are expected to contain
+ * the identified field and retrieves the referenced DHT records for all hashes
+ * present in the field.
+ */
+export const resolveMultipleEntries = <T extends {}, R extends GraphRecord<any>>
+  (reader: DHTReadFn<T>) =>
+    (refField: string) =>
+      async (inputObj: R): Promise<GraphRecord<T>[]> => {
+        if (!inputObj[refField]) {
+          return []
+        }
+        return readMultipleEntries(reader)(inputObj[refField])
+      }

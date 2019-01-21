@@ -14,9 +14,9 @@ import {
 
 import { QuantityValue as IQuantityValue } from '@holorea/zome-api-wrapper'
 
-import { Unit, UnitInput, inflateUnit } from './Unit'
+import { Unit, IUnit, UnitInput, inflateUnit } from './Unit'
 
-function resolveUnit (qv: IQuantityValue) {
+function resolveUnit (qv: IQuantityValue): IUnit {
   return inflateUnit(qv.units)
 }
 

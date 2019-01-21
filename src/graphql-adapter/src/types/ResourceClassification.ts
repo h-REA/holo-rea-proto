@@ -15,9 +15,9 @@ import {
 import { GraphRecord } from '../utils'
 import { resources } from '@holorea/zome-api-wrapper'
 
-import { Unit, inflateUnit } from './Unit'
+import { Unit, IUnit, inflateUnit } from './Unit'
 
-function resolveDefaultUnits (classification: GraphRecord<resources.ResourceClassification>) {
+function resolveDefaultUnits (classification: GraphRecord<resources.ResourceClassification>): IUnit {
   return inflateUnit(classification.defaultUnits)
 }
 

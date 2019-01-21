@@ -3,8 +3,7 @@
 //* IMPORT
 //import "./es6";
 import "./holochain-proto";
-import { LinkRepo, LinkSet, LinkReplace, LinkReplacement } from "./LinkRepo";
-
+import "./LinkRepo";
 /*/
 /**/
 
@@ -181,12 +180,12 @@ export/**/ function deepInit<T extends holochain.JsonEntry>(
       }
       if (typeof val === `object`) {
         let over = target[key];
-        if (over instanceof Array) {
-          val = over.concat(val);
-        } else if (val instanceof Array && (over || over === 0 || over === false || over === "")) {
-          val = [over].concat(val);
-        } else if (!(val instanceof Array)) {
+        if (val instanceof Array) {
+          val = (over && over instanceof Array) ? over : [over];
+        } else if (over && typeof over === `object`) {
           val = deepInit(over || {}, val);
+        } else if (over !== undefined) {
+          val = over;
         }
       } else if (key in target) {
         val = target[key];
@@ -612,8 +611,17 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
     //let entry: typeof entryProps = {};
     let defs = this.entryDefaults;
     let entry = deepInit({}, entryProps, defs);
-    // must test for existing entry here.  Or in constructor?  In constructor.
-    return new this(entry);
+    let it = new this(entry);
+    // must test for existing entry here.
+    let hash = notError(it.makeHash());
+    let old = get(hash);
+    if (old && !isErr(old)) {
+      it.originalHash = hash;
+      it.myHash = hash;
+      it.lastHash = notError(makeHash(it.className, old));
+      it.isCommitted = true;
+    }
+    return it;
   }
 
   /**
@@ -653,7 +661,14 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
    * @returns {this} an instance of this class
    */
   static get(hash: Hash<holochain.JsonEntry>): HoloObject<holochain.JsonEntry> {
-    return new this(null, hash);
+    let it = new this(null, hash);
+    if (it && it.myEntry) {
+      it.isCommitted = true;
+      it.myHash = hash;
+      it.originalHash = hash;
+      it.lastHash = notError(makeHash(this.className, it.myEntry));
+    }
+    return it;
   }
 
   /**
@@ -692,22 +707,12 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
 
     if (entry) {
       this.myEntry = entry;
-      hash = notError(makeHash(this.className, entry));
-      let old = get(hash);
-      if (old && !isErr(old)) {
-        this.originalHash = hash;
-        this.myHash = hash;
-        this.lastHash = notError(makeHash(this.className, old));
-        this.isCommitted = true;
-      }
+      // can't do any makeHash here because the subclass constructor hasn't yet
+      // assigned className.  It has to be moved into create() and get()
+
     } else {
       this.myEntry = <tE>notError(get(hash));
-      if (this.myEntry) {
-        this.isCommitted = true;
-        this.myHash = hash;
-        this.originalHash = hash;
-        this.lastHash = notError(makeHash(this.className, this.myEntry));
-      }
+
     }
 
   }
@@ -834,7 +839,7 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
    */
   close(fn?: (e: Error) => boolean): this {
     let shouldUpdate = !this.openError;
-    if (this.openError) {
+    if (this.openError && fn) {
       shouldUpdate = fn(this.openError) && !!this.openCount--;
     }
     if (shouldUpdate) {
@@ -963,3 +968,10 @@ export /**/class VfObject<T extends object = {}> extends HoloObject<VfEntry & ty
     this.myEntry.url = to;
   }
 }
+
+//* HOLO-SCOPE
+function wtf<T extends holochain.JsonEntry>(crud: CrudResponse<T>): CrudResponse<object>[] {
+
+  return [];
+}
+/**/

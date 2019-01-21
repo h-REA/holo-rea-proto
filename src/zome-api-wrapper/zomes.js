@@ -71,7 +71,10 @@ function Zome(name, fnTypes) {
   }
 }
 
-export const agents = new Zome(`agents`, [`createAgent`, `getOwnedResources`]);
+export const agents = new Zome(`agents`, [
+  `createAgent`,
+  `readAgents`, `getOwnedResources`
+]);
 
 export const resources = new Zome(`resources`, [
   `createResourceClassification`, `createResource`,

@@ -172,8 +172,11 @@ export/**/ function deepInit<T extends holochain.JsonEntry>(
   ...inits: Initializer<T>[]
 ): T {
   target = target || {};
+
   for (let init of inits) {
+
     for (let key of Object.keys(init)) {
+
       let val = init[key];
       while (typeof val === `function`) {
         val = val.call(target, target);
@@ -181,9 +184,9 @@ export/**/ function deepInit<T extends holochain.JsonEntry>(
       if (typeof val === `object`) {
         let over = target[key];
         if (val instanceof Array) {
-          val = (over && over instanceof Array) ? over : [over];
+          val = over || val;
         } else if (over && typeof over === `object`) {
-          val = deepInit(over || {}, val);
+          val = deepInit({}, over, val);
         } else if (over !== undefined) {
           val = over;
         }

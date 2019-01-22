@@ -1024,10 +1024,10 @@ export/**/ function deepInit(target) {
             if (typeof val === "object") {
                 var over = target[key];
                 if (val instanceof Array) {
-                    val = (over && over instanceof Array) ? over : [over];
+                    val = over || val;
                 }
                 else if (over && typeof over === "object") {
-                    val = deepInit(over || {}, val);
+                    val = deepInit({}, over, val);
                 }
                 else if (over !== undefined) {
                     val = over;
@@ -1691,9 +1691,11 @@ import agents from "../agents/agents";
 /*/
 /**/
 /* TYPE-SCOPE
-//import "../common/common";
-//import "../events/events";
-//import "../agents/agents";
+import "../common/common";
+import "../events/events";
+import "../agents/agents";
+//import "LinkRepo";
+import { LinkRepo } from "../common/LinkRepo";
 /*/
 /**/
 // <links>
@@ -2118,6 +2120,7 @@ function createResource(_a) {
 }
 var readResources = reader(EconomicResource);
 var createResourceClassification = creator(ResourceClassification);
+/**/
 /*
 function createResourceClassification(props?: typeof ResourceClassification.entryType): CrudResponse<typeof ResourceClassification.entryType> {
   let it: ResourceClassification, err: Error;
@@ -2134,7 +2137,9 @@ function createResourceClassification(props?: typeof ResourceClassification.entr
   };
 }
 */
+//* HOLO-SCOPE
 var readResourceClasses = reader(ResourceClassification);
+/**/
 function getFixtures(dontCare) {
     return {
         ResourceClassification: {
@@ -2145,6 +2150,7 @@ function getFixtures(dontCare) {
         }
     };
 }
+//* HOLO-SCOPE
 function affect(_a) {
     var resource = _a.resource, quantity = _a.quantity;
     var err, hash, res;

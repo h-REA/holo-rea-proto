@@ -9,7 +9,8 @@
   },
   "files": [
     "./agents/agents.ts", "./common/common.ts", "./events/events.ts",
-    "./resources/resources.ts", "./common/es6.d.ts", "./common/holochain-proto.d.ts"
+    "./resources/resources.ts", "./common/es6.d.ts", "./common/holochain-proto.d.ts",
+    "./common/LinkRepo.d.ts"
   ],
   "exclude": ["./**/*.ts", "./**/*.d.ts"],
   "comment": {

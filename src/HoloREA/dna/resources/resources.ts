@@ -14,9 +14,11 @@ import agents from "../agents/agents";
 /**/
 
 /* TYPE-SCOPE
-//import "../common/common";
-//import "../events/events";
-//import "../agents/agents";
+import "../common/common";
+import "../events/events";
+import "../agents/agents";
+//import "LinkRepo";
+import { LinkRepo } from "../common/LinkRepo";
 /*/
 /**/
 
@@ -483,7 +485,7 @@ function createResource(
 const readResources = reader(EconomicResource);
 
 const createResourceClassification = creator(ResourceClassification);
-
+/**/
 /*
 function createResourceClassification(props?: typeof ResourceClassification.entryType): CrudResponse<typeof ResourceClassification.entryType> {
   let it: ResourceClassification, err: Error;
@@ -500,9 +502,9 @@ function createResourceClassification(props?: typeof ResourceClassification.entr
   };
 }
 */
-
+//* HOLO-SCOPE
 const readResourceClasses = reader(ResourceClassification);
-
+/**/
 function getFixtures(dontCare: {}): {ResourceClassification: Fixture<ResourceClassification>} {
   return {
     ResourceClassification: {
@@ -513,7 +515,7 @@ function getFixtures(dontCare: {}): {ResourceClassification: Fixture<ResourceCla
     }
   }
 }
-
+//* HOLO-SCOPE
 function affect({resource, quantity}:{
   resource: HoloThing<resources.EconomicResource>,
   quantity: QVlike

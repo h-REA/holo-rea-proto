@@ -15,8 +15,9 @@ import resources from "../resources/resources";
 /**/
 
 /* TYPE-SCOPE
-import "../common/common";
-import "../resources/resources";
+import resources from "../resources/resources";
+import {LinkRepo} from "../common/LinkRepo";
+import { PhysicalLocation, VfObject, deepAssign, Hash } from "../common/common";
 /*/
 /**/
 

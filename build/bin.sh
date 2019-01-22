@@ -32,14 +32,19 @@ for zome in $MODULES; do
 done
 
 # sed: turn IMPORT comment-on, EXPORT comment-off, TYPE-SCOPE on, HOLO-SCOPE off to zome/zome.ts
-sed $STAGING/common/_common.ts -e "$(block IMPORT)" -e "$(block EXPORT)" > $STAGING/common/common.ts
+sed $STAGING/common/_common.ts -e "$(block IMPORT)" -e "$(block EXPORT)" -e "s:/\*\* @class \*/: :g" > $STAGING/common/common.ts
 
 for zome in $ZOMES; do
-  sed $STAGING/${zome}/_${zome}.ts -e "$(allow EXPORT)" -e "$(block HOLO-SCOPE)" -e "$(block IMPORT)" -e "$(allow TYPE-SCOPE)" > $STAGING/${zome}/${zome}.ts
+  sed $STAGING/${zome}/_${zome}.ts -e "$(allow EXPORT)" -e "$(block HOLO-SCOPE)" -e "$(block IMPORT)" -e "$(allow TYPE-SCOPE)" -e "s:/\*\* @class \*/: :g" > $STAGING/${zome}/${zome}.ts
 done
+
+# stop there to examine
+#return
 
 # tsc: compile each zome/_types with declarations-only
 tsc --project $STAGING/ --declaration --emitDeclarationOnly --declarationDir $STAGING
+# this step is failing.
+# fixed.  still not pretty, but working.
 
 # remove "export default" to make the declarations fully ambient
 for zome in $ZOMES; do

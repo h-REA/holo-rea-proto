@@ -1024,10 +1024,10 @@ export/**/ function deepInit(target) {
             if (typeof val === "object") {
                 var over = target[key];
                 if (val instanceof Array) {
-                    val = (over && over instanceof Array) ? over : [over];
+                    val = over || val;
                 }
                 else if (over && typeof over === "object") {
-                    val = deepInit(over || {}, val);
+                    val = deepInit({}, over, val);
                 }
                 else if (over !== undefined) {
                     val = over;
@@ -2615,6 +2615,7 @@ function eventSubtotals(hashes) {
     });
     return { events: subs, totals: qvs, resources: resourceHashes };
 }
+/**/
 // <fixtures>
 var fixtures;
 function getFixtures(dontCare) {
@@ -2646,6 +2647,7 @@ function getFixtures(dontCare) {
     };
 }
 // </fixures>
+//* HOLO-SCOPE
 function resourceCreationEvent(_a) {
     var resource = _a.resource, dates = _a.dates;
     var adjustHash = getFixtures({}).Action.Adjust;

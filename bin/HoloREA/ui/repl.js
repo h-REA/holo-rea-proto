@@ -144,7 +144,10 @@ function repl(code) {
   }, (e) => {
     div.removeClass(`pending`).addClass(`fail`);
 
-    el(`<div.server.response.error>`).text(`Server error: ${e}`).replaceAll(waiting);
+    el(`<div.server.response.error>`)
+      .text(`Server error:`)
+      .append(putJson(e))
+      .replaceAll(waiting);
   });
 
   return false;

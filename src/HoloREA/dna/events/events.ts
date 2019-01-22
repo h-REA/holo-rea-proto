@@ -16,9 +16,11 @@ import { LinkSet } from "../common/LinkRepo";
 /**/
 
 /* TYPE-SCOPE
-//import "../agents/agents"
-//import "../resources/resources"
-//import "../common/common"
+import "../agents/agents"
+import "../resources/resources"
+import "../common/common"
+
+import { LinkRepo, LinkSet } from "../common/LinkRepo";
 /*/
 /**/
 
@@ -1108,7 +1110,7 @@ function eventSubtotals(hashes: Hash<EconomicEvent>[]): Subtotals {
 
   return {events: subs, totals: qvs, resources: resourceHashes};
 }
-
+/**/
 // <fixtures>
 let fixtures: {
   Action: Fixture<Action>,
@@ -1146,7 +1148,7 @@ function getFixtures(dontCare: any): typeof fixtures {
 }
 
 // </fixures>
-
+//* HOLO-SCOPE
 function resourceCreationEvent(
   { resource, dates }: {
     resource: resources.EconomicResource, dates?:{start: number, end?:number}

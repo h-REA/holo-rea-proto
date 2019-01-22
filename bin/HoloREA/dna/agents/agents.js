@@ -1024,10 +1024,10 @@ export/**/ function deepInit(target) {
             if (typeof val === "object") {
                 var over = target[key];
                 if (val instanceof Array) {
-                    val = (over && over instanceof Array) ? over : [over];
+                    val = over || val;
                 }
                 else if (over && typeof over === "object") {
-                    val = deepInit(over || {}, val);
+                    val = deepInit({}, over, val);
                 }
                 else if (over !== undefined) {
                     val = over;

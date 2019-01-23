@@ -11,10 +11,24 @@ const HTTP_HOST = `${process.env.DHT_HOSTNAME}`;
 
 // clone response and attempt decoding JSON
 // (needed in both success and error cases)
-function tryParseJson(response) {
+async function tryParseJson(response) {
   const responseCopy = response.clone();
   try {
-    return responseCopy.json();
+    const result = await responseCopy.json();
+
+    // :SHONK: fix `null` error causing problems in `scenario.ts`
+    if (result.error === null) {
+      delete result['error'];
+    }
+    if (Array.isArray(result)) {
+      result.forEach((r) => {
+        if (r.error === null) {
+          delete r['error'];
+        }
+      });
+    }
+
+    return result;
   } catch (err) {
     if (err instanceof SyntaxError) {
       return responseCopy.text();
@@ -62,7 +76,7 @@ function Zome(name, fnTypes) {
         return Promise.reject(resultErr);
       }
 
-      return tryParseJson(response)
+      return await tryParseJson(response)
     });
   }
 

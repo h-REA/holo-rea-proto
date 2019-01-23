@@ -352,7 +352,7 @@ function expectGoodCrud<T>(
   crud: CrudResponse<T>, type?: string, name?: string
 ): CrudResponse<T> {
   name = name || undefined;
-  expect(crud.error, name).to.be.undefined;
+  expect(crud, name).to.have.property(`error`).that.does.not.exist;
 
   if (type) {
     expect(crud.type, `type of ${name}`).to.be.a(`string`).equals(type);

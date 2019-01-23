@@ -13,10 +13,14 @@ import {
 
 import { GraphQLFieldDef } from './'
 import {
-  GraphRecord,  // :NOTE: you don't REALLY need to define return types on these functions, the helpers will handle it for you
-  readSingleEntry, readMultipleEntries
+  readSingleEntry, readMultipleEntries,
+  // :NOTE: you don't REALLY need to define return types on these functions, the
+  // helpers will handle it for you. I'm just doing it for one case, in case
+  // something in the helpers breaks so that the compiler will alert about it.
+  GraphRecord
 } from '../utils'
 import { ResourceClassification } from '../types'
+import { getAllResourceClassificationHashes } from '../dummyData'
 
 import { resources } from '@holorea/zome-api-wrapper'
 
@@ -36,9 +40,7 @@ export const resourceClassification: GraphQLFieldDef = {
 export const allResourceClassifications: GraphQLFieldDef = {
   resultType: new GraphQLList(ResourceClassification),
   async resolve (): Promise<GraphRecord<resources.ResourceClassification>[]> {
-    const { ResourceClassification: classifications } = await resources.getFixtures()
-
-    return readResourceClassifications(Object.values(classifications))
+    return readResourceClassifications(await getAllResourceClassificationHashes())
   }
 }
 /*

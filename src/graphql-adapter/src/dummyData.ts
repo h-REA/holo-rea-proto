@@ -48,3 +48,14 @@ export const getAllAgentHashes = async () => {
     s.david.agent.hash
   ]
 }
+
+export const getAllResourceClassificationHashes = async () => {
+  const s = await getScenario()
+
+  return [
+    s.types.resource.apples.hash,
+    s.types.resource.beans.hash,
+    s.types.resource.turnovers.hash,
+    s.types.resource.coffee.hash
+  ]
+}

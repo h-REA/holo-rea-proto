@@ -42,7 +42,7 @@ done
 #return
 
 # tsc: compile each zome/_types with declarations-only
-tsc --project $STAGING/ --declaration --emitDeclarationOnly --declarationDir $STAGING
+../node_modules/.bin/tsc --project $STAGING/ --declaration --emitDeclarationOnly --declarationDir $STAGING
 # this step is failing.
 # fixed.  still not pretty, but working.
 
@@ -72,11 +72,11 @@ done
 # compile each zome with module: None to bin and add Map & Set shims.
 # All shims are now included in LinkRepo.js
 for zome in $ZOMES; do
-  tsc --project $STAGING/${zome}/ --outFile $BINDNA/${zome}/_${zome}.js
+  ../node_modules/.bin/tsc --project $STAGING/${zome}/ --outFile $BINDNA/${zome}/_${zome}.js
   cat $STAGING/LinkRepo.js $BINDNA/${zome}/_${zome}.js > $BINDNA/${zome}/${zome}.js
 done
 
-tsc --project ./json/
+../node_modules/.bin/tsc --project ./json/
 cd json
 node ./inline.js
 cd ..

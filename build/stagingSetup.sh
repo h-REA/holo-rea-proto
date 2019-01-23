@@ -37,7 +37,7 @@ done
 
 # tsc: compile each zome/_types with declarations-only to zome/index.d.ts
 # trying it with all files in the project
-tsc --project $STAGING/ --declaration --emitDeclarationOnly --declarationDir $STAGING
+../node_modules/.bin/tsc --project $STAGING/ --declaration --emitDeclarationOnly --declarationDir $STAGING
 
 # cut to glomLibs.sh
 

@@ -18,12 +18,12 @@ async function tryParseJson(response) {
 
     // :SHONK: fix `null` error causing problems in `scenario.ts`
     if (result.error === null) {
-      delete result['error'];
+      result.error = undefined;
     }
     if (Array.isArray(result)) {
       result.forEach((r) => {
         if (r.error === null) {
-          delete r['error'];
+          r.error = undefined;
         }
       });
     }

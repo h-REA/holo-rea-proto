@@ -487,8 +487,7 @@ export async function ready(): Promise<Scenario> {
       emptyRes, `resources of class apples before they exist`
     );
 
-    expectRes.to.be.an(`object`)
-      .instanceOf(Array)
+    expectRes.to.be.instanceOf(Array)
       .that.is.empty;
 
     return my;

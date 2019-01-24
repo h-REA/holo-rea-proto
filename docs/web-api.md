@@ -1,4 +1,4 @@
-_as of 10/29_
+_as of 1/24/19_
 
 # How to Holochain
 
@@ -30,9 +30,6 @@ objects.  Example:
     agents.getOwnedResources([hashOfMyAgent]).then((stuff) => {
         populateListOfStuff(stuff);
     });
-
-_Note: At present, this runs on jQuery `Promise`s, not ES6
-`Promise`s.  If this is is an issue for any reason, I can change it_
 
 ## Classes
 [class]: #classes
@@ -200,6 +197,9 @@ If it's helpful, the TypeScript [`class`](classes) that does the math could be m
 available to the web API.  It would be uncharacteristically easy, in fact, because
 it is never stored and thus never relies on the holochain API functions.
 
+_note: the property names will be changed in the next version to "unit" and
+"numericValue"._
+
 ### `Date` type
 [`Date`]: #date-type
 
@@ -335,14 +335,18 @@ A categorization of resources.  Mostly nominal.
 - **[link]** `classifies -= resourceClassifiedAs: `[`EconomicResource`].  All resource
 instances that are classified as this.
 
-**Fixtures**
-- `Currency`: Money.
-- `Work`: Labor
-  - `defaultUnits` = hours
+**Fixtures** (see [`resources.getFixtures`])
+- `thing`.  A material item measured in its own units.
+- `currency`.  A currency.
+- `work`.  Human attention and/or effort.  Measured in hours.
+- `idea`.  An abstract piece of knowledge.  Tracked in citations.
 
-**See**
-- [`createResourceClassification`]
-- [`createResource`]
+**Methods**
+- CRUD
+  - [`createResourceClassification`]
+  - [`readResourceClasses`]
+- Use/mutate
+  - [`createResource`]
 
 ### `EconomicResource`: [class] `extends` [`VfObject`]
 [`EconomicResource`]: #economicresource-class-extends-vfobject
@@ -362,7 +366,17 @@ resource.  Implemented only nominally.
 
 - (optional) `string` `trackingIdentifier`: An identifier for tracking.  Like a serial number or batch number.
 
-- (temporary) [`Hash`]`<`[`EconomicAgent`]`>` `owner`: The Agent who owns the resource.  This is for temporary use until ValueFlows explores Agent Resource Roles more precisely.
+- **aliased [link]** `owner =- owns:Agent`: The Agent who owns the resource.  This is for temporary use until ValueFlows explores Agent Resource Roles more precisely.
+
+**Methods**
+- CRUD
+  - [`createResource`]
+  - [`readResources`]
+  - [`resourceCreationEvent`]
+  - [`getOwnedResources`]
+- Mutators
+  - [`createEvent`]
+  - [`createTransfer`]
 
 ### `createResourceClassification` function
 [`createResourceClassification`]: #createresourceclassification-function
@@ -404,7 +418,16 @@ Create a resource through an event.
     - `currentQuantity`:
       - If `event` is blank or `event.affectedQuantity` is blank or zero, **make
       sure the units are the same.**
-  - [`EconomicEvent`] `event`: properties you want the creation event to have
+      - If no units are provided, they will default to the classification's
+      default unit.
+    - `owner` may be omitted if the `event` has a `receiver`.
+  - (optional) [`Anything`]`<`[`EconomicEvent`]`>` `event`: properties you want the creation event to have.  
+    - If this is a hash, it must belong to an [`EconomicEvent`] which will then target the newly created resource.  
+    - If this is an [`EconomicEvent`] object, it will be saved to the DHT.
+    - If a [`CrudResponse`]:
+      - With a `hash` property, it's the same as passing it a [`Hash`]
+      - Without a `hash` property, it's the same as passing it the entry.
+    - `affects` will be set to the new resource's hash.  No need to include it.
     - `affectedQuantity`
       - One of the two quantities should be zero or missing, but not both
       - If both exist, they _must_ have the same unit.
@@ -413,6 +436,9 @@ Create a resource through an event.
       the hash of an action with `behavior: '+'`.  In terms of fixtures as of
       11/12/18, from [`events.getFixtures`] `.Action.receive` or `.Action.adjust`
       are what you are looking for.  If left blank, it will default to `adjust`.
+    - `receiver` and `provider`
+      - May be blank if they are the same as the `owner` of the `resource`.
+      - If `provider` is blank, it defaults to `receiver`, then `owner`.
 - returns: [`CrudResponse`]`<`[`EconomicResource`]`>`
   - The event seen in this structure as `affectedBy` has already been created; do not run over to [`createEvent`] and make another.
 
@@ -441,8 +467,8 @@ Get a list hashes of all resources belonging to a classification.
   - POST fn/resources/getResourcesInClass/
   - `resources.getResourcesInClass(...).then(...)`
 - argument: `object`
-  - [`Hash`](#hashtype-type)`<`[`ResourceClassification`](#resourceclassification-class-extends-vfobject)`>` `classification`: The classification whose instances should be returned.
-- returns: [`Hash`](#hashtype-type)`<`[`EconomicResource`](#economicresource-class-extends-vfobject)`>`[]
+  - [`Hash`]`<`[`ResourceClassification`]`>` `classification`: The classification whose instances should be returned.
+- returns: [`Hash`]`<`[`EconomicResource`]`>`[]
 
 ### `getAffectingEvents`: `function`
 [`getAffectingEvents`]: #getaffectingevents-function
@@ -451,6 +477,7 @@ Get the hashes of all events that have affected a single resource.
 
 - to call:
   - POST /resources/getaffectingevents/
+  - `resources.getAffectingEvents(...).then(...)`
 - argument: `object`
   - [`Hash`]`<`[`EconomicResource`]`>` `resource`: The hash of the resource to trace.
 - returns [`Hash`]`<`[`EconomicEvent`]`>[]`
@@ -469,11 +496,13 @@ Get the hashes of all events that have affected a single resource.
 
 
 ## `events` module
+[`events`]: #events-module
 
 ### `TransferClassification`: [class] `extends` [`VfObject`]
 [`TransferClassification`]: #transferclassification-class-extends-vfobject
 
-This doesn't do anything yet.
+This class is primarily a stub while ValueFlows irons out the Transfer/Process
+issues and elaborates its properties.
 
 **Properties**
 - **link** `classifies -= classifiedAs: `[`Transfer`]
@@ -482,14 +511,22 @@ This is the case because a `TransferClassification` carries no other information
 to identify it with a hash.
 
 **Fixtures**
-- `Stub`: Since, as of 11/13/18, a `TransferClassification` serves
-no purpose except being required to make a [`Transfer`], the `Stub`
-fixture can be used as the classification of any transfer.
+- `stub`: The full `name` property is `"Transfer Classification Stub"`.
+
+**Methods**
+- [`createTransferClass`]
+- [`readTransferClasses`]
+- [`createTransfer`]
+- [`events.getFixtures`]
+
+_note: the `name` property serves the purpose of `vf:label` at this time,
+but in future versions, the object will use `label` to be VF compliant._
 
 ### `ProcessClassification`: [class] `extends` [`VfObject`]
 [`ProcessClassification`]: #processclassification-class-extends-vfobject
 
-This class exists.
+Like [`TransferClassification`], `ProcessClassification` has nominal properties
+until ValueFlows elaborates them.
 
 **Properties**
 - **link** `classifies -= classifiedAs:`[`Process`]
@@ -498,16 +535,16 @@ This class exists.
 **Fixtures**
 - `stub`: A stub process classification until they _do_ something.
 
-**See**
+**Methods**
 - [`createProcessClass`]
 - [`readProcessClasses`]
+- [`createProcess`]
 - [`events.getFixtures`]
 
 ### `Transfer`: [class] `extends` [`VfObject`]
 [`Transfer`]: #transfer-class-extends-vfobject
 
 A directed flow of resources connecting processes and events to each other.
-Doesn't really do much right now.
 
 **Properties**
 - `transferClassifiedAs` **aliased [link]** `classifiedAs =- classifies:`[`TransferClassification`]:
@@ -518,6 +555,7 @@ This is how you will know what kind of transfer this is.
 **See**
 - Creation
   - [`createTransfer`]
+  - [`readTransfers`]
 - Reports
   - [`traceTransfers`]
   - [`trackTransfers`]
@@ -541,15 +579,19 @@ Models a set of events through which resources are transformed.
 `Process`, according to plans.
 - [`Date`]` plannedDuration`: How long events should continue according to plans.
 
-**See**
+**Methods**
 - CRUD
   - [`createProcess`]
   - [`readProcesses`]
 - Mutators
-  - Adding events to `inputs` and `outputs`
-    - [`createEvent`]
-    - [`resourceCreationEvent`]
-    - [`createResource`]
+  - [`createEvent`]
+  - [`resourceCreationEvent`]
+  - [`createResource`]
+- Reports (processes can be used interchangeably with [`Transfer`]s)
+  - [`traceTransfers`]
+  - [`trackTransfers`]
+  - [`traceEvents`]
+  - [`trackEvents`]
 
 ### `Action`: [class] `extends` [`VfObject`]
 [`Action`]: #action-class-extends-vfobject
@@ -569,6 +611,15 @@ a previously unmodeled resource into the system (e.g. when setting up HoloREA)
 - `Action` `produce`: Create something that wasn't there before.
 - `Action` `consume`: Make use of a resource in such a way that it is gone
 afterward.
+- `Action increment`: a generic `'+'` action
+- `Action decrement`: a generic `'-'` action
+- `Action load`: For transportation (_note: I think_)
+- `Action unload`: The opposite of `load`
+- `Action use`: Occupy a resource without ultimately expending it
+- `Action work`: Human performing some task
+- `Action cite`: Make use of an idea
+- `Action accept`
+- `Action improve`
 
 See [`createAction`], [`events.getFixtures`].
 
@@ -611,6 +662,14 @@ event.  Use 0 if the event is not yet complete.
   - [`traceTransfers`]
   - [`trackTransfers`]
   - [`getAffectingEvents`]
+
+### `EconomicFunction` type
+[`EconomicFunction`]: #economicfunction-type
+
+An `EconomicFunction` is either a [`Transfer`] or a [`Process`].  Not both.
+Which it is can be determined easily if the object is wrapped in a [`CrudResponse`]
+by its `type` property.  Otherwise, check for the properties `transferClassifiedAs`
+and `processClassifiedAs`.
 
 ### `Subtotals` struct
 [`Subtotals`]: #subtotals-struct
@@ -830,7 +889,7 @@ Query a set of events and retrieve the transfers that were their inputs.
   - POST fn/events/traceEvents/
   - `events.traceEvents(...).then(...)`
 - Argument [`Hash`]`<`[`EconomicEvent`]`>[]`: the events you would like to trace
-- Returns [`CrudResponse`]`<`[`Transfer`]`>[]`: the transfers that trace those
+- Returns [`CrudResponse`]`<`[`EconomicFunction`]`>[]`: the transfers that trace those
 events.
 
 
@@ -843,7 +902,7 @@ Query a set of events and retrieve the transfers that are their outputs
   - POST fn/events/trackEvents/
   - `events.trackEvents(...).then(...)`
 - Argument [`Hash`]`<`[`EconomicEvent`]`>[]`: a list of events to query
-- Returns [`CrudResponse`]`<`[`Transfer`]`>[]`: the transfers that track the
+- Returns [`CrudResponse`]`<`[`EconomicFunction`]`>[]`: the transfers that track the
 events
 
 
@@ -856,7 +915,7 @@ are their inputs.
 - To [call]:
   - POST fn/events/traceTransfers/
   - `events.traceTransfers(...).then(...)`
-- Argument [`Hash`]`<`[`Transfer`]`>[]`: the transfers to trace
+- Argument [`Hash`]`<`[`EconomicFunction`]`>[]`: the transfers to trace
 - Returns [`CrudResponse`]`<`[`EconomicEvent`]`>[]`: the events that were inputs
 of the transfers.
 
@@ -868,7 +927,7 @@ Query a set of transfers to follow their outputs.
 - To [call]:
   - POST /events/trackTransfers/
   - `events.trackTransfers(...).then(...)`
-- Argument [`Hash`]`<`[`Transfer`]`>[]` The transfers to track
+- Argument [`Hash`]`<`[`EconomicFunction`]`>[]` The transfers to track
 - Returns [`CrudResponse`]`<`[`EconomicEvent`]`>[]` The events that are the
 outputs of the given transfers.
 

@@ -1,6 +1,8 @@
 /**
  * Queries related to action types
  *
+ * :TODO: update to use helpers in ../utils.ts
+ *
  * @package: HoloREA
  * @author:  pospi <pospi@spadgos.com>
  * @since:   2019-01-16

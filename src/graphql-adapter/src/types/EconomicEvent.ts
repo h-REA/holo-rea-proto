@@ -40,7 +40,7 @@ export const EconomicEvent = new GraphQLObjectType({
     scope: { type: Agent, resolve: resolveScope },
     affects: { type: EconomicResource, resolve: resolveAffectedResource },
     affectedQuantity: { type: QuantityValue },
-    start: { type: GraphQLString },
+    start: { type: GraphQLString },  // :TODO: "start" is now "observedTime" in VF
     url: { type: GraphQLString },
     requestDistribution: { type: GraphQLBoolean },
     note: { type: GraphQLString },

@@ -25,7 +25,7 @@ export interface IAgent {
   type: string,
   image: string,
   note: string,
-  primaryLocation: string,
+  primaryLocation: string,  // :TODO: use a Place record and update NRP to match
   // primaryPhone: string,
   // email: string,
 }

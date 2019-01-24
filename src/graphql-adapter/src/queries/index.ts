@@ -203,18 +203,6 @@ export const allTransfers: GraphQLFieldDef = {
   }
 }
 
-export const validation: GraphQLFieldDef = {
-  resultType: Validation,
-  args: { id: GraphQLID },
-  resolve(id: GraphQLID): Validation {
-  }
-}
-export const allValidations: GraphQLFieldDef = {
-  resultType: new GraphQLList(Validation),
-  resolve(): Validation[] {
-  }
-}
-
 // agents
 
 export const myAgent: GraphQLFieldDef = {

@@ -45,7 +45,7 @@ export const EconomicEvent = new GraphQLObjectType({
     requestDistribution: { type: GraphQLBoolean },
     note: { type: GraphQLString },
     // fulfills: [Fulfillment]
-    // validations: [Validation]
+    // validations: [Validation]    // FreedomCoop specific, unlikely to be added to VF
     isValidated: { type: GraphQLBoolean },
     userIsAuthorizedToUpdate: { type: GraphQLBoolean },
     userIsAuthorizedToDelete: { type: GraphQLBoolean }

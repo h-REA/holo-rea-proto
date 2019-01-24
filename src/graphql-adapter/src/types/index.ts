@@ -48,6 +48,7 @@ export * from './Place'
 
 export * from './ResourceClassification'
 export * from './ProcessClassification'
+export * from './TransferClassification'
 
 // actuals layer
 

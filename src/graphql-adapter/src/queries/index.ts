@@ -51,18 +51,6 @@ export * from './economicEvent'
 
 // network globals & configuration
 /*
-export const unit: GraphQLFieldDef = {
-  resultType: Unit,
-  args: { id: GraphQLID },
-  resolve(id: string): typeof Unit {
-  }
-}
-export const allUnits: GraphQLFieldDef = {
-  resultType: new GraphQLList(Unit),
-  resolve(): Unit[] {
-  }
-}
-
 export const quantityValue: GraphQLFieldDef = {
   resultType: QuantityValue,
   args: { id: GraphQLID },

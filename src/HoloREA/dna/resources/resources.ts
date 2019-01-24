@@ -520,7 +520,7 @@ function affect({resource, quantity}:{
   resource: HoloThing<resources.EconomicResource>,
   quantity: QVlike
 }): CrudResponse<resources.EconomicResource> {
-  let err: Error, hash: Hash<resources.EconomicResource>, res:EconomicResource;
+  let err: Error = null, hash: Hash<resources.EconomicResource>, res:EconomicResource;
   try {
     res = EconomicResource.get(hashOf(resource));
     hash = res.open((entry) => {

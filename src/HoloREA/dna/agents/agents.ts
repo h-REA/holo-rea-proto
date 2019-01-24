@@ -4,7 +4,7 @@
 //import { HoloObject, LinkRepo, Hash, VfObject, PhysicalLocation, Dict, CrudResponse, notError } from "../../../lib/ts/common";
 import {
   HoloObject, Hash, VfObject, PhysicalLocation, Dict, CrudResponse,
-  notError, deepAssign, Initializer, reader
+  notError, deepAssign, Initializer, reader, creator, HoloClass
 } from "../common/common";
 import {LinkRepo} from "../common/LinkRepo"
 import "../common/holochain-proto";
@@ -15,9 +15,9 @@ import resources from "../resources/resources";
 /**/
 
 /* TYPE-SCOPE
-import resources from "../resources/resources";
-import {LinkRepo} from "../common/LinkRepo";
-import { PhysicalLocation, VfObject, deepAssign, Hash } from "../common/common";
+import "../resources/resources";
+import "../common/LinkRepo";
+import "../common/common";
 /*/
 /**/
 
@@ -72,21 +72,7 @@ export default agents;
 
 // <zome> public functions
 //* HOLO-SCOPE
-function createAgent(props?: typeof Agent.entryType): CrudResponse<typeof Agent.entryType> {
-  let it: Agent, err: Error;
-  try {
-    it = notError<Agent>(Agent.create(props));
-  } catch (e) {
-    err = e;
-  }
-
-  return {
-    error: err,
-    hash: err ? null : it.commit(),
-    entry: err ? null : it.entry,
-    type: err ? "error" : it.className
-  };
-}
+const createAgent = creator(Agent);
 
 
 function getOwnedResources(

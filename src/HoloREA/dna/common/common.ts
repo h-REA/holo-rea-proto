@@ -106,7 +106,7 @@ export/**/function creator<
       return it.portable();
     } catch (e) {
       return {
-        error: e,
+        error: e || null,
         hash: it && it.hash,
         entry: it && it.entry,
         type: Hc.className

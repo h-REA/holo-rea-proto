@@ -49,7 +49,7 @@ export const Agent = new GraphQLObjectType({
       type: new GraphQLList(EconomicResource),
       args: {
         // category: {},
-        resourceClassificationId: { type: new GraphQLList(GraphQLString) }
+        resourceClassificationId: { type: new GraphQLList(GraphQLID) }
         // page: {}
       },
       resolve: async (agent: IAgent, {

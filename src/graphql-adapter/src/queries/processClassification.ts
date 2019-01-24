@@ -8,7 +8,7 @@
 
 import {
   GraphQLList,
-  GraphQLString
+  GraphQLID
 } from 'graphql'
 
 import { GraphQLFieldDef } from './'
@@ -23,7 +23,7 @@ const readProcessClassifications = readMultipleEntries(events.readProcessClasses
 
 export const processClassification: GraphQLFieldDef = {
   resultType: ProcessClassification,
-  args: { id: GraphQLString },
+  args: { id: GraphQLID },
   async resolve (_1, { id }: { id: string }) {
     return readProcessClassification(id)
   }

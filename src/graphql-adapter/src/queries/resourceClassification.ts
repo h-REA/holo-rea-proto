@@ -8,7 +8,7 @@
 
 import {
   GraphQLList,
-  GraphQLString
+  GraphQLID
 } from 'graphql'
 
 import { GraphQLFieldDef } from './'
@@ -29,7 +29,7 @@ const readResourceClassifications = readMultipleEntries(resources.readResourceCl
 
 export const resourceClassification: GraphQLFieldDef = {
   resultType: ResourceClassification,
-  args: { id: GraphQLString },
+  args: { id: GraphQLID },
   async resolve (_1, { id }: { id: string }): Promise<GraphRecord<resources.ResourceClassification>> {
     return readResourceClassification(id)
   }

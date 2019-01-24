@@ -40,6 +40,7 @@ export * from './actionType'
 
 export * from './resourceClassification'
 export * from './processClassification'
+export * from './transferClassification'
 
 // actuals layer
 

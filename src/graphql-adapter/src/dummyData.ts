@@ -68,3 +68,11 @@ export const getAllResourceClassificationHashes = async () => {
     s.types.resource.coffee.hash
   ]
 }
+
+export const getAllTransferClassificationHashes = async () => {
+  const s = await getScenario()
+
+  return [
+    s.types.transfer.trade.hash
+  ]
+}

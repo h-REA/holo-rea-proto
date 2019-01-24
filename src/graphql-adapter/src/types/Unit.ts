@@ -39,22 +39,28 @@ export interface IUnit {
   symbol: string
 }
 
+interface UnitIdx {
+  [id: string]: IUnit
+}
+
+// temporary lookup table for unit IDs & data
+export const allowableUnits: UnitIdx = {
+  '': {
+    id: 'each',
+    name: 'each',
+    symbol: ''
+  },
+  hours: {
+    id: 'hours',
+    name: 'hours',
+    symbol: 'hrs'
+  }
+}
+
 // temporary method to translate GFD string values into NRP-compatible unit objects
 export function inflateUnit (GFDunit: string): IUnit {
-  switch (GFDunit) {
-    case '':
-      return {
-        id: 'each',
-        name: 'each',
-        symbol: ''
-      }
-    case 'hours':
-      return {
-        id: 'hours',
-        name: 'hours',
-        symbol: 'hrs'
-      }
-    default:
-      throw new Error(`Unit ${GFDunit} not implemented!`)
+  if (!allowableUnits[GFDunit]) {
+    throw new Error(`Unit ${GFDunit} not implemented!`)
   }
+  return allowableUnits[GFDunit]
 }

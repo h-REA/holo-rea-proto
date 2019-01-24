@@ -34,6 +34,7 @@ export interface GraphQLFieldDef {
 
 // network configuration
 
+export * from './unit'
 export * from './actionType'
 
 // classifications & taxonomies

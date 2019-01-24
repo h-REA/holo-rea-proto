@@ -49,6 +49,15 @@ export const getAllAgentHashes = async () => {
   ]
 }
 
+export const getAllProcessClassificationHashes = async () => {
+  const s = await getScenario()
+
+  return [
+    s.types.process.bake.hash,
+    s.types.process.brew.hash
+  ]
+}
+
 export const getAllResourceClassificationHashes = async () => {
   const s = await getScenario()
 

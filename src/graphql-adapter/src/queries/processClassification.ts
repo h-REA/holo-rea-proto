@@ -14,6 +14,7 @@ import {
 import { GraphQLFieldDef } from './'
 import { readSingleEntry, readMultipleEntries } from '../utils'
 import { ProcessClassification } from '../types'
+import { getAllProcessClassificationHashes } from '../dummyData'
 
 import { events } from '@holorea/zome-api-wrapper'
 
@@ -31,7 +32,6 @@ export const processClassification: GraphQLFieldDef = {
 export const allProcessClassifications: GraphQLFieldDef = {
   resultType: new GraphQLList(ProcessClassification),
   async resolve () {
-    const { ProcessClassification: classifications } = await events.getFixtures()
-    return readProcessClassifications(Object.keys(classifications))
+    return readProcessClassifications(await getAllProcessClassificationHashes())
   }
 }

@@ -517,7 +517,7 @@ export async function ready(): Promise<Scenario> {
 
       events.readProcessClasses([pc.stub]).then(([stub]) => {
         expectGoodCrud(stub, `ProcessClassification`, `The process class stub crud`);
-        expect(stub.entry, `The stub process class`).to.have.property(`name`)
+        expect(stub.entry, `The stub process class`).to.have.property(`label`)
           .that.is.a(`string`);
         my.types.process.stub = stub;
       })

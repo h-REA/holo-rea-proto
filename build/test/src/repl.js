@@ -30,7 +30,7 @@ function putJson(json) {
       el(`<li.item>`).append(putJson(item)).appendTo(ol);
     }
     return ol;
-  } else if (typeof json === `object`) {
+  } else if (typeof json === `object` && json) {
     const ul = el(`<ul.object>`);
     for (key of Object.keys(json)) {
       const li = el(`<li.property>`).appendTo(ul);
@@ -57,6 +57,8 @@ function putJson(json) {
       return putJson(json.help);
     }
     return el(`<span.code>`).text(`${json.name || `function `}()`);
+  } else if (json === undefined) {
+    return el(`<span.value>`).text(`undefined`)
   } else {
     return el(`<span.value>`).text(JSON.stringify(json));
   }

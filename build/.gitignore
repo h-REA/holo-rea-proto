@@ -1,0 +1,16 @@
+json/staging/
+agents/agents.*
+agents/lib.d.ts
+agents/Agent.json
+agents/AgentRelationship.json
+common/*.json
+events/events.*
+events/lib.d.ts
+events/Action.json
+events/EconomicEvent.json
+events/Process*
+events/Transfer*
+resources/EconomicResource.json
+resources/ResourceClassification.json
+resources/resources.*
+resources/lib.d.ts

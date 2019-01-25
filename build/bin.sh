@@ -7,8 +7,9 @@ COMMON=$SRCDNA/common/
 ZOMES="agents events resources"
 MODULES="${ZOMES} common"
 LIBPATH="$STAGING/common/"
+# Too presumptive I believe
 REPOPATH=~/LinkRepo/bin
-JSLIBS="$REPOPATH/LinkRepo.js "
+JSLIBS="$REPOPATH/LinkRepo.js"
 DTSLIBS="$LIBPATH/holochain-proto.d.ts $REPOPATH/LinkRepo.d.ts"
 
 function allow {

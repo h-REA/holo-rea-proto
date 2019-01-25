@@ -508,10 +508,10 @@ const readResourceClasses = reader(ResourceClassification);
 function getFixtures(dontCare: {}): {ResourceClassification: Fixture<ResourceClassification>} {
   return {
     ResourceClassification: {
-      thing: ResourceClassification.create({name: `Thing`, defaultUnits: ``}).commit(),
-      currency: ResourceClassification.create({name: `Currency`, defaultUnits: ``}).commit(),
-      work: ResourceClassification.create({name: `Work`, defaultUnits: `hours`}).commit(),
-      idea: ResourceClassification.create({name: `Idea`, defaultUnits: `citations`}).commit()
+      thing: ResourceClassification.create({name: `thing`, defaultUnits: ``}).commit(),
+      currency: ResourceClassification.create({name: `currency`, defaultUnits: ``}).commit(),
+      work: ResourceClassification.create({name: `work`, defaultUnits: `hours`}).commit(),
+      idea: ResourceClassification.create({name: `idea`, defaultUnits: `citations`}).commit()
     }
   }
 }
@@ -520,7 +520,7 @@ function affect({resource, quantity}:{
   resource: HoloThing<resources.EconomicResource>,
   quantity: QVlike
 }): CrudResponse<resources.EconomicResource> {
-  let err: Error, hash: Hash<resources.EconomicResource>, res:EconomicResource;
+  let err: Error = null, hash: Hash<resources.EconomicResource>, res:EconomicResource;
   try {
     res = EconomicResource.get(hashOf(resource));
     hash = res.open((entry) => {

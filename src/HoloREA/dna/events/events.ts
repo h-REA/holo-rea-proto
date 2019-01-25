@@ -656,7 +656,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
   static entryType: EeEntry & typeof VfObject.entryType;
   static entryDefaults = deepAssign({}, VfObject.entryDefaults, <Initializer<EeEntry>>{
 
-    action: () => getFixtures(null).Action.Adjust,
+    action: () => getFixtures(null).Action.adjust,
     affects: ``,
     affectedQuantity: { units: ``, quantity: 0 },
     start: 0,
@@ -1142,7 +1142,7 @@ function getFixtures(dontCare: any): typeof fixtures {
       }).commit()
     },
     ProcessClassification: {
-      stub: ProcessClassification.create({label: `Process Class Stub`}).commit()
+      stub: ProcessClassification.create({label: `Process Classification Stub`}).commit()
     }
   };
 }
@@ -1150,11 +1150,14 @@ function getFixtures(dontCare: any): typeof fixtures {
 // </fixures>
 //* HOLO-SCOPE
 function resourceCreationEvent(
-  { resource, dates }: {
-    resource: resources.EconomicResource, dates?:{start: number, end?:number}
+  { resource, dates, action }: {
+    resource: resources.EconomicResource,
+    dates?:{start: number, end?:number},
+    action?: Hash<Action>
   }
 ): CrudResponse<events.EconomicEvent> {
-  let adjustHash: Hash<Action> = getFixtures({}).Action.Adjust;
+  let error: Error;
+  let adjustHash: Hash<Action> = action || getFixtures({}).Action.adjust;
   let qv = resource.currentQuantity;
   let start: number, end: number;
   if (dates) {
@@ -1170,27 +1173,19 @@ function resourceCreationEvent(
     qv.units = resClass.defaultUnits;
   }
 
-  let resHash: Hash<resources.EconomicResource> =
-    notError(commit(`EconomicResource`, resource));
+  const res = call(`resources`, `createResource`, {
+    properties: resource,
+    event: {
+      action: adjustHash,
+      affectedQuantity: { units: qv.units, quantity: 0 },
+      start,
+      duration: end - start || 1
+    }
+  });
+  const [eventHash] = call(`resources`, `getAffectingEvents`, { resource: res.hash });
+  const event = EconomicEvent.get(eventHash);
+  return event.portable();
 
-  // THIS ONLY WORKS IN A STRATEGY-2 RESOURCE (see mattermost rants)
-  // a strategy-1 resource is calculated forward, so the pre-event state MUST
-  // have quantity 0.
-  let entry: events.EconomicEvent = {
-    action: adjustHash,
-    affects: resHash,
-    receiver: resource.owner,
-    provider: resource.owner,
-    affectedQuantity: qv,
-    start: start,
-    duration: end - start
-  };
-  let event = new EconomicEvent(entry);
-  return {
-    type: event.className,
-    hash: event.commit(),
-    entry: event.entry
-  }
 }
 
 // CRUD

@@ -352,7 +352,7 @@ function expectGoodCrud<T>(
   crud: CrudResponse<T>, type?: string, name?: string
 ): CrudResponse<T> {
   name = name || undefined;
-  expect(crud, name).to.have.property(`error`).that.does.not.exist;
+  expect(crud.error, `${name}'s error`).to.not.exist;
 
   if (type) {
     expect(crud.type, `type of ${name}`).to.be.a(`string`).equals(type);
@@ -487,9 +487,7 @@ export async function ready(): Promise<Scenario> {
       emptyRes, `resources of class apples before they exist`
     );
 
-    expectRes.to.be.an(`object`)
-      .instanceOf(Array)
-      .that.is.empty;
+    expectRes.to.be.an(`array`).that.is.empty;
 
     return my;
   });
@@ -519,7 +517,7 @@ export async function ready(): Promise<Scenario> {
 
       events.readProcessClasses([pc.stub]).then(([stub]) => {
         expectGoodCrud(stub, `ProcessClassification`, `The process class stub crud`);
-        expect(stub.entry, `The stub process class`).to.have.property(`name`)
+        expect(stub.entry, `The stub process class`).to.have.property(`label`)
           .that.is.a(`string`);
         my.types.process.stub = stub;
       })

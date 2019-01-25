@@ -1,7 +1,8 @@
 import React, { Fragment } from 'react'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
 import styled from 'styled-components'
-import Agent from '../../pages/agent'
+// import Agent from '../../pages/agent'
+import Inventory from '../../pages/allInventories'
 
 // :TODO: might want to keep this in as a top-level page for demoing, once routing is ready to do that
 import schema from '@holorea/graphql-adapter/src'
@@ -18,7 +19,8 @@ const Surface = styled.div`
 
 const DemoUI = () => (
   <Surface>
-    <Agent />
+    {/* <Agent /> */}
+    <Inventory />
   </Surface>
 )
 

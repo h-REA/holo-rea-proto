@@ -10,6 +10,8 @@ import store, { client } from './store'
 import AppTemplate from './templates/AppTemplate'
 import Dark from './style/themeDark'
 
+import 'react-table/react-table.css'
+
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css?family=Fira+Sans:300,400,400i,500,500i,700');
   * {box-sizing: border-box}

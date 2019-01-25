@@ -13,6 +13,7 @@
     "@nivo/line": "0.51.0",
     "@nivo/pie": "0.51.0",
     "@svgr/webpack": "2.4.1",
+    "apollo-cache-inmemory": "^1.4.2",
     "apollo-cache-redux": "^0.1.2",
     "apollo-client": "^2.4.12",
     "apollo-link-error": "^1.1.5",

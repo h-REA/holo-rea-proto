@@ -16,14 +16,15 @@ import { ApolloClient } from 'apollo-client'
 // Exact impact unknown (tree shaking), for max expected overhead see https://www.apollographql.com/docs/link/links/schema.html
 import { SchemaLink } from 'apollo-link-schema'
 import { onError } from 'apollo-link-error'
-import { ReduxCache, apolloReducer } from 'apollo-cache-redux'
+// import { ReduxCache, apolloReducer } from 'apollo-cache-redux'
+import { InMemoryCache } from 'apollo-cache-inmemory'
 import thunk from 'redux-thunk'
 // import { composeWithDevTools } from 'remote-redux-devtools'
 
 import schema from '@holorea/graphql-adapter/src' // eslint-disable-line no-unused-vars
 
 // :TODO implement additional reducers if necessary
-// import * as reducer from './reducer'
+import * as reducers from './reducers'
 
 const initialState = {}
 
@@ -31,8 +32,8 @@ const initialState = {}
 
 const store = createStore(
   combineReducers({
-    apollo: apolloReducer
-    // ...reducer
+    // apollo: apolloReducer
+    ...reducers
   }),
   initialState,
   // composeEnhancers(
@@ -42,7 +43,8 @@ const store = createStore(
   // )
 )
 
-const cache = new ReduxCache({ store })
+// const cache = new ReduxCache({ store })
+const cache = new InMemoryCache()
 
 const link = ApolloLink.from([
   onError(({ graphQLErrors, networkError }) => {
@@ -62,7 +64,7 @@ export const graphQLFetcher = (operation) => {
   return execute(link, operation)
 }
 
-const client = new ApolloClient({
+export const client = new ApolloClient({
   link,
   cache
 })

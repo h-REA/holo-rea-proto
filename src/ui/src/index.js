@@ -1,10 +1,11 @@
 import React, { Fragment } from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
+import { ApolloProvider } from 'react-apollo'
 import { createGlobalStyle, ThemeProvider } from 'styled-components'
 
 import registerServiceWorker from './registerServiceWorker'
-import store from './store'
+import store, { client } from './store'
 
 import AppTemplate from './templates/AppTemplate'
 import Dark from './style/themeDark'
@@ -92,12 +93,14 @@ const GlobalStyle = createGlobalStyle`
 
 ReactDOM.render(
   <Provider store={store}>
-    <ThemeProvider theme={Dark}>
-      <Fragment>
-        <GlobalStyle />
-        <AppTemplate />
-      </Fragment>
-    </ThemeProvider>
+    <ApolloProvider client={client}>
+      <ThemeProvider theme={Dark}>
+        <Fragment>
+          <GlobalStyle />
+          <AppTemplate />
+        </Fragment>
+      </ThemeProvider>
+    </ApolloProvider>
   </Provider>,
   document.getElementById('root')
 )

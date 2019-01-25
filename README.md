@@ -42,11 +42,12 @@ If you wish to proceed with setting up a local Go toolchain and running `hcdev` 
 
 ### Service entrypoints
 
-When running in development mode, these are the services which will be booted up:
+When running in development mode, these are the components which will be booted up & where to find them:
 
+- Our demo UI at `http://localhost:3000`
+- A GraphQL query browser at `http://localhost:3000/graphql`
 - A test REPL for the Holochain app at `http://localhost:3141`
 - The Holochain app Zome APIs at subpaths of `http://localhost:3141/fn/*`
-- Our demo UI and GraphQL query interface at `http://localhost:3000`
 
 
 ## Useful development tools

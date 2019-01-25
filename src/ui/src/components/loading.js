@@ -56,6 +56,6 @@ export const ErrorMini = ({ message, loading, refetch }) => (
 
 ErrorMini.propTypes = {
   message: PropTypes.string,
-  loading: PropTypes.boolean,
-  refetch: PropTypes.function
+  loading: PropTypes.bool,
+  refetch: PropTypes.func
 }

@@ -162,6 +162,9 @@ class EconomicResource<T = {}> extends VfObject<T & ErEntry & typeof VfObject.en
     const it = <EconomicResource> super.get(hash);
     const my = it.myEntry;
 
+    it.pullLinks();
+    return it;
+
     const owners = AgentProperty.get(my.owner, `owns`).select(({hash}) => hash === it.myHash);
     if (my.owner && !owners.length) {
       throw new Error(`resource was re-assigned ownership, but can't recover new owner`);
@@ -213,6 +216,24 @@ class EconomicResource<T = {}> extends VfObject<T & ErEntry & typeof VfObject.en
     return it;
   }
 
+  protected pullLinks() {
+    if (this.committed()) {
+      const my = this.myEntry, myHash = this.myHash;
+
+      let underlying = ResourceRelationships.get(myHash, `underlyingResource`);
+      ([my.underlyingResource] = underlying.hashes());
+
+      let contains = ResourceRelationships.get(myHash, `contains`);
+      ([my.contains] = contains.hashes());
+
+      let type = ResourceClasses.get(myHash, `classifiedAs`);
+      ([my.resourceClassifiedAs] = type.hashes());
+
+      //let owner = AgentProperty.get(myHash, `owner`)
+      if (this.hasChanged()) this.update();
+    }
+  }
+
   static create(entry: ErEntry & typeof VfObject.entryType): EconomicResource {
     let rc = notError(ResourceClassification.get(entry.resourceClassifiedAs));
 
@@ -225,18 +246,31 @@ class EconomicResource<T = {}> extends VfObject<T & ErEntry & typeof VfObject.en
     }
 
     let it = <EconomicResource> super.create(entry);
-    it.updateLinks();
+    // I'm thinking this is fundamentally wrong.  2 reasons.
+    //  (1) See how there is no hash argument?  Unless a guess happened, the
+    //    object has no hash and no links.
+    //  (2) A freshly created object shouldn't have any side effects if not
+    //    committed.  It's too early to do this.
+    // Changed to new function, pullLinks, which does check on its hash.
+    it.pullLinks();
 
     return it;
   }
   constructor(entry: T & ErEntry & typeof VfObject.entryType | null, hash?: Hash<EconomicResource>) {
     super(entry, hash);
   }
-  static entryDefaults = Object.assign({}, VfObject.entryDefaults, <Initializer<ErEntry>>{
-    currentQuantity: {units: '', quantity: 0},
+  static entryDefaults = deepAssign({}, VfObject.entryDefaults, <Initializer<ErEntry>>{
     resourceClassifiedAs: () => getFixtures(null).ResourceClassification.currency,
-    quantityLastCalculated: 0,
     owner: ``
+  }, <Initializer<ErEntry>> {
+    currentQuantity(it): QVlike {
+      if (it.resourceClassifiedAs) {
+        let rc = ResourceClassification.get(it.resourceClassifiedAs);
+        return { units: rc.defaultUnits, quantity: 0 };
+      } else {
+        return { units: '', quantity: 0 };
+      }
+    }
   });
 
   // </mandatory overrides>
@@ -269,6 +303,7 @@ class EconomicResource<T = {}> extends VfObject<T & ErEntry & typeof VfObject.en
     this.owner = to || null;
   }
 
+  // This seems to be pushing links, not pulling them.
   protected updateLinks(hash?: Hash<this>): Hash<this> {
     hash = hash || this.myHash;
     const my = this.myEntry;
@@ -404,11 +439,16 @@ function getAffectingEvents({resource}: {resource: Hash<EconomicResource>}): Has
 // CRUD
 
 function createResource(
-  {properties: props, event: thing}: {
+  {
+    properties: props,
+    event: thing,
+    response = `resource`
+  }: {
     properties: resources.EconomicResource,
-    event: HoloThing<events.EconomicEvent>
+    event: HoloThing<events.EconomicEvent>,
+    response?: "event"|"resource"
   }
-): CrudResponse<typeof EconomicResource.entryType> {
+): CrudResponse<typeof EconomicResource.entryType | events.EconomicEvent> {
   let it: EconomicResource, err: Error;
   let event: events.EconomicEvent;
   if (thing) {
@@ -431,7 +471,7 @@ function createResource(
     let res = EconomicResource.get(event.affects);
     // that's all we needed to do to sync up its links.
     res.update();
-    return res.portable();
+    return response === "event" ? crud : res.portable();
   }
 
   let resQv = props.currentQuantity;
@@ -467,19 +507,22 @@ function createResource(
       props.trackingIdentifier = new Date().toString();
     }
   }
+  let eventCrud: CrudResponse<events.EconomicEvent>;
+
   if (!err) try {
     it = notError<EconomicResource>(EconomicResource.create(props));
     event.affects = it.hash;
-    call(`events`, `createEvent`, event);
+    eventCrud = call(`events`, `createEvent`, event);
   } catch (e) {
     err = e;
   }
-  return {
+  let resCrud: CrudResponse<typeof EconomicResource.entryType> = {
     error: err,
     hash: err ? null : it.commit(),
     entry: err ? null : it.entry,
     type: err ? "error" : it.className
   };
+  return response === `event` ? eventCrud : resCrud;
 }
 
 const readResources = reader(EconomicResource);

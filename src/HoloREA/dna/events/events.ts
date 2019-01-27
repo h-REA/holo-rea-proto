@@ -1173,18 +1173,18 @@ function resourceCreationEvent(
     qv.units = resClass.defaultUnits;
   }
 
-  const res = call(`resources`, `createResource`, {
+  const event = call(`resources`, `createResource`, {
     properties: resource,
     event: {
       action: adjustHash,
       affectedQuantity: { units: qv.units, quantity: 0 },
       start,
       duration: end - start || 1
-    }
+    },
+    response: `event`
   });
-  const [eventHash] = call(`resources`, `getAffectingEvents`, { resource: res.hash });
-  const event = EconomicEvent.get(eventHash);
-  return event.portable();
+
+  return event;
 
 }
 

@@ -511,14 +511,15 @@ function createResource(
 
   if (!err) try {
     it = notError<EconomicResource>(EconomicResource.create(props));
-    event.affects = it.hash;
+    event.affects = it.commit();
     eventCrud = call(`events`, `createEvent`, event);
   } catch (e) {
     err = e;
   }
+  err = err || (eventCrud && eventCrud.error) || (!eventCrud ? new Error(`failed to createEvent`) : null);
   let resCrud: CrudResponse<typeof EconomicResource.entryType> = {
     error: err,
-    hash: err ? null : it.commit(),
+    hash: err ? null : it.hash,
     entry: err ? null : it.entry,
     type: err ? "error" : it.className
   };
@@ -566,11 +567,8 @@ function affect({resource, quantity}:{
   let err: Error = null, hash: Hash<resources.EconomicResource>, res:EconomicResource;
   try {
     res = EconomicResource.get(hashOf(resource));
-    hash = res.open((entry) => {
-      let current = res.currentQuantity.add(quantity);
-      res.currentQuantity = current;
-      return entry;
-    }).close().hash;
+    res.currentQuantity = res.currentQuantity.add(quantity);
+    hash = res.update();
   } catch (e) {
     err = e;
   }

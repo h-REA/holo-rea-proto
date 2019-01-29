@@ -178,7 +178,7 @@ export/**/ function deepInit<T extends holochain.JsonEntry>(
     for (let key of Object.keys(init)) {
 
       let val = init[key];
-      while (typeof val === `function`) {
+      while (typeof val === `function` && !(key in target)) {
         val = val.call(target, target);
       }
       if (typeof val === `object`) {
@@ -670,6 +670,8 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
       it.myHash = hash;
       it.originalHash = hash;
       it.lastHash = notError(makeHash(this.className, it.myEntry));
+    } else {
+      throw new RangeError(`Hash of ${this.className} ${hash} not found`);
     }
     return it;
   }

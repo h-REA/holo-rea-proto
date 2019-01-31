@@ -351,7 +351,9 @@ function checkAllInventory(
 function expectGoodCrud<T>(
   crud: CrudResponse<T>, type?: string, name?: string
 ): CrudResponse<T> {
-  name = name || undefined;
+  name = name || "(CRUD)";
+  expect(crud).to.be.an(`object`);
+
   expect(crud.error, `${name}'s error`).to.not.exist;
 
   if (type) {
@@ -527,11 +529,11 @@ export async function ready(): Promise<Scenario> {
     let [give, take, adjust, produce, consume] = await events.readActions([
       act.give, act.receive, act.adjust, act.produce, act.consume
     ]);
-    my.actions = {give, take, adjust, produce, consume};
+    my.actions = { give, take, adjust, produce, consume, receive: take };
 
-    expect(take, `action fixture take`).to.have.property(`behavior`, '+');
-    expect(give, `action fixture give`).to.have.property(`behavior`, '-');
-    expect(adjust, `action fixture adjust`).to.have.property(`behavior`, '+');
+    expect(take.entry, `action fixture take`).to.have.property(`behavior`, '+');
+    expect(give.entry, `action fixture give`).to.have.property(`behavior`, '-');
+    expect(adjust.entry, `action fixture adjust`).to.have.property(`behavior`, '+');
 
     // TEST events.createAction
     let [pick, gather] = await Promise.all([
@@ -745,7 +747,7 @@ export async function ready(): Promise<Scenario> {
           start: await tick()
         }
       }).then(async (adjustEv) => {
-        expectGoodCrud(adjustEv, `Event`, `crud of adjust event for Chloe's coffee`);
+        expectGoodCrud(adjustEv, `EconomicEvent`, `crud of adjust event for Chloe's coffee`);
         let expectIt = expect(
           adjustEv.entry, `The adjust event for Chloe's coffee`
         );
@@ -755,7 +757,7 @@ export async function ready(): Promise<Scenario> {
 
         expectIt.to.have.property(`affectedQuantity`).that.is.an(`object`)
           .that.does.exist
-          .that.deep.equals({ units: `mL`, quantity: `300` });
+          .that.deep.equals({ units: `mL`, quantity: 300 });
 
         // TEST resources.readResources
         let [res] = await resources.readResources([adjustEv.entry.affects]);

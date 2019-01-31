@@ -16,7 +16,7 @@ import resources from "../resources/resources";
 
 /* TYPE-SCOPE
 import "../resources/resources";
-import "../common/LinkRepo";
+import {LinkRepo, LinkSet} from "../common/LinkRepo";
 import "../common/common";
 /*/
 /**/

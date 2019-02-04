@@ -980,3 +980,7 @@ function wtf<T extends holochain.JsonEntry>(crud: CrudResponse<T>): CrudResponse
   return [];
 }
 /**/
+//* EXPORT
+export/**/function callZome(zome: string, fn: string, arg: holochain.JsonEntry): holochain.JsonEntry {
+  return JSON.parse(call(zome, fn, arg));
+}

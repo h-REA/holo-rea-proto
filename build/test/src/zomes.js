@@ -14,8 +14,11 @@ function Zome(name, fnTypes) {
           } else {
             let response = xhr.response;
 
-            let statusText = `${xhr.status} ${xhr.statusText} in ${response.function}: ${response.errorMessage} (${JSON.stringify(response)})`;
-            reject(response);//xhr.statusText);
+            let statusText = `${xhr.status} ${xhr.statusText} in
+              ${response && response.function || `(no function)`}:
+              ${response && response.errorMessage || `(no error)`}
+              (${JSON.stringify(response)})`;
+            reject(response || statusText);//xhr.statusText);
           }
         }
       };

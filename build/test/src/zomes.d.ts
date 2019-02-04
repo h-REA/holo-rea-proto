@@ -86,6 +86,16 @@ declare namespace resources {
 
   export function createResource(
     props: {
+      properties: EconomicResource;
+      event: {
+        action: Hash<events.Action>;
+        provider?: Hash<agents.Agent>;
+        receiver?: Hash<agents.Agent>;
+        scope?: any;
+        start?: IntDate;
+        duration?: IntDate;
+      }
+    } | {
       resource: EconomicResource;
       event: {
         action: Hash<events.Action>;

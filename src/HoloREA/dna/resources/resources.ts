@@ -5,9 +5,9 @@
 //import { LinkRepo, VfObject, QuantityValue, Hash, QVlike, notError, CrudResponse, PhysicalLocation, HoloThing, entryOf, hashOf } from "../../../lib/ts/common";
 import {
   VfObject, QuantityValue, Hash, QVlike, notError, CrudResponse,
-  PhysicalLocation, HoloThing, entryOf, hashOf, deepAssign, Initializer, Fixture, reader, creator
+  PhysicalLocation, HoloThing, entryOf, hashOf, deepAssign, Initializer, Fixture, reader, creator, callZome
 } from "../common/common";
-import {LinkRepo} from "../common/LinkRepo";
+import {LinkRepo, LinkSet} from "../common/LinkRepo";
 import events from "../events/events";
 import agents from "../agents/agents";
 /*/
@@ -15,6 +15,7 @@ import agents from "../agents/agents";
 
 /* TYPE-SCOPE
 import "../common/common";
+import "../common/holochain-proto";
 import "../events/events";
 import "../agents/agents";
 //import "LinkRepo";
@@ -375,7 +376,7 @@ class EconomicResource<T = {}> extends VfObject<T & ErEntry & typeof VfObject.en
     let links = TrackTrace.get(this.myHash, `affectedBy`);
     let eEvents = links.types<events.EconomicEvent>("EconomicEvent");
     // I hate this a lot.
-    return <Hash<events.EconomicEvent>[]> call(`events`, `sortEvents`, {events: eEvents.hashes(), order: `up`, by: `end` });
+    return <Hash<events.EconomicEvent>[]> callZome(`events`, `sortEvents`, {events: eEvents.hashes(), order: `up`, by: `end` });
   }
 
   get currentQuantity(): QuantityValue {
@@ -442,58 +443,110 @@ function createResource(
   {
     properties: props,
     event: thing,
-    response = `resource`
+    response = `resource`,
+    resource
   }: {
-    properties: resources.EconomicResource,
+    properties?: resources.EconomicResource,
     event: HoloThing<events.EconomicEvent>,
-    response?: "event"|"resource"
+    response?: "event"|"resource",
+    resource?: resources.EconomicResource
   }
 ): CrudResponse<typeof EconomicResource.entryType | events.EconomicEvent> {
   let it: EconomicResource, err: Error;
   let event: events.EconomicEvent;
-  if (thing) {
-    event = entryOf(thing);
-  }
-  if (!event) {
-    let crud = <CrudResponse<events.EconomicEvent>>
-      call(`events`, `resourceCreationEvent`, {
-        resource: props
-      });
-    if (crud.error) {
-      return {
-        error: crud.error,
-        entry: null,
-        type: `Error`,
-        hash: ``
-      };
-    }
-    event = crud.entry;
-    let res = EconomicResource.get(event.affects);
-    // that's all we needed to do to sync up its links.
-    res.update();
-    return response === "event" ? crud : res.portable();
-  }
+  let amount: QVlike;
+  let action: events.Action;
+  let sign: number;
 
-  let resQv = props.currentQuantity;
-  let evQv = event.affectedQuantity;
-  if (resQv && evQv) {
-    if (resQv.units !== evQv.units) {
-      if (!resQv.units && resQv.quantity === 0) {
-        resQv.quantity = evQv.quantity;
-        resQv.units = evQv.units;
-      } else if (!evQv.units && evQv.quantity === 0) {
-        evQv.units = resQv.units;
-        evQv.quantity = resQv.quantity;
-      } else {
-        err = new TypeError(`Can't create resource in ${resQv.units} from event in ${evQv.units}`);
+  try {
+    props = props || resource;
+    if (!props) {
+      throw new Error(`resource properties are required`);
+    }
+    if (thing) {
+      event = entryOf(thing);
+    }
+
+    if (!event) {
+      let crud = <CrudResponse<events.EconomicEvent>>
+        callZome(`events`, `resourceCreationEvent`, {
+          resource: props
+        });
+      if (crud.error) {
+        return crud;
       }
+      event = crud.entry;
+      let res = EconomicResource.get(event.affects);
+      // that's all we needed to do to sync up its links.
+      // or is it?
+      // events.resourceCreationEvent calls back here having produced nothing of
+      // its own yet
+      // during that callback, this function creates the resource and commits it
+      // without its event link (and at 0 quantity).
+      // this function then calls events.createEvent to make the event
+      // createEvent, when it commits the event, attaches the link, which should
+      // propagate in its repo without any further action
+      // event.commit also calls back into resources.affect *after* the event
+      // is actually committed to the DHT
+      // affect:
+      //  - loads the object again
+      //    - pulls down its links, which *will not* necessarily be up-to-date
+      //      - affects will be null on the entry and probably still have no link
+      //  - modifies the quantity, causing the object to be flagged modified
+      //  - updates the DHT entry of the resource
+      //  - the new hash is returned from update(), but I don't think the event
+      //    cares about that
+      // So the affects link is up there already, there is no need to update here.
+      //res.update();
+      return response === "event" ? crud : res.portable();
     }
-    if (!err) {
-      props.currentQuantity = resQv;
-      event.affectedQuantity = evQv;
+
+
+    let resQv = props.currentQuantity;
+    let evQv = event.affectedQuantity;
+    // a dangerous but time-saving assumption (!!action), will crash if violated
+    action = notError(get(event.action));
+    switch (action.behavior) {
+      case '+': sign = 1; break;
+      case '-': sign = -1; break;
+      case '0': sign = 0; break;
     }
-  }
-  if (!err) {
+
+    if (resQv && evQv) {
+      if (resQv.units !== evQv.units) {
+        if (!resQv.units && resQv.quantity === 0) {
+          let {units, quantity} = evQv;
+          quantity *= sign;
+          amount = {units, quantity};
+          //resQv.quantity = evQv.quantity;
+          //resQv.units = evQv.units;
+        } else if (!evQv.units && evQv.quantity === 0) {
+          let {units, quantity} = resQv;
+          amount = {units, quantity};
+          //evQv.units = resQv.units;
+          //evQv.quantity = resQv.quantity;
+        } else {
+          throw new TypeError(`Can't create resource in ${resQv.units} from event in ${evQv.units}`);
+        }
+      } else {
+        amount = {units: evQv.units, quantity: sign*evQv.quantity + resQv.quantity};
+      }
+      //props.currentQuantity = resQv;
+      //event.affectedQuantity = evQv;
+    } else if (resQv) {
+      let {units, quantity} = resQv;
+      amount = {units, quantity};
+    } else if (evQv) {
+      let {units, quantity} = evQv;
+      quantity *= sign;
+      amount = {units, quantity};
+    } else {
+      amount = { units: notError(get(props.resourceClassifiedAs)).defaultUnits, quantity: 0 };
+    }
+
+    event.affectedQuantity = { units: amount.units, quantity: amount.quantity*sign };
+    props.currentQuantity = { units: amount.units, quantity: 0 };
+
     if (!event.receiver) {
       event.receiver = props.owner || event.provider;
     }
@@ -506,28 +559,40 @@ function createResource(
     if (!props.trackingIdentifier) {
       props.trackingIdentifier = new Date().toString();
     }
+
+  } catch (e) {
+    return {
+      error: e,
+      hash: null,
+      type: "Error",
+      entry: null
+    };
   }
   let eventCrud: CrudResponse<events.EconomicEvent>;
 
-  if (!err) try {
+  try {
     it = notError<EconomicResource>(EconomicResource.create(props));
     event.affects = it.commit();
-    eventCrud = call(`events`, `createEvent`, event);
+    eventCrud = <CrudResponse<events.EconomicEvent>> callZome(`events`, `createEvent`, event);
   } catch (e) {
     err = e;
   }
   err = err || (eventCrud && eventCrud.error) || (!eventCrud ? new Error(`failed to createEvent`) : null);
+
+  let entry = it && it.entry;
+  if (it) entry.currentQuantity = amount;
+
   let resCrud: CrudResponse<typeof EconomicResource.entryType> = {
     error: err,
     hash: err ? null : it.hash,
-    entry: err ? null : it.entry,
+    entry: err ? null : entry,
     type: err ? "error" : it.className
   };
+  if (eventCrud) eventCrud.error = err;
   return response === `event` ? eventCrud : resCrud;
 }
 
 const readResources = reader(EconomicResource);
-
 const createResourceClassification = creator(ResourceClassification);
 /**/
 /*

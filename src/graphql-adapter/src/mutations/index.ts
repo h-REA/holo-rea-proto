@@ -8,6 +8,10 @@
  * @since:   2019-01-21
  */
 
-// events
+// agents
+
+export * from './agent'
+
+// actuals
 
 export * from './economicEvent'

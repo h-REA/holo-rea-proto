@@ -1,6 +1,7 @@
-import "./chai/chai";
+import chai from "./chai/chai";
 import "./zomes";
 
+console.log('Chai inited:', chai)
 const expect = chai.expect;
 
 /**

@@ -22,7 +22,7 @@ export type GraphRecord<T extends VfObject> = T | { [id: string]: string }
  *
  * In this process we lose `type`, but that's OK because GraphQL adds its *own* types.
  */
-const normaliseRecord = <T extends {}>(response: DHTResponse<T>): GraphRecord<T> => {
+export const normaliseRecord = <T extends {}>(response: DHTResponse<T>): GraphRecord<T> => {
   return {
     id: response.hash,
     ...response.entry

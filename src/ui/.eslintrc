@@ -4,6 +4,7 @@
   "plugins": ["flowtype"],
   "rules": {
     "no-unused-vars": 1,
+    "react/prop-types": 0,
     "react/no-unused-prop-types": 0
   }
 }

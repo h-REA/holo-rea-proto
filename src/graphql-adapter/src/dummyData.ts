@@ -45,7 +45,7 @@ export const getAllAgentHashes = async () => {
     s.al.agent.hash,
     s.bea.agent.hash,
     s.chloe.agent.hash,
-    s.david.agent.hash
+    // s.david.agent.hash
   ]
 }
 

@@ -39,32 +39,22 @@ const RefreshPane = styled.div`
 
 const columns = [
   {
-    Header: 'Name',
-    columns: [
-      {
-        Header: 'Id',
-        id: 'id',
-        accessor: d => `${d.id.substr(0, 6)}..${d.id.substr(-6)}`
-      },
-      {
-        Header: 'Name',
-        id: 'name',
-        accessor: d => d.name
-      }
-    ]
+    Header: 'Id',
+    id: 'id',
+    accessor: d => `${d.id.substr(0, 6)}..${d.id.substr(-6)}`
   },
   {
-    Header: 'Current Quantity',
-    columns: [
-      {
-        Header: 'Quantity',
-        accessor: 'quantity'
-      },
-      {
-        Header: 'Unit',
-        accessor: 'unit'
-      }
-    ]
+    Header: 'Name',
+    id: 'name',
+    accessor: d => d.name
+  },
+  {
+    Header: 'Quantity',
+    accessor: 'quantity'
+  },
+  {
+    Header: 'Unit',
+    accessor: 'unit'
   },
   {
     Header: 'Tracking identifier',
@@ -94,7 +84,7 @@ const renderAgent = (agent, i) => (
         sortable={false}
         resizable={false}
         className='-striped -highlight'
-        style={{ flex: 1, height: '30em' }}
+        style={{ flex: 1, height: '25em' }}
       />
     </Body>
   </Fragment>

@@ -1,4 +1,4 @@
-import * as chai from "./chai/chai";
+import "./chai/chai";
 import "./zomes";
 
 const expect = chai.expect;
@@ -422,7 +422,7 @@ export async function ready(): Promise<Scenario> {
           return dict;
       }, {});
 
-      expectData.to.be.instanceOf(Array);
+      expectData.to.be.an(`array`);
       for (let person of Object.keys(people)) {
           let hash = people[person].hash;
           expect(them[hashMap[hash]], `entry for agent ${person}`)
@@ -591,11 +591,6 @@ export async function ready(): Promise<Scenario> {
   // Time to start making events and resources
   prep = prep.then(async (my) => {
 
-    let david = await agents.createAgent({
-      name: `David`,
-      primaryLocation: [`412 kongstun st`, `hullodeysbarg, QB 27759`]
-    });
-
     let time = await tick();
     my.timeline.begin = time;
 
@@ -678,7 +673,7 @@ export async function ready(): Promise<Scenario> {
         action: pick.hash,
         provider: al.hash,
         receiver: al.hash,
-        start: time,
+        start: my.timeline.alGetsApples = time,
         duration: 1
       }
     }).then(async (alApples) => {
@@ -728,7 +723,7 @@ export async function ready(): Promise<Scenario> {
         action: gather.hash,
         provider: bea.hash,
         receiver: bea.hash,
-        start: await tick(),
+        start: my.timeline.beaGetsBeans = await tick(),
         duration: 1
       }
     }).then((bb) => (my.bea.beans = bb));
@@ -742,7 +737,7 @@ export async function ready(): Promise<Scenario> {
         owner: chloe.hash
       },
       dates: {
-        start: await tick()
+        start: my.timeline.chloeGetsCoffee = await tick()
       }
     }).then(async (adjustEv) => {
       expectGoodCrud(adjustEv, `EconomicEvent`, `crud of adjust event for Chloe's coffee`);
@@ -802,6 +797,7 @@ export async function ready(): Promise<Scenario> {
     // [x] chloe has some initial coffee
     // [x] everyone has a complete inventory with 0 quantities where appropriate
     // [ ] al trades apples for coffee
+    console.log(`critical initialization tests passed`);
     return verbify(my);
   }).then(async (my) => {
     // TODO: This is kind of a secondary function, consider moving it out of sequence
@@ -810,6 +806,7 @@ export async function ready(): Promise<Scenario> {
     let {apples, turnovers} = my.types.resource;
 
     // TEST agents.getOwnedResources
+    console.log(`TEST agents.getOwnedResources ...`);
     let invs = await agents.getOwnedResources({
       agents: [al.agent.hash, bea.agent.hash, chloe.agent.hash],
       types: [apples.hash, turnovers.hash]
@@ -829,6 +826,7 @@ export async function ready(): Promise<Scenario> {
     expect(alApples.entry.currentQuantity.quantity, `al's quantity of apples`)
       .to.equal(100);
 
+    console.log("passed");
     return my;
   }).then(async (my) => {
     // namespace freshening
@@ -837,6 +835,9 @@ export async function ready(): Promise<Scenario> {
     let trade = my.types.transfer.trade;
     let {give, take} = my.actions;
     const AL_ARRIVES = await tick();
+    my.timeline.alArrives = AL_ARRIVES;
+
+    console.log(`manual trade (al's apples, chloe's coffee) test`)
 
     let [giveEv, takeEv] = await Promise.all([
       events.createEvent({
@@ -860,6 +861,8 @@ export async function ready(): Promise<Scenario> {
     ]);
 
     // TEST createEvent affects resource
+    console.log(`TEST createEvent affects resources`);
+
     let [src, dest] = await resources.readResources([al.apples.hash, chloe.apples.hash]).then(([src, dest]) => {
       expectGoodCrud(src, `EconomicResource`, `Al's apples crud after first give`);
       expectGoodCrud(dest, `EconomicResource`, `Chloe's apples crud after first give`);
@@ -883,7 +886,11 @@ export async function ready(): Promise<Scenario> {
       return [src, dest];
     });
 
+    console.log(`PASSED`);
+
     // TEST events.createTransfer(Transfer)
+    console.log(`TEST events.createTransfer(Transfer) ...`);
+
     let p1 = events.createTransfer({
       transferClassifiedAs: trade.hash,
       inputs: giveEv.hash,
@@ -905,12 +912,14 @@ export async function ready(): Promise<Scenario> {
       expect(outputs.entry, `outputs`).to.have.property(`receiver`, chloe.agent.hash);
       expect(outputs.entry, `outputs`).to.have.property(`affects`, dest.hash);
 
+      console.log(`events.createTransfer(Transfer) PASSED`);
       return xfer;
     });
 
     // Chloe gives Al a 300 mL cup of coffee. Al receives it.
-
+    my.timeline.chloeGivesAlCoffee = AL_ARRIVES + 100
     // TEST events.createTransfer(Transfer(event, event))
+    console.log(`TEST events.createTransfer(Transfer(event, event)) ...`)
     let p2 = events.createTransfer({
       transferClassifiedAs: my.types.transfer.trade.hash,
       inputs: {
@@ -950,6 +959,9 @@ export async function ready(): Promise<Scenario> {
         receiver: al.agent.hash
       });
 
+      console.log(`events.createTransfer(Transfer(event,event)) PASSED`);
+      // TODO: ensure that createTransfer also affects quantities.
+
       return xfer;
     });
 
@@ -964,6 +976,7 @@ export async function ready(): Promise<Scenario> {
     let time = my.timeline.firstBake = await tick();
 
     // TEST events.createProcess
+    console.log(`TEST events.createProcess ...`);
     let [inputs, outputs] = await Promise.all([
       events.createEvent({
         action: my.actions.consume.hash,
@@ -1003,6 +1016,7 @@ export async function ready(): Promise<Scenario> {
     expect(inputs.entry).to.have.property(`inputOf`, proc.hash);
     expect(outputs.entry).to.have.property(`outputOf`, proc.hash);
 
+    console.log(`events.createProcess PASSED`);
     return my;
   }).then(checkAllInventory({
     chloe: { apples: 0, turnovers: 1 }
@@ -1013,19 +1027,22 @@ export async function ready(): Promise<Scenario> {
       { units: ``, quantity: 1 },
       chloe.turnovers.hash,
       bea.turnovers.hash,
-      await tick()
+      my.timeline.chloeTradeToBea = await tick()
     );
 
     await my.verbs.trade(
       { units: `kg`, quantity: 0.5 },
       bea.beans.hash,
       chloe.coffee.hash,
-      await tick()
+      my.timeline.beaTradeToChloe = await tick()
     );
 
     await my.verbs.brewCoffee(1000, await tick());
     return my;
-  });
+  }).then(checkAllInventory({
+    bea: {turnovers: 1},
+    chloe: {beans: 0.5}
+  }));
 
   return prep;
 }

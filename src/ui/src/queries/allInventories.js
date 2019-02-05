@@ -17,7 +17,6 @@ export default gql`
         id
         resourceClassifiedAs {
           name
-          category
           processCategory
         }
         trackingIdentifier

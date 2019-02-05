@@ -41,7 +41,7 @@ export const Agent = new GraphQLObjectType({
     type: { type: GraphQLString },
     image: { type: GraphQLString },
     note: { type: GraphQLString },
-    primaryLocation: { type: GraphQLString },
+    // primaryLocation: { type: GraphQLString },
     // :TODO: confirm & implement if desired
     // primaryPhone: { type: GraphQLString },
     // email: { type: GraphQLString },

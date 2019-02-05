@@ -54,7 +54,7 @@ export namespace agents {
   }
   export type EconomicAgent = Agent;
 
-  export function createAgent(props: Agent): Promise<CrudResponse<Agent>>;
+  export function createAgent(props: Agent): Promise<DHTResponse<Agent>>;
 
   export function getOwnedResources(
     args: {

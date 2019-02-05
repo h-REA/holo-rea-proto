@@ -13,6 +13,7 @@ export default gql`
   query {
     allAgents {
       id
+      name
       ownedEconomicResources {
         id
         resourceClassifiedAs {

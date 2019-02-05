@@ -13,7 +13,7 @@ const Surface = styled.div`
   height: 100%;
   display: flex;
   flex-direction: column;
-  width: 1010px;
+  max-width: 1010px;
   margin: 0 auto;
 `
 

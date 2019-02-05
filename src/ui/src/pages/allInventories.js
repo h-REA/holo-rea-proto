@@ -8,14 +8,34 @@
  * @since:   2019-01-25
  */
 
-import React from 'react'
+import React, { Fragment } from 'react'
 import ReactTable from 'react-table'
 import styled from 'styled-components'
 import { Query } from 'react-apollo'
 
+import Button from '../atoms/button'
+
 import getInventories from '../queries/allInventories'
 
 import { LoadingMini, ErrorMini } from '../components/loading'
+
+const Body = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  margin: 8px;
+  background: #fff;
+`
+
+const Header = styled.h3`
+  font-weight: bold;
+  font-size: 1.5em;
+  margin-top: 1em;
+`
+
+const RefreshPane = styled.div`
+  float: right;
+`
 
 const columns = [
   {
@@ -23,7 +43,8 @@ const columns = [
     columns: [
       {
         Header: 'Id',
-        accessor: 'id'
+        id: 'id',
+        accessor: d => `${d.id.substr(0, 6)}..${d.id.substr(-6)}`
       },
       {
         Header: 'Name',
@@ -46,19 +67,38 @@ const columns = [
     ]
   },
   {
-    Header: 'Category',
-    columns: [
-      {
-        Header: 'Taxonomy',
-        accessor: 'taxonomy'
-      },
-      {
-        Header: 'Process Category',
-        accessor: 'processCategory'
-      }
-    ]
+    Header: 'Tracking identifier',
+    accessor: 'trackingIdentifier'
   }
 ]
+
+const resourceToData = r => ({
+  id: r.id,
+  name: r.resourceClassifiedAs.name,
+  quantity: r.currentQuantity.quantity,
+  unit: r.currentQuantity.unit.name,
+  trackingIdentifier: r.trackingIdentifier
+})
+
+const renderAgent = (agent, i) => (
+  <Fragment key={i}>
+    <Header>{agent.name}</Header>
+    <Body>
+      <ReactTable
+        data={agent.ownedEconomicResources.map(resourceToData)}
+        columns={columns}
+        showPagination={false}
+        showPageSizeOptions={false}
+        defaultPageSize={8}
+        minRows={8}
+        sortable={false}
+        resizable={false}
+        className='-striped -highlight'
+        style={{ flex: 1, height: '30em' }}
+      />
+    </Body>
+  </Fragment>
+)
 
 const Inventory = props => (
   <Query
@@ -72,39 +112,14 @@ const Inventory = props => (
           <ErrorMini refetch={refetch} message={`Error! ${error.message}`} />
         )
       }
-      console.log(data)
-      const datat = data.allAgents[0].ownedEconomicResources.map(r => ({
-        id: r.id,
-        name: r.resourceClassifiedAs.name,
-        quantity: r.currentQuantity.quantity,
-        unit: r.currentQuantity.unit.name,
-        taxonomy: r.resourceClassifiedAs.category,
-        processCategory: r.resourceClassifiedAs.processCategory
-      }))
       return (
-        <Body>
-          <ReactTable
-            data={datat}
-            filterable
-            defaultFilterMethod={(filter, row) =>
-              String(row[filter.id]) === filter.value}
-            columns={columns}
-            defaultPageSize={10}
-            className='-striped -highlight'
-            style={{ flex: 1 }}
-          />
-        </Body>
+        <div>
+          <RefreshPane><Button onClick={() => refetch()}>refresh</Button></RefreshPane>
+          {data.allAgents.map(renderAgent)}
+        </div>
       )
     }}
   </Query>
 )
-
-const Body = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  margin: 8px;
-  background: #fff;
-`
 
 export default Inventory

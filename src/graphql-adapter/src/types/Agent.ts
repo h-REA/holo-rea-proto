@@ -68,7 +68,7 @@ export const Agent = new GraphQLObjectType({
 
         // flatten response
         const hashes = Object.values(res).reduce((hashes: string[], group: { [l: string]: string }) => {
-          return hashes.concat(Object.values(group))
+          return hashes.concat(Object.values(group).reduce((a: string[], g: string) => a.concat(g), []))
         }, [])
 
         // read ref'd records

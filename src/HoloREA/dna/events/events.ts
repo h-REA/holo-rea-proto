@@ -6,7 +6,7 @@
 import {
   Hash, QuantityValue, VfObject, QVlike, HoloObject, CrudResponse, bisect,
   HoloThing, hashOf, notError, HoloClass, deepAssign, Fixture, Initializer,
-  reader, entryOf, creator
+  reader, entryOf, creator, callZome
 } from "../common/common";
 import resources from "../resources/resources";
 import agents from "../agents/agents";
@@ -16,10 +16,10 @@ import { LinkSet } from "../common/LinkRepo";
 /**/
 
 /* TYPE-SCOPE
-import "../agents/agents"
-import "../resources/resources"
-import "../common/common"
-
+import "../common/holochain-proto";
+import "../agents/agents";
+import "../resources/resources";
+import "../common/common";
 import { LinkRepo, LinkSet } from "../common/LinkRepo";
 /*/
 /**/
@@ -814,47 +814,47 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     //hash = hash || this.myHash;
     let my = this.myEntry;
     let {myHash} = this;
-    let linksOut = EventLinks.get(hash);
+    let linksOut = hash && EventLinks.get(hash);
 
-    let action = linksOut.tags(`action`);
-    if (my.action !== (action.length && action.hashes()[0] || null)) {
+    let action = linksOut && linksOut.tags(`action`);
+    if (!action || my.action !== (action.length && action.hashes()[0] || null)) {
       if (my.action) {
         EventLinks.put(myHash, my.action, `action`);
-      } else {
+      } else if (action) {
         action.removeAll();
       }
     }
 
-    let inputOf = linksOut.tags(`inputOf`);
-    if (my.inputOf !== (inputOf.length && inputOf.hashes()[0] || null)) {
+    let inputOf = linksOut && linksOut.tags(`inputOf`);
+    if (!inputOf || my.inputOf !== (inputOf.length && inputOf.hashes()[0] || null)) {
       if (my.inputOf) {
         EventLinks.put(myHash, my.inputOf, `inputOf`);
-      } else {
+      } else if (inputOf) {
         inputOf.removeAll();
       }
     }
 
-    let outputOf = linksOut.tags(`outputOf`);
-    if (my.outputOf !== (outputOf.length && outputOf.hashes()[0] || null)) {
+    let outputOf = linksOut && linksOut.tags(`outputOf`);
+    if (!outputOf || my.outputOf !== (outputOf.length && outputOf.hashes()[0] || null)) {
       if (my.outputOf) {
         EventLinks.put(myHash, my.outputOf, `outputOf`);
-      } else {
+      } else if (outputOf) {
         inputOf.removeAll();
       }
     }
 
-    let affects = TrackTrace.get(hash, `affects`);
-    if (my.affects !== (affects.length && affects.hashes()[0] || null)) {
+    let affects = hash && TrackTrace.get(hash, `affects`);
+    if (!affects || my.affects !== (affects.length && affects.hashes()[0] || null)) {
       if (my.affects) {
-        this.unaffect(affects[0].Hash);
+        if (affects && affects.length) this.unaffect(affects[0].Hash);
         TrackTrace.put(myHash, my.affects, `affects`);
         this.affect(my.affects);
-      } else {
+      } else if (affects) {
         affects.removeAll();
       }
     }
 
-    return hash;
+    return myHash;
   }
 
   commit(): Hash<this> {
@@ -874,7 +874,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
   private affect(hash: Hash<resources.EconomicResource>) {
     let qv = this.quantity.mul({units: ``, quantity: this.action.sign });
     let {quantity, units} = qv;
-    call(`resources`, `affect`, { resource: hash, quantity: {quantity, units} });
+    callZome(`resources`, `affect`, { resource: hash, quantity: {quantity, units} });
   }
 
   private unaffect(hash: Hash<resources.EconomicResource>) {
@@ -1172,19 +1172,19 @@ function resourceCreationEvent(
       notError<resources.ResourceClassification>(get(resource.resourceClassifiedAs));
     qv.units = resClass.defaultUnits;
   }
-
-  const res = call(`resources`, `createResource`, {
+  resource.currentQuantity = { units: qv.units, quantity: 0 };
+  const event = callZome(`resources`, `createResource`, {
     properties: resource,
     event: {
       action: adjustHash,
-      affectedQuantity: { units: qv.units, quantity: 0 },
+      affectedQuantity: qv,//{ units: qv.units, quantity: 0 },
       start,
       duration: end - start || 1
-    }
+    },
+    response: `event`
   });
-  const [eventHash] = call(`resources`, `getAffectingEvents`, { resource: res.hash });
-  const event = EconomicEvent.get(eventHash);
-  return event.portable();
+
+  return <CrudResponse<events.EconomicEvent>> event;
 
 }
 
@@ -1194,13 +1194,8 @@ function createEvent(init: typeof EconomicEvent.entryType): CrudResponse<typeof 
   try {
     it = EconomicEvent.create(init);
 
-    if (it.affects) {
-      call(`resources`, `affect`, {
-        resource: it.affects,
-        quantity: it.quantity.mul({ units: ``, quantity: it.action.sign })
-      });
-    }
-
+    // Events affect their resources on commit now
+    it.commit();
     return it.portable();
   } catch (e) {
     return {

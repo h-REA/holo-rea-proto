@@ -5,10 +5,10 @@
    	"allowJs": true,
     "target": "es6",
     "module": "es6",
-    "lib" : ["es5", "es6"],
+    "lib" : ["es6"],
     "newLine" : "lf",
     "downlevelIteration": true
   },
-  "include" : ["scenario.ts", "zomes.d.ts", "chai/index.d.ts"],
+  "include" : ["scenario.ts", "zomes.d.ts", "chai/index.d.ts", "scenario-test.ts"],
   "exclude": []
 }

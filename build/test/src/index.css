@@ -154,7 +154,7 @@ li.property {
   //background-color: #1d1e22;
 }
 .outputWrapper #output {
-    overflow-y: auto;
+    overflow-y: scroll; /*auto;*/
     display: flex;
     flex-direction: column-reverse;
     height: 60%;

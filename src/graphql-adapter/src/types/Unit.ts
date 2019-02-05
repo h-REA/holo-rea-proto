@@ -54,6 +54,16 @@ export const allowableUnits: UnitIdx = {
     id: 'hours',
     name: 'hours',
     symbol: 'hrs'
+  },
+  mL: {
+    id: 'millilitres',
+    name: 'millilitres',
+    symbol: 'mL'
+  },
+  kg: {
+    id: 'kilograms',
+    name: 'kilograms',
+    symbol: 'kg'
   }
 }
 

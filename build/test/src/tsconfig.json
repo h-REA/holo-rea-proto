@@ -9,6 +9,6 @@
     "newLine" : "lf",
     "downlevelIteration": true
   },
-  "include" : ["scenario.ts", "zomes.d.ts", "chai/index.d.ts", "scenario_test.ts"],
+  "include" : ["scenario.ts", "zomes.d.ts", "chai/index.d.ts", "scenario-test.ts"],
   "exclude": []
 }

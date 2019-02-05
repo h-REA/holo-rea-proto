@@ -413,7 +413,7 @@ Create a resource through an event.
   - POST fn/resources/createResource/
   - `resources.createResource(...).then(...)`
 - argument: `object`
-  - [`EconomicResource`] `resource`: the properties you would like the resource
+  - [`EconomicResource`] `properties`: the properties you would like the resource
   to have.
     - `currentQuantity`:
       - If `event` is blank or `event.affectedQuantity` is blank or zero, **make

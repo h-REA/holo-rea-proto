@@ -640,8 +640,8 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
    * @protected
    */
   protected myHash: Hash<this>;
-  private originalHash: Hash<this>;
-  private lastHash: Hash<this>;
+  protected originalHash: Hash<this>;
+  protected lastHash: Hash<this>;
   /**
    * Returns the POD struct that is stored in the DHT. Modifying the object
    * will have no effect.
@@ -980,3 +980,7 @@ function wtf<T extends holochain.JsonEntry>(crud: CrudResponse<T>): CrudResponse
   return [];
 }
 /**/
+//* EXPORT
+export/**/function callZome(zome: string, fn: string, arg: holochain.JsonEntry): holochain.JsonEntry {
+  return JSON.parse(call(zome, fn, arg));
+}

@@ -6,7 +6,7 @@
 import {
   Hash, QuantityValue, VfObject, QVlike, HoloObject, CrudResponse, bisect,
   HoloThing, hashOf, notError, HoloClass, deepAssign, Fixture, Initializer,
-  reader, entryOf, creator
+  reader, entryOf, creator, callZome
 } from "../common/common";
 import resources from "../resources/resources";
 import agents from "../agents/agents";
@@ -16,10 +16,10 @@ import { LinkSet } from "../common/LinkRepo";
 /**/
 
 /* TYPE-SCOPE
-import "../agents/agents"
-import "../resources/resources"
-import "../common/common"
-
+import "../common/holochain-proto";
+import "../agents/agents";
+import "../resources/resources";
+import "../common/common";
 import { LinkRepo, LinkSet } from "../common/LinkRepo";
 /*/
 /**/
@@ -846,7 +846,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     let affects = hash && TrackTrace.get(hash, `affects`);
     if (!affects || my.affects !== (affects.length && affects.hashes()[0] || null)) {
       if (my.affects) {
-        if (affects) this.unaffect(affects[0].Hash);
+        if (affects && affects.length) this.unaffect(affects[0].Hash);
         TrackTrace.put(myHash, my.affects, `affects`);
         this.affect(my.affects);
       } else if (affects) {
@@ -874,7 +874,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
   private affect(hash: Hash<resources.EconomicResource>) {
     let qv = this.quantity.mul({units: ``, quantity: this.action.sign });
     let {quantity, units} = qv;
-    call(`resources`, `affect`, { resource: hash, quantity: {quantity, units} });
+    callZome(`resources`, `affect`, { resource: hash, quantity: {quantity, units} });
   }
 
   private unaffect(hash: Hash<resources.EconomicResource>) {
@@ -1173,7 +1173,7 @@ function resourceCreationEvent(
     qv.units = resClass.defaultUnits;
   }
   resource.currentQuantity = { units: qv.units, quantity: 0 };
-  const event = call(`resources`, `createResource`, {
+  const event = callZome(`resources`, `createResource`, {
     properties: resource,
     event: {
       action: adjustHash,
@@ -1184,7 +1184,7 @@ function resourceCreationEvent(
     response: `event`
   });
 
-  return event;
+  return <CrudResponse<events.EconomicEvent>> event;
 
 }
 

@@ -134,23 +134,26 @@ declare class LinkSet<B, L, Tags extends string = string, T extends L = L> exten
    * @arg {class} C Type or union of types that the result should contain.  These are classes, not names.
    * @params {string} typeNames is the list of types that the result should have.
    *  these are the type names, not the classes.
-   * @returns {LinkSet<C>}
+   * @returns {LinkSet}
    */
   types<C extends T = T>(...typeNames: string[]): LinkSet<B,L,Tags,C>;
 
   /**
    * Returns an array of Hashes from the LinkSet, typed appropriately
+   * @returns {Array} The hashes in the set
    */
   hashes(): Hash<T>[];
 
   /**
    * Returns the entries in the LinkSet as a typesafe array.
+   * @returns {T[]} The entries of the links in the set.
    */
   data(): T[];
 
   /**
    * Filters by source.
    * @param {holochain.Hash} ... allowed sources to be allowed
+   * @returns {LinkSet}
    */
   sources(...allowed: holochain.Hash[]): LinkSet<B,L,Tags,T>;
 
@@ -161,13 +164,14 @@ declare class LinkSet<B, L, Tags extends string = string, T extends L = L> exten
   removeAll(): void;
 
   /**
-   * Filters and replaces elements of the set.  Provide a function that accepts
-   * a LinkReplace ({hash, tag, type, entry}) and returns a LinkReplacement
-   * ({hash, tag, type}).  Return undefined or the unmodified argument to leave
-   * the link alone.  Return null to have the link deleted, both from the set
-   * and the DHT.  Return false to remove the link from the set without deleting
-   * on the DHT.  Otherwise, return the new {hash, tag, type}.
-   * @returns {this}
+   * Filters and replaces elements of the set.
+   * @param {Function(LinkReplace<T, Tags>) => LinkReplacement<T,Tags>|false} fn -
+   *  takes an object {hash, tag, type, entry} and returns an object
+   *  {hash, tag, type} that will replace it.  It can also return undefined
+   *  to leave the link alone, null to have the link removed AND deleted on the
+   *  DHT, or false to remove the link from the result set without altering the
+   *  DHT.
+   * @returns {this} A new LinkSet
    */
   replace(fn: (obj: LinkReplace<T, Tags>) => LinkReplacement<T, Tags>|false): this;
 
@@ -228,29 +232,6 @@ declare interface Tag<B,L, T extends string> {
 }
 
 /**
- * Problems:
- *  The actual links entry type is not filtered in the response from getLinks.
- *  That kind of undermines the concept of it being a repository.
- *    Can't fake it with tags, since tag strings are types and are gone at runtime
- *
- *  FIXED: The recursion guard seems overzealous, stopping the application of a reciprocal
- *  tag unnecessarily.  Sometimes.  Maybe not the first time?
- *    Fixed by entering a full description of the event ("A +tag B") in the RG,
- *    doing away with the notion of how many times a tag can be repeated in the
- *    stack.
- *
- *  update() does not appear to work in the test system for load/store repos.
- *
- *  Remove() does not appear to be effective.  Of course removeAll() is broken
- *  too.
- *    Given that the test system assumes there is only one result for querying
- *    repos, it is possible that it is finding old versions by using the first
- *    of an array of all of its versions.  BUT it shouldn't be able to find
- *    an old version without asking for it specifically, right?
- *
- */
-
-/**
  * LinkRepo encapsulates all kinds of links.  Used for keeping track of reciprocal
  * links, managing DHT interactions that are otherwise nuanced, producing
  * LinkSet objects, maintaining type-safe Hash types, and defending against
@@ -271,7 +252,7 @@ declare class LinkRepo<B, L, T extends string = string> {
    */
   constructor (name: string);
   name: string;
-  
+
   protected backLinks: Map<T, Tag<L|B,B|L, T|string>[]>;
   /*
   protected recurseGuard: Map<T, number>();

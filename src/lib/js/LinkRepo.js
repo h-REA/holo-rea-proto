@@ -233,13 +233,6 @@ var LinkSet = /** @class */ (function (_super) {
         _this.sync = true;
         _this.sync = sync;
         return _this;
-        /*// I do not recall what I was doing here.
-        if (onlyTag) {
-          this.forEach((item: holochain.GetLinksResponse) => {
-            item.Tag = onlyTag;
-          });
-        }
-        */
     }
     /**
      * Filter by any number of tags.  Returns a new LinkSet of the same type.
@@ -403,7 +396,7 @@ var LinkSet = /** @class */ (function (_super) {
      * and return a boolean.
      */
     LinkSet.prototype.select = function (fn) {
-        var chosen = new LinkSet([], this.origin, this.baseHash);
+        var chosen = new LinkSet([], this.origin, this.baseHash, undefined, this.loaded, this.sync);
         var _loop_1 = function (response) {
             var type = response.EntryType, hash = response.Hash;
             var tag = response.Tag;
@@ -421,6 +414,23 @@ var LinkSet = /** @class */ (function (_super) {
             _loop_1(response);
         }
         return chosen;
+    };
+    LinkSet.prototype.unique = function (cleanDht) {
+        if (cleanDht === void 0) { cleanDht = this.sync; }
+        var inSet = new Set();
+        var result = new LinkSet([], this.origin, this.baseHash, undefined, this.loaded, this.sync);
+        for (var _i = 0, _a = this; _i < _a.length; _i++) {
+            var link = _a[_i];
+            var desc = this.descEntry(link);
+            if (!inSet.has(desc)) {
+                inSet.add(desc);
+                result.push(link);
+            }
+            else if (cleanDht) {
+                this.origin.remove(this.baseHash, link.Hash, link.Tag);
+            }
+        }
+        return result;
     };
     LinkSet.prototype.descEntry = function (args) {
         var Hash = args.Hash, Tag = args.Tag, EntryType = args.EntryType;

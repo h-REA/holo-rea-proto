@@ -3,7 +3,7 @@ agents/agents.*
 agents/lib.d.ts
 agents/Agent.json
 agents/AgentRelationship.json
-common/*.json
+common/*
 events/events.*
 events/lib.d.ts
 events/Action.json

@@ -386,6 +386,13 @@ class EconomicResource<T = {}> extends VfObject<T & ErEntry & typeof VfObject.en
     let {units, quantity} = to;
     this.myEntry.currentQuantity = {units, quantity};
   }
+
+  get trackingIdentifier(): string {
+    return this.myEntry.trackingIdentifier;
+  }
+  set trackingIdentifier(to: string) {
+    this.myEntry.trackingIdentifier = to;
+  }
 }
 // </classes>
 

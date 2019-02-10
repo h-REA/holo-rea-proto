@@ -14,4 +14,3 @@ resources/EconomicResource.json
 resources/ResourceClassification.json
 resources/resources.*
 resources/lib.d.ts
-test/buildTest.sh

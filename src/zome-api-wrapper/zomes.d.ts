@@ -63,7 +63,7 @@ export namespace agents {
     }
   ): Promise<{
     [k:string]: {
-      [l:string]: Hash<resources.EconomicResource>[]
+      [l:string]: Hash<resources.EconomicResource>
     }
   }>;
 

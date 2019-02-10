@@ -1,5 +1,5 @@
-import "./chai/chai.js";
-import "./zomes.js";
+import * as chai from "./chai/chai";
+import "./zomes";
 
 const expect = chai.expect;
 
@@ -405,7 +405,7 @@ export async function ready(): Promise<Scenario> {
         })
       ]).then(() => my)
     ).then(async (my) => {
-      console.log(`TEST agents.readAgents`);
+      // TEST agents.readAgents
       let {al, bea, chloe} = my;
       let people = {
         al: al.agent,
@@ -422,13 +422,12 @@ export async function ready(): Promise<Scenario> {
           return dict;
       }, {});
 
-      expectData.to.be.an(`array`);
+      expectData.to.be.instanceOf(Array);
       for (let person of Object.keys(people)) {
           let hash = people[person].hash;
           expect(them[hashMap[hash]], `entry for agent ${person}`)
               .to.deep.equal(people[person], `previous agent data`);
       }
-      console.log(`PASS`);
       return my;
     })
   }
@@ -441,13 +440,13 @@ export async function ready(): Promise<Scenario> {
         name: `apples`,
         defaultUnits: ``
       }).then((apples) => {
-        console.log(`TEST resources.createResourceClassification`);
+
         expectGoodCrud(apples, `ResourceClassification`, `resource class apples crud`);
 
         let expectData = expect(apples.entry, `apples resource class`);
         expectData.to.have.property(`name`).that.equals(`apples`);
         expectData.to.have.property(`defaultUnits`).that.equals(``);
-        console.log(`PASS`)
+
         return apples
       }),
 
@@ -455,13 +454,13 @@ export async function ready(): Promise<Scenario> {
         name: `coffee beans`,
         defaultUnits: `kg`
       }).then(async (beans) => {
-        console.log(`TEST resources.readResourceClasses`);
+        // TEST resources.readResourceClasses
         let hash = beans.hash;
         let [readBeans] = await resources.readResourceClasses([hash]);
 
         expect(readBeans, `The read beans resource class`)
           .to.deep.equal(beans);
-        console.log(`PASS`)
+
         return beans;
       }),
 
@@ -480,9 +479,8 @@ export async function ready(): Promise<Scenario> {
     })
   }
 
-  //
+  // TEST resources.getResourcesInClass *returning none
   prep = prep.then(async (my) => {
-    console.log(`TEST resources.getResourcesInClass *returning none`)
     let emptyRes = await resources.getResourcesInClass({
       classification: my.types.resource.apples.hash
     });
@@ -492,13 +490,13 @@ export async function ready(): Promise<Scenario> {
     );
 
     expectRes.to.be.an(`array`).that.is.empty;
-    console.log(`PASS`)
+
     return my;
   });
 
   let stub: CrudResponse<events.TransferClassification>;
   prep = prep.then(async (my) => {
-
+    // TEST events.getFixtures
     let evFix = await events.getFixtures(null);
 
     let tc = evFix.TransferClassification;
@@ -506,34 +504,28 @@ export async function ready(): Promise<Scenario> {
     let pc = evFix.ProcessClassification;
 
     events.getFixtures({}).then((fix) => {
-      console.log(` TEST events.getFixtures`);
       expect(fix, `The second read of the event fixtures`)
         .to.deep.equal(evFix);
-      console.log(`PASS`);
     });
 
     // TEST events.readTransferClasses & readProcessClasses
     let p = Promise.all([
 
       events.readTransferClasses([tc.stub]).then(([stub]) => {
-        console.log(` TEST events.readTransferClasses`)
         expect(stub.entry, `The stub transfer class`).to.have.property(`name`)
           .that.is.a(`string`);
         my.types.transfer.stub = stub;
-        console.log(`PASS`)
       }),
 
       events.readProcessClasses([pc.stub]).then(([stub]) => {
-        console.log(`TEST events.readProcessClasses`)
         expectGoodCrud(stub, `ProcessClassification`, `The process class stub crud`);
         expect(stub.entry, `The stub process class`).to.have.property(`label`)
           .that.is.a(`string`);
         my.types.process.stub = stub;
-        console.log(`PASS`)
       })
     ]);
 
-    console.log(` TEST events.readActions`)
+    // TEST events.readActions
     let [give, take, adjust, produce, consume] = await events.readActions([
       act.give, act.receive, act.adjust, act.produce, act.consume
     ]);
@@ -542,17 +534,15 @@ export async function ready(): Promise<Scenario> {
     expect(take.entry, `action fixture take`).to.have.property(`behavior`, '+');
     expect(give.entry, `action fixture give`).to.have.property(`behavior`, '-');
     expect(adjust.entry, `action fixture adjust`).to.have.property(`behavior`, '+');
-    console.log(`PASS`);
+
     // TEST events.createAction
     let [pick, gather] = await Promise.all([
       events.createAction({name: `pick`, behavior: '+'}).then((pick) => {
-        console.log(`TEST events.createAction`)
         expectGoodCrud(pick, `Action`, `Action pick crud`);
 
         let expectPick = expect(pick.entry, `Action pick`);
         expectPick.to.have.property(`name`, `pick`);
         expectPick.to.have.property(`behavior`, '+');
-        console.log(`PASS`)
         return pick;
       }),
       events.createAction({name: `gather`, behavior: '+'})
@@ -560,29 +550,27 @@ export async function ready(): Promise<Scenario> {
 
     Object.assign(my.actions, {pick, gather});
 
-    console.log(` TEST events.readActions`);
+    // TEST events.readActions
     ([consume] = await events.readActions([consume.hash]));
 
     expectGoodCrud(consume);
     expect(consume.entry, `read-back action consume`).to.have.property(`behavior`, '-');
-    console.log(`PASS`)
-    console.log(` TEST events.createTransferClass`)
+
+    // TEST events.createTransferClass
     let trade = my.types.transfer.trade = await events.createTransferClass({name: `trade`});
     expectGoodCrud(trade, `TransferClassification`, `crud from creation of trade transfer type`);
     expect(trade.entry, `Transfer class trade`)
       .to.have.property(`name`)
         .a(`string`)
         .that.equals(`trade`);
-    console.log(`PASS`)
 
-    console.log(`TEST events.createProcessClass()...`)
+    // TEST events.createProcessClass
     let [bake, brew] = await Promise.all([
       events.createProcessClass({name: `bake`, label: `bake`}).then((bake) => {
-        console.log(`...events.createProcessClass`)
         expectGoodCrud(bake, `ProcessClassification`, `Bake process class`);
         expect(bake.entry).to.have.property(`name`, `bake`);
         expect(bake.entry).to.have.property(`label`, `bake`);
-        console.log(`PASS`)
+
         return bake;
       }),
       events.createProcessClass({name: `brew`, label: `brew`})
@@ -602,6 +590,11 @@ export async function ready(): Promise<Scenario> {
 
   // Time to start making events and resources
   prep = prep.then(async (my) => {
+
+    let david = await agents.createAgent({
+      name: `David`,
+      primaryLocation: [`412 kongstun st`, `hullodeysbarg, QB 27759`]
+    });
 
     let time = await tick();
     my.timeline.begin = time;
@@ -674,7 +667,6 @@ export async function ready(): Promise<Scenario> {
     }
 
     // Too many requests, it seems.
-    console.log(`TEST resources.createResource (events.createEvent, resources.affect) (al's apples init)`)
     let alApples = await resources.createResource({
       properties: {
         resourceClassifiedAs: apples.hash,
@@ -686,11 +678,11 @@ export async function ready(): Promise<Scenario> {
         action: pick.hash,
         provider: al.hash,
         receiver: al.hash,
-        start: my.timeline.alGetsApples = time,
+        start: time,
         duration: 1
       }
     }).then(async (alApples) => {
-
+      // TEST resources.createResource (events.createEvent, resources.affect)
       expectGoodCrud(alApples);
 
       let expectEm = expect(alApples.entry, `Al's apples`)
@@ -702,14 +694,14 @@ export async function ready(): Promise<Scenario> {
       expectEm.to.have.property(`resourceClassifiedAs`)
         .a(`string`)
         .that.equals(apples.hash, `apples`);
-      console.log(`PASS`)
-      console.log(`TEST resources.getAffectingEvents`)
+
+      // TEST resources.getAffectingEvents
       let pickings = await resources.getAffectingEvents(
         {resource: alApples.hash}
       );
       expect(pickings).to.be.an(`array`).that.has.length(1);
-      console.log(`PASS`)
-      console.log(`TEST events.readEvents`)
+
+      // TEST events.readEvents
       let [picking] = await events.readEvents(pickings);
       expectGoodCrud(picking);
 
@@ -721,7 +713,7 @@ export async function ready(): Promise<Scenario> {
       expectIt.to.have.property(`duration`).that.equals(1);
       expectIt.to.have.property(`affectedQuantity`).an(`object`)
         .that.deep.equals({units: ``, quantity: 100});
-      console.log(`PASS`)
+
       return my.al.apples = alApples;
     });
 
@@ -736,12 +728,12 @@ export async function ready(): Promise<Scenario> {
         action: gather.hash,
         provider: bea.hash,
         receiver: bea.hash,
-        start: my.timeline.beaGetsBeans = await tick(),
+        start: await tick(),
         duration: 1
       }
     }).then((bb) => (my.bea.beans = bb));
 
-    console.log(`TEST events.resourceCreationEvent`)
+    // TEST events.resourceCreationEvent
     let chloeCoffee = events.resourceCreationEvent({
       resource: {
         currentQuantity: { units: `mL`, quantity: 300 },
@@ -750,7 +742,7 @@ export async function ready(): Promise<Scenario> {
         owner: chloe.hash
       },
       dates: {
-        start: my.timeline.chloeGetsCoffee = await tick()
+        start: await tick()
       }
     }).then(async (adjustEv) => {
       expectGoodCrud(adjustEv, `EconomicEvent`, `crud of adjust event for Chloe's coffee`);
@@ -765,8 +757,7 @@ export async function ready(): Promise<Scenario> {
         .that.does.exist
         .that.deep.equals({ units: `mL`, quantity: 300 });
 
-      console.log(`PASS`)
-      console.log(`TEST resources.readResources`)
+      // TEST resources.readResources
       let [res] = await resources.readResources([adjustEv.entry.affects]);
       expectGoodCrud(res);
 
@@ -777,7 +768,6 @@ export async function ready(): Promise<Scenario> {
       expectIt.to.have.property(`resourceClassifiedAs`, coffee.hash, `coffee`);
       expectIt.to.have.property(`owner`, chloe.hash, `Chloe`);
 
-      console.log(`PASS`)
       return my.chloe.coffee = res;
     });
 
@@ -812,7 +802,6 @@ export async function ready(): Promise<Scenario> {
     // [x] chloe has some initial coffee
     // [x] everyone has a complete inventory with 0 quantities where appropriate
     // [ ] al trades apples for coffee
-    console.log(`critical initialization tests passed`);
     return verbify(my);
   }).then(async (my) => {
     // TODO: This is kind of a secondary function, consider moving it out of sequence
@@ -821,7 +810,6 @@ export async function ready(): Promise<Scenario> {
     let {apples, turnovers} = my.types.resource;
 
     // TEST agents.getOwnedResources
-    console.log(`TEST agents.getOwnedResources ...`);
     let invs = await agents.getOwnedResources({
       agents: [al.agent.hash, bea.agent.hash, chloe.agent.hash],
       types: [apples.hash, turnovers.hash]
@@ -829,7 +817,7 @@ export async function ready(): Promise<Scenario> {
 
     for (let agent of [al, bea, chloe]) {
       let inventory = invs[agent.agent.hash];
-      let turnoverRes = inventory[turnovers.hash][0];
+      let turnoverRes = inventory[turnovers.hash];
       await resources.readResources([turnoverRes]).then(([crud]) => {
         expectGoodCrud(crud, `EconomicResource`, `turnover res crud`);
         expect(crud.entry.currentQuantity.quantity, `turnovers in inventory`)
@@ -837,11 +825,10 @@ export async function ready(): Promise<Scenario> {
       });
     }
 
-    let [alApples] = await resources.readResources([invs[al.agent.hash][apples.hash][0]]);
+    let [alApples] = await resources.readResources([invs[al.agent.hash][apples.hash]]);
     expect(alApples.entry.currentQuantity.quantity, `al's quantity of apples`)
       .to.equal(100);
 
-    console.log("passed");
     return my;
   }).then(async (my) => {
     // namespace freshening
@@ -850,9 +837,6 @@ export async function ready(): Promise<Scenario> {
     let trade = my.types.transfer.trade;
     let {give, take} = my.actions;
     const AL_ARRIVES = await tick();
-    my.timeline.alArrives = AL_ARRIVES;
-
-    console.log(`manual trade (al's apples, chloe's coffee) test`)
 
     let [giveEv, takeEv] = await Promise.all([
       events.createEvent({
@@ -876,8 +860,6 @@ export async function ready(): Promise<Scenario> {
     ]);
 
     // TEST createEvent affects resource
-    console.log(`TEST createEvent affects resources`);
-
     let [src, dest] = await resources.readResources([al.apples.hash, chloe.apples.hash]).then(([src, dest]) => {
       expectGoodCrud(src, `EconomicResource`, `Al's apples crud after first give`);
       expectGoodCrud(dest, `EconomicResource`, `Chloe's apples crud after first give`);
@@ -901,11 +883,7 @@ export async function ready(): Promise<Scenario> {
       return [src, dest];
     });
 
-    console.log(`PASSED`);
-
     // TEST events.createTransfer(Transfer)
-    console.log(`TEST events.createTransfer(Transfer) ...`);
-
     let p1 = events.createTransfer({
       transferClassifiedAs: trade.hash,
       inputs: giveEv.hash,
@@ -927,14 +905,12 @@ export async function ready(): Promise<Scenario> {
       expect(outputs.entry, `outputs`).to.have.property(`receiver`, chloe.agent.hash);
       expect(outputs.entry, `outputs`).to.have.property(`affects`, dest.hash);
 
-      console.log(`events.createTransfer(Transfer) PASSED`);
       return xfer;
     });
 
     // Chloe gives Al a 300 mL cup of coffee. Al receives it.
-    my.timeline.chloeGivesAlCoffee = AL_ARRIVES + 100
+
     // TEST events.createTransfer(Transfer(event, event))
-    console.log(`TEST events.createTransfer(Transfer(event, event)) ...`)
     let p2 = events.createTransfer({
       transferClassifiedAs: my.types.transfer.trade.hash,
       inputs: {
@@ -974,9 +950,6 @@ export async function ready(): Promise<Scenario> {
         receiver: al.agent.hash
       });
 
-      console.log(`events.createTransfer(Transfer(event,event)) PASSED`);
-      // TODO: ensure that createTransfer also affects quantities.
-
       return xfer;
     });
 
@@ -991,7 +964,6 @@ export async function ready(): Promise<Scenario> {
     let time = my.timeline.firstBake = await tick();
 
     // TEST events.createProcess
-    console.log(`TEST events.createProcess ...`);
     let [inputs, outputs] = await Promise.all([
       events.createEvent({
         action: my.actions.consume.hash,
@@ -1031,7 +1003,6 @@ export async function ready(): Promise<Scenario> {
     expect(inputs.entry).to.have.property(`inputOf`, proc.hash);
     expect(outputs.entry).to.have.property(`outputOf`, proc.hash);
 
-    console.log(`events.createProcess PASSED`);
     return my;
   }).then(checkAllInventory({
     chloe: { apples: 0, turnovers: 1 }
@@ -1042,22 +1013,19 @@ export async function ready(): Promise<Scenario> {
       { units: ``, quantity: 1 },
       chloe.turnovers.hash,
       bea.turnovers.hash,
-      my.timeline.chloeTradeToBea = await tick()
+      await tick()
     );
 
     await my.verbs.trade(
       { units: `kg`, quantity: 0.5 },
       bea.beans.hash,
       chloe.coffee.hash,
-      my.timeline.beaTradeToChloe = await tick()
+      await tick()
     );
 
     await my.verbs.brewCoffee(1000, await tick());
     return my;
-  }).then(checkAllInventory({
-    bea: {turnovers: 1},
-    chloe: {beans: 0.5}
-  }));
+  });
 
   return prep;
 }

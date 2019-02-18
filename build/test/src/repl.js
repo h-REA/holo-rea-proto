@@ -66,9 +66,10 @@ function putJson(json) {
 
 function repl(code) {
   const div = el(`<p.command>`);
+  const codeDescription = code.name || code;
   output.children().first().before(div);
   const codeDiv = el(`<a.user>`)
-    .append($(`<kbd>`).text(''+code))
+    .append($(`<kbd>`).text(codeDescription))
     .attr({href: '#'})
     .click((ev) => {
       ev.preventDefault();

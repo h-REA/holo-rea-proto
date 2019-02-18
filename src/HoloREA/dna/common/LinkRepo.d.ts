@@ -182,6 +182,8 @@ declare class LinkSet<B, L, Tags extends string = string, T extends L = L> exten
    */
   select(fn: (lr: LinkReplace<T, Tags>) => boolean): LinkSet<B, L, Tags, T>;
 
+  unique(cleanDht?: boolean): this;
+
   private descEntry(args: {Hash: Hash<B>, Tag?: string, EntryType?: string}): string;
 
   private desc(): string[];

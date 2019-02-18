@@ -157,7 +157,7 @@ export /**/function deepAssign<T extends object, U extends object>(dest: T, src:
 }
 
 //* EXPORT
-export/**/ type Initializer<T, U = void> =
+export/**/ type Initializer<T, U = T> =
   (
     T extends object
       ? { [K in keyof T]?: Initializer<T[K], T> }

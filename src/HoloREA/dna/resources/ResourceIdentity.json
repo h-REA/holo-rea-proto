@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "urn:uuid:e1d2d188-c8b3-11e8-9c63-b639e56260b8/resources/ResourceIdentity",
+  "title": "ResourceIdentity",
+  "description": "The defining characteristics of a resource that do not change",
+  "properties": {
+    "resourceClassifiedAs": {
+      "type": "string",
+      "description": "The hash of the ResourceClassification that defines the type of this resource"
+    },
+    "underlyingResource": {
+      "type": "string",
+      "description": "The hash of a more concrete EconomicResource upon which this resource is based."
+    },
+    "initialQuantity": { "$ref": "../common/QuantityValue" },
+    "contains": {
+      "type": "string",
+      "description": "The hash of an EconomicResource that contains this resource"
+    },
+    "trackingIdentifier": {
+      "type": "string",
+      "description": "Something like a batch or serial number"
+    }
+  },
+  "required": ["resourceClassifiedAs"],
+  "$extends": "../common/VfObject"
+}

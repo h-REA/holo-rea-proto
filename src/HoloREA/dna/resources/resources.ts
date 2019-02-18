@@ -599,7 +599,41 @@ function createResource(
   return response === `event` ? eventCrud : resCrud;
 }
 
-const readResources = reader(EconomicResource);
+//const readResources = reader(EconomicResource);
+
+function readResources(hashes: Hash<resources.EconomicResource>[]): CrudResponse<resources.EconomicResource>[] {
+
+  return hashes.map((hash) => {
+    let err: Error = null;
+    let qv: QuantityValue;
+    let state: EconomicResource;
+
+    try {
+      const events = TrackTrace.get(hash, `affectedBy`);
+      state = EconomicResource.get(hash);
+      if (!state) throw new ReferenceError(`no resource with hash ${hash}`);
+      const units = state.currentQuantity.units;
+
+      qv = events.unique(false).data().reduce((sum: QuantityValue, {action: actHash, affectedQuantity}: events.EconomicEvent) => {
+        const action = notError<events.Action>(get(actHash));
+        const sign = ({ '+': 1, '-': -1, '0': 0 })[action.behavior];
+        const signQv = new QuantityValue({ units: '', quantity: sign });
+        const qv = signQv.mul(affectedQuantity);
+
+        return sum.add(qv);
+      }, new QuantityValue({ units, quantity: 0 }));
+    } catch (e) {
+      err = e;
+    }
+    return {
+      error: err,
+      hash: state && state.hash,
+      type: state && state.className,
+      entry: state && state.entry && Object.assign(state.entry, { currentQuantity: qv })
+    };
+  });
+}
+
 const createResourceClassification = creator(ResourceClassification);
 /**/
 /*

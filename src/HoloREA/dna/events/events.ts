@@ -114,6 +114,11 @@ class Action<T = {}> extends VfObject<ActEntry & T & typeof VfObject.entryType> 
     }
   }
 
+  toString(): string {
+    const sigil = this.behavior === '0' ? '' : this.behavior;
+    return `${this.name} ${sigil}`;
+  }
+
   get events(): EconomicEvent[] {
     return EventLinks.get(this.myHash, `actionOf`).hashes().map((hash) => EconomicEvent.get(hash));
   }
@@ -839,14 +844,18 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
       if (my.outputOf) {
         EventLinks.put(myHash, my.outputOf, `outputOf`);
       } else if (outputOf) {
-        inputOf.removeAll();
+        outputOf.removeAll();
       }
     }
+
 
     let affects = hash && TrackTrace.get(hash, `affects`);
     if (!affects || my.affects !== (affects.length && affects.hashes()[0] || null)) {
       if (my.affects) {
-        if (affects && affects.length) this.unaffect(affects[0].Hash);
+        if (affects && affects.length) {
+          this.unaffect(affects[0].Hash);
+          affects.removeAll();
+        }
         TrackTrace.put(myHash, my.affects, `affects`);
         this.affect(my.affects);
       } else if (affects) {
@@ -866,7 +875,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
 
   update(): Hash<this> {
     let hash = this.myHash;
-    super.commit()
+    super.update()
     this.updateLinks(hash);
     return this.myHash;
   }
@@ -888,6 +897,13 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
 
     resource.currentQuantity = {units, quantity};
     update(`EconomicResource`, resource, my.affects);
+  }
+
+  toString(): string {
+    const action = this.action;
+    const resTypeHash: Hash<resources.ResourceClassification> = entryOf(this.affects).resourceClassifiedAs;
+    const resType = entryOf<resources.ResourceClassification>(resTypeHash);
+    return `${''+action}${''+this.quantity} ${resType.name}`;
   }
 
   remove(): this {

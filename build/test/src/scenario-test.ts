@@ -826,7 +826,7 @@ export async function ready(): Promise<Scenario> {
       agents: [al.agent.hash, bea.agent.hash, chloe.agent.hash],
       types: [apples.hash, turnovers.hash]
     });
-
+    console.log(invs);
     for (let agent of [al, bea, chloe]) {
       let inventory = invs[agent.agent.hash];
       let turnoverRes = inventory[turnovers.hash][0];

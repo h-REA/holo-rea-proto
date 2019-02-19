@@ -7,8 +7,8 @@ COMMON=$SRCDNA/common/
 ZOMES="agents events resources"
 MODULES="${ZOMES} common"
 LIBPATH="$STAGING/common/"
-# Too presumptive I believe
-REPOPATH=~/LinkRepo/bin
+# Too presumptive I believe: ok, fixed
+REPOPATH=$ROOT/src/lib/js
 JSLIBS="$REPOPATH/LinkRepo.js"
 DTSLIBS="$LIBPATH/holochain-proto.d.ts $REPOPATH/LinkRepo.d.ts"
 

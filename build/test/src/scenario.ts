@@ -1,4 +1,4 @@
-import chai from "./chai/chai";
+import "./chai/chai";
 import "./zomes";
 
 console.log('Chai inited:', chai)
@@ -52,6 +52,14 @@ export interface Verbs {
   ): Promise<CrudResponse<events.Transfer>>
 
   inventory(who: Person): Promise<Inventory<QuantityValue>>;
+
+
+  traceStep(...elements: TraceElement[]): Promise<Map<TraceElement, Set<TraceElement>>>;
+  trackStep(...elements: TraceElement[]): Promise<Map<TraceElement, Set<TraceElement>>>;
+
+  trace(...elements: TraceElement[]): Promise<TreeGraph>;
+  track(...elements: TraceElement[]): Promise<TreeGraph>;
+
 }
 
 export interface Scenario {
@@ -59,7 +67,6 @@ export interface Scenario {
   al: Person,
   bea: Person,
   chloe: Person,
-  david: Person,
 
   types: {
     resource: { [name:string]: CrudResponse<resources.ResourceClassification> },
@@ -68,11 +75,6 @@ export interface Scenario {
   },
 
   actions: { [name:string]: CrudResponse<events.Action> },
-  /*
-  events: { [name:string]: CrudResponse<events.EconomicEvent> },
-  transfers: { [name:string]: CrudResponse<events.Transfer> },
-  processes: { [name:string]: CrudResponse<events.Process> },
-  */
   verbs: Verbs,
   facts: { [name:string]: number },
   timeline: { [name:string]: number }
@@ -83,7 +85,6 @@ function scenario(): Scenario {
     al: new Person(),
     bea: new Person(),
     chloe: new Person(),
-    david: new Person(),
     types: {
       resource: {},
       transfer: {},
@@ -104,6 +105,69 @@ interface Inventory<T extends string|number|QuantityValue> {
   beans?: T;
   coffee?: T;
   turnovers?: T;
+}
+
+type TraceElement = CrudResponse<events.EconomicEvent | events.Process | events.Transfer | resources.EconomicResource>;
+
+class TreeGraphNode {
+  constructor(public element: TraceElement, public branch: Set<TreeGraphNode> = new Set<TreeGraphNode>()) {}
+}
+
+class TreeGraph {
+  public topLevel: Set<TreeGraphNode>;
+  private visited: Map<Hash<TraceElement>, TreeGraphNode>;
+  private done = false;
+
+  constructor(public step: (e:TraceElement) => Promise<Set<TraceElement>>, ...topLevel: TraceElement[]) {
+    const nodes = topLevel.map((el) => new TreeGraphNode(el));
+    this.topLevel = new Set(nodes);
+    this.visited = new Map();
+    for (let node of nodes) {
+      this.visited.set(node.element.hash, node);
+    }
+  }
+
+  notVisited(set: Set<TraceElement>): Set<TraceElement> {
+    const {visited} = this;
+    return new Set<TraceElement>([...set].filter(el => !visited.has(el.hash)));
+  }
+
+  existing(set: Set<TraceElement>): Set<TraceElement> {
+    const {visited} = this;
+    return new Set<TraceElement>([...set].filter((el) => visited.has(el.hash)));
+  }
+
+  async grow(): Promise<this> {
+    if (this.done) return this;
+
+    const visited = this.visited;
+    let deck = new Set(this.topLevel);
+
+    while (deck.size) {
+      for (let node of [...deck]) {
+        let branch = await this.step(node.element);
+
+        this.notVisited(branch).forEach((el) => {
+          let tgn = new TreeGraphNode(el);
+          node.branch.add(tgn);
+          deck.add(tgn);
+          visited.set(el.hash, tgn);
+        });
+
+        this.existing(branch).forEach((el) => {
+          node.branch.add(visited.get(el.hash));
+        });
+
+        deck.delete(node);
+      }
+    }
+    this.done = true;
+    return this;
+  }
+
+  get(hash: Hash<TraceElement>): TreeGraphNode {
+    return this.visited.get(hash);
+  }
 }
 
 async function ms(n: number) {
@@ -320,9 +384,95 @@ export function verbify(my: Scenario) {
     return res;
   }
 
+
+
+  async function traceStep(after: TraceElement): Promise<Set<TraceElement>> {
+    const before = new Set<TraceElement>();
+
+    switch (after.type) {
+      case "EconomicEvent": {
+        const event = <events.EconomicEvent> after.entry;
+        if (event.inputOf) {
+          let [res] = await resources.readResources([event.affects]);
+          before.add(res);
+        }
+        if (event.outputOf) {
+          const fns = await events.traceEvents([after.hash]);
+          for (let fn of fns) before.add(fn);
+        }
+      } break;
+
+      case "Process":
+      case "Transfer": {
+        const ev = await events.traceTransfers([after.hash]);
+        for (let e of ev) before.add(e);
+      } break;
+
+      case "EconomicResource": {
+        const hashes = await resources.getAffectingEvents({resource: after.hash});
+        const evs = await events.readEvents(hashes);
+        evs.filter((ev) => !!ev.entry.outputOf || !ev.entry.inputOf).forEach((ev) => before.add(ev));
+      }
+    }
+
+    return before;
+  }
+
+  async function trackStep(before: TraceElement): Promise<Set<TraceElement>> {
+    const after = new Set<TraceElement>();
+
+    switch (before.type) {
+      case "EconomicEvent": {
+        const ev = <events.EconomicEvent> before.entry;
+        if (ev.outputOf) {
+          const [res] = await resources.readResources([ev.affects]);
+          after.add(res);
+        }
+        if (ev.inputOf) {
+          (await events.trackEvents([before.hash])).forEach((fn) => after.add(fn));
+        }
+      } break;
+
+      case "Transfer":
+      case "Process": {
+        (await events.trackTransfers([before.hash])).forEach((ev) => after.add(ev));
+      } break;
+
+      case "EconomicResource": {
+        const hashes = await resources.getAffectingEvents({resource: before.hash});
+        const evts = await events.readEvents(hashes);
+        evts.filter((ev) => !!ev.entry.inputOf).forEach((ev) => after.add(ev));
+      }
+    }
+
+    return after;
+  }
+
   my.verbs = {
     pickApples, gatherBeans, trade: transfer, bakeTurnovers, brewCoffee,
-    inventory
+    inventory,
+    traceStep: async function (...elements: TraceElement[]): Promise<Map<TraceElement, Set<TraceElement>>> {
+      const map = new Map<TraceElement, Set<TraceElement>>();
+      for (let element of elements) {
+        let set = await traceStep(element);
+        map.set(element, set);
+      }
+      return map;
+    },
+    trackStep: async function (...elements: TraceElement[]): Promise<Map<TraceElement, Set<TraceElement>>> {
+      const map = new Map<TraceElement, Set<TraceElement>>();
+      for (let element of elements) {
+        let set = await trackStep(element);
+        map.set(element, set);
+      }
+      return map;
+    },
+    async trace(...elements: TraceElement[]): Promise<TreeGraph> {
+      return new TreeGraph(traceStep, ...elements).grow();
+    },
+    async track(...elements: TraceElement[]): Promise<TreeGraph> {
+      return new TreeGraph(trackStep, ...elements).grow();
+    }
   };
 
   return my;

@@ -432,6 +432,15 @@ var LinkSet = /** @class */ (function (_super) {
         }
         return result;
     };
+    LinkSet.prototype.has = function (tag, hash) {
+        var i = this.length;
+        while (i--) {
+            var link = this[i];
+            if (link.Tag === tag && link.Hash === hash)
+                return true;
+        }
+        return false;
+    };
     LinkSet.prototype.descEntry = function (args) {
         var Hash = args.Hash, Tag = args.Tag, EntryType = args.EntryType;
         return (Tag || "no-tag") + " " + Hash + ":" + (EntryType || "no-type");

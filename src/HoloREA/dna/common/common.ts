@@ -4,6 +4,7 @@
 //import "./es6";
 import "./holochain-proto";
 import "./LinkRepo";
+import { LinkRepo } from "./LinkRepo";
 /*/
 /**/
 
@@ -984,3 +985,80 @@ function wtf<T extends holochain.JsonEntry>(crud: CrudResponse<T>): CrudResponse
 export/**/function callZome(zome: string, fn: string, arg: holochain.JsonEntry): holochain.JsonEntry {
   return JSON.parse(call(zome, fn, arg));
 }
+
+// Now moving all the link definitions here.
+//* EXPORT
+export/**/const AgentProperty: LinkRepo<
+  agents.Agent|resources.EconomicResource,
+  resources.EconomicResource|agents.Agent,
+  "owns"|"owner"
+> = new LinkRepo("AgentProperty");
+AgentProperty
+  .linkBack(`owns`, `owner`)
+  .linkBack(`owner`, `owns`)
+  .singular(`owner`);
+
+//* EXPORT
+export/**/const Classifications: LinkRepo<
+  events.Transfer|events.TransferClassification|events.Process|events.ProcessClassification,
+  events.Transfer|events.TransferClassification|events.Process|events.ProcessClassification,
+  "classifiedAs"|"classifies"
+> = new LinkRepo("Classifications");
+Classifications
+  .linkBack("classifiedAs", "classifies")
+  .linkBack("classifies", "classifiedAs")
+  .singular("classifiedAs");
+
+
+//* EXPORT
+export/**/const EventLinks: LinkRepo<
+  events.EconomicEvent|events.Transfer|events.Process|events.Action,
+  events.EconomicEvent|events.Transfer|events.Process|events.Action,
+  "inputs"|"inputOf"|"outputs"|"outputOf"|"actionOf"|"action"
+> = new LinkRepo("EventLinks");
+EventLinks.linkBack("inputs", "inputOf")
+  .linkBack("outputs", "outputOf")
+  .linkBack("inputOf", "inputs")
+  .linkBack("outputOf", "outputs")
+  .linkBack("action", "actionOf")
+  .linkBack("actionOf", "action")
+  .singular(`inputOf`)
+  .singular(`outputOf`)
+  .singular(`action`);
+
+//* EXPORT
+export/**/const ResourceClasses: LinkRepo<
+  resources.EconomicResource|resources.ResourceClassification,
+  resources.EconomicResource|resources.ResourceClassification,
+  "classifiedAs"|"classifies"
+> = new LinkRepo("ResourceClasses");
+ResourceClasses
+  .linkBack("classifiedAs","classifies")
+  .linkBack("classifies", "classifiedAs")
+  .singular("classifiedAs");
+
+//* EXPORT
+export/**/const ResourceRelationships: LinkRepo<
+  resources.EconomicResource,
+  resources.EconomicResource,
+  "underlyingResource"|"contains"|"underlies"|"inside"
+> = new LinkRepo("ResourceRelationships");
+ResourceRelationships
+  .linkBack(`underlyingResource`, `underlies`)
+  .linkBack(`underlies`, `underlyingResource`)
+  .singular(`underlies`)
+  .singular(`underlyingResource`)
+  .linkBack(`contains`, `inside`)
+  .linkBack(`inside`, `contains`)
+  .singular(`inside`);
+
+//* EXPORT
+export/**/const TrackTrace: LinkRepo<
+  resources.EconomicResource|events.EconomicEvent,
+  events.EconomicEvent|resources.EconomicResource,
+"affects"|"affectedBy">
+= new LinkRepo("TrackTrace");
+TrackTrace
+  .linkBack("affects", "affectedBy")
+  .linkBack("affectedBy", "affects")
+  .singular("affects");

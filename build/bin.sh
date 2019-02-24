@@ -8,9 +8,9 @@ ZOMES="agents events resources"
 MODULES="${ZOMES} common"
 LIBPATH="$STAGING/common/"
 # Too presumptive I believe: ok, fixed
-REPOPATH=$ROOT/src/lib/js
-JSLIBS="$REPOPATH/LinkRepo.js"
-DTSLIBS="$LIBPATH/holochain-proto.d.ts $REPOPATH/LinkRepo.d.ts"
+REPOPATH="$ROOT/src/lib/js"
+JSLIBS="${REPOPATH}/LinkRepo.js"
+DTSLIBS="${LIBPATH}/holochain-proto.d.ts ${LIBPATH}/LinkRepo.d.ts"
 
 function allow {
   echo s:^/\\* $1://\\* $1:g
@@ -18,12 +18,13 @@ function allow {
 function block {
   echo s:^//\\* $1:/\\* $1:g
 }
-
+echo "DTSLIBS is ${DTSLIBS} and that is it"
 # Now that I have some separate libraries, this needs to glom them all together
 # instead of just copying
 # cp: common to staging/common.
 cp $COMMON -r $STAGING/
 cp $REPOPATH/LinkRepo.js $STAGING/
+cp $SRCDNA/dna.json $BINDNA/
 
 # cp: zomes to staging as zome.ts
 for zome in $MODULES; do
@@ -55,13 +56,14 @@ done
 
 # accumulate all of the symbol imports of each zome to a default lib (lib.d.ts)
 # agents
-cat $DTSLIBS $STAGING/events/_events.d.ts $STAGING/resources/_resources.d.ts > $STAGING/agents/lib.d.ts
+
+cat ${DTSLIBS} $STAGING/events/_events.d.ts $STAGING/resources/_resources.d.ts > $STAGING/agents/lib.d.ts
 
 # events
-cat $DTSLIBS $STAGING/agents/_agents.d.ts $STAGING/resources/_resources.d.ts > $STAGING/events/lib.d.ts
+cat ${DTSLIBS} $STAGING/agents/_agents.d.ts $STAGING/resources/_resources.d.ts > $STAGING/events/lib.d.ts
 
 # resources
-cat $DTSLIBS $STAGING/agents/_agents.d.ts $STAGING/events/_events.d.ts > $STAGING/resources/lib.d.ts
+cat ${DTSLIBS} $STAGING/agents/_agents.d.ts $STAGING/events/_events.d.ts > $STAGING/resources/lib.d.ts
 
 # apply new settings for the output (-TYPE-SCOPE +HOLO-SCOPE) and inline code imports
 for zome in $ZOMES; do

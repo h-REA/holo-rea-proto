@@ -5,7 +5,7 @@
 //import { LinkRepo, VfObject, QuantityValue, Hash, QVlike, notError, CrudResponse, PhysicalLocation, HoloThing, entryOf, hashOf } from "../../../lib/ts/common";
 import {
   VfObject, QuantityValue, Hash, QVlike, notError, CrudResponse,
-  PhysicalLocation, HoloThing, entryOf, hashOf, deepAssign, Initializer, Fixture, reader, creator, callZome
+  PhysicalLocation, HoloThing, entryOf, hashOf, deepAssign, Initializer, Fixture, reader, creator, callZome, TrackTrace, ResourceClasses, ResourceRelationships, AgentProperty
 } from "../common/common";
 import {LinkRepo, LinkSet} from "../common/LinkRepo";
 import events from "../events/events";
@@ -25,52 +25,15 @@ import { LinkRepo } from "../common/LinkRepo";
 
 // <links>
 // <imported from events>
-const EventLinks: events.EventLinks = new LinkRepo(`EventLinks`);
-EventLinks.linkBack("inputs", "inputOf")
-  .linkBack("outputs", "outputOf")
-  .linkBack("inputOf", "inputs")
-  .linkBack("outputOf", "outputs")
-  .linkBack("action", "actionOf")
-  .linkBack("actionOf", "action");
-
-const XferClasses: events.Classifications = new LinkRepo(`Classifications`);
-XferClasses.linkBack("classifiedAs", "classifies")
-  .linkBack("classifies", "classifiedAs");
 
 // </imported from agents/>
 
-const AgentProperty: agents.AgentProperty = new LinkRepo(`AgentProperty`);
+
+
 
 // </imported>
 
 // <own> links
-const ResourceClasses: LinkRepo<
-  resources.EconomicResource|resources.ResourceClassification,
-  resources.EconomicResource|resources.ResourceClassification,
-  "classifiedAs"|"classifies"
-> = new LinkRepo("ResourceClasses");
-ResourceClasses
-  .linkBack("classifiedAs","classifies")
-  .linkBack("classifies", "classifiedAs");
-
-const ResourceRelationships: LinkRepo<
-  resources.EconomicResource,
-  resources.EconomicResource,
-  "underlyingResource"|"contains"|"underlies"|"inside"
-> = new LinkRepo("ResourceRelationships");
-ResourceRelationships
-  .linkBack(`underlyingResource`, `underlies`)
-  .linkBack(`underlies`, `underlyingResource`)
-  .linkBack(`contains`, `inside`)
-  .linkBack(`inside`, `contains`);
-
-const TrackTrace: LinkRepo<
-  resources.EconomicResource|events.EconomicEvent,
-  events.EconomicEvent|resources.EconomicResource,
-"affects"|"affectedBy">
-= new LinkRepo("TrackTrace");
-TrackTrace.linkBack("affects", "affectedBy")
-  .linkBack("affectedBy", "affects");
 
 // </own> </links>
 
@@ -312,13 +275,13 @@ class EconomicResource<T = {}> extends VfObject<T & ErEntry & typeof VfObject.en
     let relationships = ResourceRelationships.get(hash);
 
     let underlying = relationships.tags(`underlyingResource`);
-    if (my.underlyingResource && (!underlying.length || underlying.hashes()[0] !== my.underlyingResource)) {
+    if (my.underlyingResource && !underlying.has(`underlyingResource`, my.underlyingResource)) {
       ResourceRelationships.put(hash, my.underlyingResource, `underlyingResource`);
       underlying.removeAll();
     }
 
     let contains = relationships.tags(`contains`);
-    if (my.contains && (!contains.length || contains.hashes()[0] !== my.contains)) {
+    if (my.contains && !contains.has(`contains`, my.contains)) {
       ResourceRelationships.put(hash, my.contains, `contains`);
       contains.removeAll();
     }
@@ -330,11 +293,10 @@ class EconomicResource<T = {}> extends VfObject<T & ErEntry & typeof VfObject.en
       classy.removeAll();
     }
 
-    if (my.owner) {
-      let owner = AgentProperty.get(my.owner, `owns`).select(({hash}) => hash === this.myHash);
-      if (!owner.length) {
-        AgentProperty.put(my.owner, hash, `owns`);
-      }
+    let owner = AgentProperty.get(hash, `owner`);
+    if (!(owner.length && owner.has(`owner`, my.owner))) {
+      AgentProperty.put(this.myHash, my.owner, `owner`);
+      owner.removeAll();
     }
 
     return hash;
@@ -398,9 +360,9 @@ declare global {
 namespace resources {
   export type EconomicResource = typeof EconomicResource.entryType;
   export type ResourceClassification = typeof ResourceClassification.entryType;
-  export type TrackTrace = typeof TrackTrace;
-  export type ResourceClasses = typeof ResourceClasses;
-  export type ResourceRelationships = typeof ResourceRelationships;
+  //export type TrackTrace = typeof TrackTrace;
+  //export type ResourceClasses = typeof ResourceClasses;
+  //export type ResourceRelationships = typeof ResourceRelationships;
 }
 //* TYPE-SCOPE
 }
@@ -663,6 +625,13 @@ function affect({resource, quantity}:{
   resource: HoloThing<resources.EconomicResource>,
   quantity: QVlike
 }): CrudResponse<resources.EconomicResource> {
+  // Unless I really do have to remodel EconomicResource, this is not necessary
+  return {
+    error: null,
+    hash: hashOf(resource),
+    entry: entryOf(resource),
+    type: `EconomicResource`
+  };
   let err: Error = null, hash: Hash<resources.EconomicResource>, res:EconomicResource;
   try {
     res = EconomicResource.get(hashOf(resource));

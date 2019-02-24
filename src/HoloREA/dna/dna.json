@@ -19,62 +19,6 @@
     },
     "Zomes": [
         {
-            "Name": "chatter",
-            "Description": "a ridiculously simple chat",
-            "CodeFile": "chatter.js",
-            "RibosomeType": "js",
-            "BridgeFuncs": null,
-            "Config": null,
-            "Entries": [
-                {
-                    "Name": "Message",
-                    "Description": "A ridiculously simple chat message",
-                    "DataFormat": "json",
-                    "SchemaFile": "Message.json",
-                    "Sharing": "public"
-                },
-                {
-                  "Name": "Cleaned",
-                  "Description": "Store hashes of cleaned messages",
-                  "DataFormat": "string",
-                  "Sharing": "public"
-                },
-                {
-                  "Name": "Posted",
-                  "Description": "A silly way to query the public DHT for a list",
-                  "DataFormat": "links",
-                  "Sharing": "public"
-                }
-            ],
-            "Functions": [
-                {
-                    "Name": "createMessage",
-                    "CallingType": "json",
-                    "Exposure": "public"
-                },
-                {
-                    "Name": "postMessage",
-                    "CallingType": "json",
-                    "Exposure": "public"
-                },
-                {
-                    "Name": "receiveMessages",
-                    "CallingType": "json",
-                    "Exposure": "public"
-                },
-                {
-                  "Name": "isClean",
-                  "CallingType": "json",
-                  "Exposure": "public"
-                },
-                {
-                  "Name": "allPosted",
-                  "CallingType": "json",
-                  "Exposure": "public"
-                }
-            ]
-        },
-        {
           "Name": "agents",
           "Description": "All things related to agents and agent relationships",
           "CodeFile": "agents.js",

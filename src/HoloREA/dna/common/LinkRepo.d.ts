@@ -182,7 +182,21 @@ declare class LinkSet<B, L, Tags extends string = string, T extends L = L> exten
    */
   select(fn: (lr: LinkReplace<T, Tags>) => boolean): LinkSet<B, L, Tags, T>;
 
-  unique(cleanDht: boolean): this;
+  /**
+   * removes all duplicate entries from the set.
+   * @param {Boolean} cleanDht pass true to remove the links that gave rise to
+   *  duplicates from the DHT, as well.  This defaults to the value of this.sync
+   * @returns {LinkSet} a LinkSet with no duplicates.
+   */
+  unique(cleanDht?: boolean): this;
+
+  /**
+   * Determine whether the link is in this set with the given tag.
+   * @param {Tags} tag The tag for the link to search.
+   * @param {Hash} hash The hash that might have that tag.
+   * @returns {Boolean} True if this set has the link, false if it doesn't.
+   */
+  has(tag: Tags, hash: Hash<T>): boolean;
 
   private descEntry(args: {Hash: Hash<B>, Tag?: string, EntryType?: string}): string;
 

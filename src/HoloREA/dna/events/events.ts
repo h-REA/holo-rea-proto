@@ -6,7 +6,7 @@
 import {
   Hash, QuantityValue, VfObject, QVlike, HoloObject, CrudResponse, bisect,
   HoloThing, hashOf, notError, HoloClass, deepAssign, Fixture, Initializer,
-  reader, entryOf, creator, callZome
+  reader, entryOf, creator, callZome, EventLinks, Classifications, TrackTrace
 } from "../common/common";
 import resources from "../resources/resources";
 import agents from "../agents/agents";
@@ -29,35 +29,10 @@ import { LinkRepo, LinkSet } from "../common/LinkRepo";
 type Agent = agents.Agent;
 type EconomicResource = resources.EconomicResource;
 
-const TrackTrace: resources.TrackTrace = new LinkRepo(`TrackTrace`);
-TrackTrace.linkBack("affects", "affectedBy")
-  .linkBack("affectedBy", "affects");
 // </imports>
 
 // <links>
-const Classifications: LinkRepo<
-  events.Transfer|events.TransferClassification,
-  events.Transfer|events.TransferClassification,
-  "classifiedAs"|"classifies"
-> = new LinkRepo("Classifications");
-Classifications.linkBack("classifiedAs", "classifies")
-  .linkBack("classifies", "classifiedAs");
 
-
-const EventLinks: LinkRepo<
-  events.EconomicEvent|FuncEntry|events.Action,
-  events.EconomicEvent|FuncEntry|events.Action,
-  "inputs"|"inputOf"|"outputs"|"outputOf"|"actionOf"|"action"
-> = new LinkRepo("EventLinks");
-EventLinks.linkBack("inputs", "inputOf")
-  .linkBack("outputs", "outputOf")
-  .linkBack("inputOf", "inputs")
-  .linkBack("outputOf", "outputs")
-  .linkBack("action", "actionOf")
-  .linkBack("actionOf", "action")
-  .singular(`inputOf`)
-  .singular(`outputOf`)
-  .singular(`action`);
 
 // </links>
 
@@ -528,7 +503,7 @@ implements Funcable {
 
     let inputs = links.tags(`inputs`);
     if (inputs.length) {
-      if (inputs[0].Hash !== my.inputs) {
+      if (!inputs.has(`inputs`, my.inputs)) {
         inputs.removeAll();
       }
     }
@@ -536,7 +511,7 @@ implements Funcable {
 
     let outputs = links.tags(`outputs`);
     if (outputs.length) {
-      if (outputs[0].Hash !== my.outputs) {
+      if (!outputs.has(`outputs`, my.outputs)) {
         outputs.removeAll();
       }
     }
@@ -544,7 +519,7 @@ implements Funcable {
 
     let cl = Classifications.get(this.myHash, `classifiedAs`);
     if (cl.length) {
-      if (cl[0].Hash !== my.transferClassifiedAs) {
+      if (!cl.has(`classifiedAs`, my.transferClassifiedAs)) {
         cl.removeAll();
       }
     }
@@ -822,7 +797,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     let linksOut = hash && EventLinks.get(hash);
 
     let action = linksOut && linksOut.tags(`action`);
-    if (!action || my.action !== (action.length && action.hashes()[0] || null)) {
+    if (!action || !action.has(`action`, my.action)) {
       if (my.action) {
         EventLinks.put(myHash, my.action, `action`);
       } else if (action) {
@@ -831,7 +806,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     }
 
     let inputOf = linksOut && linksOut.tags(`inputOf`);
-    if (!inputOf || my.inputOf !== (inputOf.length && inputOf.hashes()[0] || null)) {
+    if (!inputOf || !inputOf.has(`inputOf`, my.inputOf)) {
       if (my.inputOf) {
         EventLinks.put(myHash, my.inputOf, `inputOf`);
       } else if (inputOf) {
@@ -840,7 +815,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     }
 
     let outputOf = linksOut && linksOut.tags(`outputOf`);
-    if (!outputOf || my.outputOf !== (outputOf.length && outputOf.hashes()[0] || null)) {
+    if (!outputOf || !outputOf.has(`outputOf`, my.outputOf)) {
       if (my.outputOf) {
         EventLinks.put(myHash, my.outputOf, `outputOf`);
       } else if (outputOf) {
@@ -850,7 +825,7 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
 
 
     let affects = hash && TrackTrace.get(hash, `affects`);
-    if (!affects || my.affects !== (affects.length && affects.hashes()[0] || null)) {
+    if (!affects || !affects.has(`affects`, my.affects)) {
       if (my.affects) {
         if (affects && affects.length) {
           this.unaffect(affects[0].Hash);
@@ -943,8 +918,9 @@ namespace events {
   export type Transfer = typeof Transfer.entryType;
   export type ProcessClassification = typeof ProcessClassification.entryType;
   export type Process = typeof Process.entryType;
-  export type Classifications = typeof Classifications;
-  export type EventLinks = typeof EventLinks;
+  export type EconomicFunction = typeof EconomicFunction.entryType;
+  //export type Classifications = typeof Classifications;
+  //export type EventLinks = typeof EventLinks;
   //export type functions =
   //  "traceEvents"|"trackEvents"|"traceTransfers"|"trackTransfers"|
   //  "eventSubtotals"|"eventsEndedBefore"|"eventsStartedBefore"|"eventEndedAfter"|

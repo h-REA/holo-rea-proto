@@ -4,7 +4,7 @@
 //import "./es6";
 import "./holochain-proto";
 import "./LinkRepo";
-import { LinkRepo } from "./LinkRepo";
+import { LinkRepo, Set, Map } from "./LinkRepo";
 /*/
 /**/
 
@@ -160,6 +160,7 @@ export /**/function deepAssign<T extends object, U extends object>(dest: T, src:
 //* EXPORT
 export/**/ type Initializer<T, U = T> =
   (
+    T extends Array<infer V> ? Array<V> :
     T extends object
       ? { [K in keyof T]?: Initializer<T[K], T> }
       : T
@@ -305,6 +306,12 @@ export /**/type HoloClass<T,U> = (new (o:U, h:Hash<T>) => T) &
     entryType: U
   };
 
+//* EXPORT
+export/**/function debugRet<T>(it: T): T {
+  debug(''+it);
+  return it;
+}
+
 /**
  * It's just as good as a QuantityValue as far as a real QV knows, and it can
  * cross zomes or machines, but you can't do math on it by itself.
@@ -335,10 +342,6 @@ export /**/class QuantityValue implements QVlike {
     this.quantity = quantity;
   }
 
-  valueOf() {
-    return this.quantity;
-  }
-
   toString() {
     return `${this.quantity} ${this.units}`
   }
@@ -348,13 +351,13 @@ export /**/class QuantityValue implements QVlike {
    * if a % is added (not to a %) the addition is relative to the original quantity
    */
   add({units, quantity}: QVlike): QuantityValue {
-
+    debug(`${''+this} + ${quantity} ${units} =>`);
     if (units === this.units) {
-      return new QuantityValue({units: this.units, quantity: this.quantity + quantity});
+      return debugRet(new QuantityValue({units: this.units, quantity: this.quantity + quantity}));
     } else if (units === `%`) {
-      return this.mul({units: `%`, quantity: 100 + quantity});
+      return debugRet(this.mul({units: `%`, quantity: 100 + quantity}));
     }
-    throw new Error(`Can't add quantity in ${units} to quantity in ${this.units}`);
+    throw new TypeError(`Can't add quantity in ${units} to quantity in ${this.units}`);
   }
 
   /**
@@ -364,6 +367,7 @@ export /**/class QuantityValue implements QVlike {
    * a unitless ratio.
    */
   mul({units, quantity}: QVlike): QuantityValue {
+    debug(`${''+this} * ${quantity} ${units} =>`)
     if (units === `%`) {
       quantity /= 100;
       units = ``;
@@ -376,7 +380,7 @@ export /**/class QuantityValue implements QVlike {
       units = this.units;
     }
 
-    return new QuantityValue({units, quantity: quantity*this.quantity});
+    return debugRet(new QuantityValue({units, quantity: quantity*this.quantity}));
   }
 
   /**
@@ -385,13 +389,14 @@ export /**/class QuantityValue implements QVlike {
    * units must match.
    */
   sub({units, quantity}: QVlike): QuantityValue {
+    debug(`${''+this} - ${quantity} ${units} =>`)
     if (units === `%`) {
       quantity = 100 - quantity;
       return this.mul({units, quantity});
     } else if (units === this.units) {
-      return new QuantityValue({units, quantity: this.quantity - quantity});
+      return debugRet(new QuantityValue({units, quantity: this.quantity - quantity}));
     } else {
-      throw new Error(`Can't subtract ${units} from ${this.units}`);
+      throw new TypeError(`Can't subtract ${units} from ${this.units}`);
     }
   }
 
@@ -401,6 +406,8 @@ export /**/class QuantityValue implements QVlike {
    * the same as the input.
    */
   div({units, quantity}: QVlike): QuantityValue {
+    debug(`${''+this} / ${quantity} ${units} =>`)
+    if (!quantity) throw new Error(`Can't divide by 0 ${units}`);
     if (units === `%`) {
       units = ``;
       quantity = 100/quantity;
@@ -413,10 +420,12 @@ export /**/class QuantityValue implements QVlike {
     } else {
       units = this.units;
     }
-    return new QuantityValue({units, quantity: this.quantity/quantity});
+    return debugRet(new QuantityValue({units, quantity: this.quantity/quantity}));
   }
 
   static decomposeUnits(units: string): {[key: string]: number} {
+    if (!units) return {};
+
     let decomp: string[] = units.split(`*`),
       dict: {[key: string]: number} = {};
 
@@ -476,7 +485,7 @@ export /**/class QuantityValue implements QVlike {
   static recomposeUnits(decomp: {[key: string]: number}): string {
     return Object.keys(decomp).map((unit) => {
       let expo = decomp[unit];
-      if (expo !== 1) {
+      if (expo === 1) {
         return unit;
       } else {
         return `${unit}^${expo}`;
@@ -484,9 +493,25 @@ export /**/class QuantityValue implements QVlike {
     }).join(`*`);
   }
 
+  static isEqualUnits(a: string, b: string): boolean {
+    const adict = this.decomposeUnits(a);
+    const bdict = this.decomposeUnits(b);
+
+    for (let key of Object.keys(adict)) {
+      if (adict[key] !== bdict[key]) return false;
+    }
+
+    const aset = new Set(Object.keys(adict));
+    const bset = new Set(Object.keys(bdict));
+    if (bset.disjunct(aset).size) return false;
+
+    return true;
+  }
+
   isCount(): boolean {
     return this.units === "";
   }
+
 }
 
 /**

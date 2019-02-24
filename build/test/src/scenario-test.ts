@@ -1085,13 +1085,13 @@ export async function ready(): Promise<Scenario> {
       expectGoodCrud(inputs, `EconomicEvent`, `chloe give coffee to al crud`);
       expectGoodCrud(outputs, `EconomicEvent`, `al take coffee from chloe crud`);
 
-      expect(inputs.entry, `chloe give coffee to all`).to.deep.equal({
+      expect(inputs.entry, `chloe give coffee to al`).to.deep.include({
         action: my.actions.give.hash,
         provider: chloe.agent.hash,
         receiver: al.agent.hash
       });
 
-      expect(outputs.entry, `al take coffee from chloe`).to.deep.equal({
+      expect(outputs.entry, `al take coffee from chloe`).to.deep.include({
         action: my.actions.take.hash,
         provider: chloe.agent.hash,
         receiver: al.agent.hash

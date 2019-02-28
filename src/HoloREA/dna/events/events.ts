@@ -1267,12 +1267,14 @@ function createProcess(init: VfProc): CrudResponse<events.Process> {
     plannedDuration: init.plannedDuration,
     processClassifiedAs: init.processClassifiedAs
   };
-
+  function toEv(hash) {
+    return EconomicEvent.get(hash);
+  }
   let it: Process;
   try {
     it = Process.create(props);
-    it.addInputs(...init.inputs.map(EconomicEvent.get));
-    it.addOutputs(...init.outputs.map(EconomicEvent.get));
+    it.addInputs(...init.inputs.map(toEv));
+    it.addOutputs(...init.outputs.map(toEv));
     it.commit();
     return it.portable();
   } catch (e) {

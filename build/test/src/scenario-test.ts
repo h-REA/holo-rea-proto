@@ -1047,10 +1047,12 @@ export async function ready(): Promise<Scenario> {
       expect(inputs.entry, `inputs`).to.have.property(`provider`, al.agent.hash);
       expect(inputs.entry, `inputs`).to.have.property(`receiver`, chloe.agent.hash);
       expect(inputs.entry, `inputs`).to.have.property(`affects`, src.hash);
+      expect(inputs.entry, `inputs`).to.have.property(`inputOf`, xfer.hash);
 
       expect(outputs.entry, `outputs`).to.have.property(`provider`, al.agent.hash);
       expect(outputs.entry, `outputs`).to.have.property(`receiver`, chloe.agent.hash);
       expect(outputs.entry, `outputs`).to.have.property(`affects`, dest.hash);
+      expect(outputs.entry, `outputs`).to.have.property(`outputOf`, xfer.hash);
 
       return xfer;
     });
@@ -1088,13 +1090,15 @@ export async function ready(): Promise<Scenario> {
       expect(inputs.entry, `chloe give coffee to al`).to.deep.include({
         action: my.actions.give.hash,
         provider: chloe.agent.hash,
-        receiver: al.agent.hash
+        receiver: al.agent.hash,
+        inputOf: xfer.hash
       });
 
       expect(outputs.entry, `al take coffee from chloe`).to.deep.include({
         action: my.actions.take.hash,
         provider: chloe.agent.hash,
-        receiver: al.agent.hash
+        receiver: al.agent.hash,
+        outputOf: xfer.hash
       });
 
       return xfer;
@@ -1172,7 +1176,11 @@ export async function ready(): Promise<Scenario> {
 
     await my.verbs.brewCoffee(1000, await tick());
     return my;
-  });
+  }).then(checkAllInventory({
+    al: { apples: 97, beans: 0, coffee: 300, turnovers: 0 },
+    bea: { apples: 0, beans: 1.5, coffee: 0, turnovers: 1 },
+    chloe: { apples: 0, beans: 0, coffee: 1000, turnovers: 0 }
+  }));
 
   return prep;
 }

@@ -176,21 +176,28 @@ implements Funcable {
   private readonly links: typeof Process.links = Process.links;
 
   private loadLinks() {
-    this.myEntry.processClassifiedAs = this.links.processClassifiedAs
-      .get(this.myHash, `classifiedAs`).hashes()[0];
+    if (this.committed()) {
+      this.myEntry.processClassifiedAs = this.links.processClassifiedAs
+        .get(this.myHash, `classifiedAs`).hashes()[0] || this.myEntry.processClassifiedAs;
 
-    this.inputs = this.links.inputs.get(this.myHash, `inputs`).types(`EconomicEvent`);
-    this.inputs.forEach(({Hash}, i, inputs) => {
-      inputs[i].Entry = EconomicEvent.get(Hash);
-    });
-    this.inputs.sync = false;
+      this.inputs = this.links.inputs.get(this.myHash, `inputs`).types(`EconomicEvent`);
+      this.inputs.forEach(({Hash}, i, inputs) => {
+        inputs[i].Entry = EconomicEvent.get(Hash);
+      });
+      this.inputs.sync = false;
 
-    this.outputs = this.links.outputs.get(this.myHash, `outputs`).types(`EconomicEvent`);
-    this.outputs.forEach(({Hash}, i, outputs) => {
-      outputs[i].Entry = EconomicEvent.get(Hash);
-    });
-    this.outputs.sync = false;
+      this.outputs = this.links.outputs.get(this.myHash, `outputs`).types(`EconomicEvent`);
+      this.outputs.forEach(({Hash}, i, outputs) => {
+        outputs[i].Entry = EconomicEvent.get(Hash);
+      });
+      this.outputs.sync = false;
+    } else {
+      this.inputs = this.links.inputs.emptySet(this.hash);
+      this.inputs.sync = false;
 
+      this.outputs = this.links.outputs.emptySet(this.hash);
+      this.outputs.sync = false;
+    }
   }
   private saveLinks(hash: Hash<ProcEntry>): Hash<ProcEntry> {
     this.links.processClassifiedAs.put(this.myHash, this.myEntry.processClassifiedAs, `classifiedAs`);
@@ -209,7 +216,9 @@ implements Funcable {
   }
 
   static create(entry: ProcEntry  & typeof VfObject.entryType): Process {
-    return <Process> super.create(entry);
+    let proc = <Process> super.create(entry);
+    proc.loadLinks();
+    return proc;
   }
   constructor(entry?: T & ProcEntry  & typeof VfObject.entryType, hash?: Hash<Process>) {
     super(entry, hash);

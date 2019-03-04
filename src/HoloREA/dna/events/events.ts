@@ -446,13 +446,32 @@ implements Funcable {
   });
   //protected myEntry: T & XferEntry & typeof VfObject.entryType;
   static get(hash: Hash<Transfer>): Transfer {
-    return <Transfer> super.get(hash);
+    const it = <Transfer> super.get(hash);
+    it.loadLinks();
+    return it;
   }
   static create(entry?: XferEntry & typeof VfObject.entryType): Transfer {
-    return <Transfer> super.create(entry);
+    const it = <Transfer> super.create(entry);
+    it.loadLinks();
+    return it;
   }
   constructor(entry?: T & XferEntry & typeof VfObject.entryType, hash?: Hash<Transfer>) {
     super(entry, hash);
+  }
+  loadLinks(): void {
+    if (this.committed()) {
+      const hash = this.myHash;
+      const my = this.myEntry;
+
+      const type = Classifications.get(hash, `classifiedAs`);
+      if (type.length) my.transferClassifiedAs = type.hashes()[0];
+
+      const inputs = EventLinks.get(hash, `inputs`);
+      if (inputs.length) my.inputs = inputs.hashes()[0];
+
+      const outputs = EventLinks.get(hash, `outputs`);
+      if (outputs.length) my.outputs = outputs.hashes()[0];
+    }
   }
 
   asFunction(): EconomicFunction {
@@ -463,10 +482,6 @@ implements Funcable {
     return EconomicEvent.get(this.myEntry.inputs);
   }
   set input(to: EconomicEvent) {
-    let current = this.myEntry.inputs;
-    if (current && current !== to.hash) {
-      EventLinks.remove(this.hash, this.myEntry.inputs, `inputs`);
-    }
     this.myEntry.inputs = to.hash;
   }
 
@@ -474,10 +489,6 @@ implements Funcable {
     return EconomicEvent.get(this.myEntry.outputs);
   }
   set output(to: EconomicEvent) {
-    let current = this.myEntry.outputs;
-    if (current && current !== to.hash) {
-      EventLinks.remove(this.hash, current, `outputs`);
-    }
     this.myEntry.outputs = to.hash;
   }
 
@@ -485,10 +496,6 @@ implements Funcable {
     return TransferClassification.get(this.myEntry.transferClassifiedAs);
   }
   set classification(to: TransferClassification) {
-    let current = this.myEntry.transferClassifiedAs;
-    if (current && current !== to.hash) {
-      Classifications.remove(this.hash, current, `classifiedAs`);
-    }
     this.myEntry.transferClassifiedAs = to.hash;
   }
 
@@ -508,31 +515,24 @@ implements Funcable {
 
   private saveLinks(hash: Hash<this>) {
     let my = this.myEntry;
-    let links = EventLinks.get(this.myHash).tags(`inputs`, `outputs`);
+    let links = EventLinks.get(hash).tags(`inputs`, `outputs`);
 
     let inputs = links.tags(`inputs`);
-    if (inputs.length) {
-      if (!inputs.has(`inputs`, my.inputs)) {
-        inputs.removeAll();
-      }
+    if (!inputs.has(`inputs`, my.inputs)) {
+      inputs.removeAll();
+      if (my.inputs) EventLinks.put(hash, my.inputs, `inputs`);
     }
-    if (my.inputs) EventLinks.put(hash, my.inputs, `inputs`);
 
     let outputs = links.tags(`outputs`);
-    if (outputs.length) {
-      if (!outputs.has(`outputs`, my.outputs)) {
-        outputs.removeAll();
-      }
+    if (!outputs.has(`outputs`, my.outputs)) {
+      outputs.removeAll();
+      if (my.outputs) EventLinks.put(hash, my.outputs, `outputs`);
     }
-    if (my.outputs) EventLinks.put(hash, my.outputs, `outputs`);
 
     let cl = Classifications.get(this.myHash, `classifiedAs`);
-    if (cl.length) {
-      if (!cl.has(`classifiedAs`, my.transferClassifiedAs)) {
-        cl.removeAll();
-      }
+    if (!cl.has(`classifiedAs`, my.transferClassifiedAs)) {
+      Classifications.put(hash, my.transferClassifiedAs, `classifiedAs`);
     }
-    if (my.transferClassifiedAs) Classifications.put(hash, my.transferClassifiedAs, `classifiedAs`);
 
     return hash;
   }
@@ -590,7 +590,7 @@ class EconomicFunction<T = {}> extends VfObject<T & FuncEntry> implements Funcab
   }
 
   transfer(): Transfer {
-    return this.isTransfer() ? new Transfer(<XferEntry> this.myEntry) : null;
+    return this.isTransfer() ? Transfer.create(<XferEntry> this.myEntry) : null;
   }
 
   isProcess(): boolean {
@@ -598,7 +598,7 @@ class EconomicFunction<T = {}> extends VfObject<T & FuncEntry> implements Funcab
   }
 
   process(): Process {
-    return this.isProcess() ? new Process(<ProcEntry> this.myEntry) : null;
+    return this.isProcess() ? Process.create(<ProcEntry> this.myEntry) : null;
   }
 
   portable(): CrudResponse<T & typeof EconomicFunction.entryType> {
@@ -654,10 +654,15 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     receiver: ``
   });
   static get(hash: Hash<EconomicEvent>): EconomicEvent {
-    return <EconomicEvent> super.get(hash);
+    const it = <EconomicEvent> super.get(hash);
+    //it.loadLinks();
+    return it;
+
   }
   static create(entry: EeEntry & typeof VfObject.entryType): EconomicEvent {
-    return <EconomicEvent> super.create(entry);
+    const it = <EconomicEvent> super.create(entry);
+    //it.loadLinks();
+    return it;
   }
   constructor(entry?: EeEntry & T & typeof VfObject.entryType, hash?: Hash<EconomicEvent>) {
     super(entry, hash);
@@ -763,9 +768,6 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
   set affects(res: HoloThing<EconomicResource>) {
     let hash = hashOf(res);
     const my = this.myEntry;
-    if (my.affects && my.affects !== hash) {
-      TrackTrace.remove(this.hash, my.affects, `affects`);
-    }
     my.affects = hash;
     //this.update();
   }
@@ -775,23 +777,24 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
 
   protected loadLinks() {
     const my = this.myEntry, hash = this.myHash;
+    if (hash) {
+      my.action = EventLinks.get(hash, `action`).hashes()[0];
 
-    my.action = EventLinks.get(hash, `action`).hashes()[0];
+      my.affects = TrackTrace.get(hash, `affects`).hashes()[0];
 
-    my.affects = TrackTrace.get(hash, `affects`).hashes()[0];
+      let links = EventLinks.get(hash, `inputOf`);
+      if (links.length) {
+        my.inputOf = links.hashes()[0];
+      } else {
+        my.inputOf = null;
+      }
 
-    let links = EventLinks.get(hash, `inputOf`);
-    if (links.length) {
-      my.inputOf = links.hashes()[0];
-    } else {
-      my.inputOf = null;
-    }
-
-    links = EventLinks.get(hash, `outputOf`);
-    if (links.length) {
-      my.outputOf = links.hashes()[0];
-    } else {
-      my.outputOf = null;
+      links = EventLinks.get(hash, `outputOf`);
+      if (links.length) {
+        my.outputOf = links.hashes()[0];
+      } else {
+        my.outputOf = null;
+      }
     }
   }
 
@@ -804,13 +807,13 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     let my = this.myEntry;
     let {myHash} = this;
     let linksOut = hash && EventLinks.get(hash);
-
+    // I don't need to manually removeAll() anymore for fields with singular()
     let action = linksOut && linksOut.tags(`action`);
     if (!action || !action.has(`action`, my.action)) {
       if (my.action) {
         EventLinks.put(myHash, my.action, `action`);
-      } else if (action) {
-        action.removeAll();
+      //} else if (action && action.length) {
+      //  action.removeAll();
       }
     }
 
@@ -818,8 +821,8 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     if (!inputOf || !inputOf.has(`inputOf`, my.inputOf)) {
       if (my.inputOf) {
         EventLinks.put(myHash, my.inputOf, `inputOf`);
-      } else if (inputOf) {
-        inputOf.removeAll();
+      //} else if (inputOf && inputOf.length) {
+      //  inputOf.removeAll();
       }
     }
 
@@ -827,23 +830,23 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
     if (!outputOf || !outputOf.has(`outputOf`, my.outputOf)) {
       if (my.outputOf) {
         EventLinks.put(myHash, my.outputOf, `outputOf`);
-      } else if (outputOf) {
-        outputOf.removeAll();
+      //} else if (outputOf && outputOf.length) {
+      //  outputOf.removeAll();
       }
     }
 
-
+    // not using affect() or unaffect()
     let affects = hash && TrackTrace.get(hash, `affects`);
     if (!affects || !affects.has(`affects`, my.affects)) {
       if (my.affects) {
-        if (affects && affects.length) {
-          this.unaffect(affects[0].Hash);
-          affects.removeAll();
-        }
+        //if (affects && affects.length) {
+        //  this.unaffect(affects[0].Hash);
+        //  affects.removeAll();
+        //}
         TrackTrace.put(myHash, my.affects, `affects`);
-        this.affect(my.affects);
-      } else if (affects) {
-        affects.removeAll();
+        //this.affect(my.affects);
+      //} else if (affects) {
+      //  affects.removeAll();
       }
     }
 
@@ -865,12 +868,14 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
   }
 
   private affect(hash: Hash<resources.EconomicResource>) {
+    return void 0;
     let qv = this.quantity.mul({units: ``, quantity: this.action.sign });
     let {quantity, units} = qv;
     callZome(`resources`, `affect`, { resource: hash, quantity: {quantity, units} });
   }
 
   private unaffect(hash: Hash<resources.EconomicResource>) {
+    return void 0;
     let my = this.myEntry;
     let resource: resources.EconomicResource = notError(get(hash));
 

@@ -300,7 +300,7 @@ export function verbify(my: Scenario) {
         provider: chloe.hash,
         receiver: chloe.hash,
         start: when,
-        duration: 1000*cups*facts.mlPerCup*facts.secondsPerHour/facts.coffeePerHour,
+        duration: Math.ceil(1000*cups*facts.mlPerCup*facts.secondsPerHour/facts.coffeePerHour),
         affects: coffeeRes,
         affectedQuantity: { units: `mL`, quantity: cups*facts.mlPerCup }
       })

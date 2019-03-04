@@ -285,7 +285,7 @@ export function verbify(my: Scenario) {
 
     if (beansHad < beansNeeded) {
       return Promise.reject(
-        `can't make ${cups} cups of coffee with only ${beansHad} kg of coffee beans`
+        `can't make ${cups} cups of coffee with less than ${beansNeeded} kg coffee beans (had ${beansHad} kg)`
       );
     }
 
@@ -304,7 +304,7 @@ export function verbify(my: Scenario) {
         provider: chloe.hash,
         receiver: chloe.hash,
         start: when,
-        duration: 1000*cups*facts.mlPerCup*facts.secondsPerHour/facts.coffeePerHour,
+        duration: Math.ceil(1000*cups*facts.mlPerCup*facts.secondsPerHour/facts.coffeePerHour),
         affects: coffeeRes,
         affectedQuantity: { units: `mL`, quantity: cups*facts.mlPerCup }
       })
@@ -864,7 +864,7 @@ export async function ready(): Promise<Scenario> {
       return my.al.apples = alApples;
     });
 
-    let beaBeans = resources.createResource({
+    let beaBeans = await resources.createResource({
       properties: {
         resourceClassifiedAs: beans.hash,
         owner: bea.hash,
@@ -881,7 +881,7 @@ export async function ready(): Promise<Scenario> {
     }).then((bb) => (my.bea.beans = bb));
 
     // TEST events.resourceCreationEvent
-    let chloeCoffee = events.resourceCreationEvent({
+    let chloeCoffee = await events.resourceCreationEvent({
       resource: {
         currentQuantity: { units: `mL`, quantity: 300 },
         resourceClassifiedAs: coffee.hash,
@@ -1158,7 +1158,7 @@ export async function ready(): Promise<Scenario> {
   }).then(checkAllInventory({
     chloe: { apples: 0, turnovers: 1 }
   })).then(async (my) => {
-    let {chloe, bea} = my;
+    let {chloe, bea, facts} = my;
 
     await my.verbs.trade(
       { units: ``, quantity: 1 },
@@ -1174,12 +1174,12 @@ export async function ready(): Promise<Scenario> {
       await tick()
     );
 
-    await my.verbs.brewCoffee(1000, await tick());
+    await my.verbs.brewCoffee(1000 / facts.mlPerCup, await tick());
     return my;
   }).then(checkAllInventory({
     al: { apples: 97, beans: 0, coffee: 300, turnovers: 0 },
     bea: { apples: 0, beans: 1.5, coffee: 0, turnovers: 1 },
-    chloe: { apples: 0, beans: 0, coffee: 1000, turnovers: 0 }
+    chloe: { apples: 0, coffee: 1000, turnovers: 0 }
   }));
 
   return prep;

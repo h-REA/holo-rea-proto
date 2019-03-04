@@ -18,7 +18,7 @@ function allow {
 function block {
   echo s:^//\\* $1:/\\* $1:g
 }
-echo "DTSLIBS is ${DTSLIBS} and that is it"
+
 # Now that I have some separate libraries, this needs to glom them all together
 # instead of just copying
 # cp: common to staging/common.

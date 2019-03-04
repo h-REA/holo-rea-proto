@@ -86,7 +86,18 @@ export/**/function reader<
   E extends holochain.JsonEntry = T["entryType"]
 >( Hc: T ): (hashes: Hash<E>[]) => CrudResponse<E>[] {
   function crudR(hashes: Hash<E>[]): CrudResponse<E>[] {
-    return hashes.map(hash => Hc.get(hash).portable());
+    try {
+      return hashes.map(hash => {
+        try {
+          return Hc.get(hash).portable();
+        } catch (e) {
+          return { hash, error: e }
+        }
+      });
+
+    } catch (e) {
+      return [{error:e}];
+    }
   }
 
   return crudR;

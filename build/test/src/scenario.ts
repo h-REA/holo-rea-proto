@@ -1,8 +1,8 @@
-import "./chai/chai";
+//import chai from "./chai/chai";
 import "./zomes";
 
-console.log('Chai inited:', chai)
-const expect = chai.expect;
+//console.log('Chai inited:', chai)
+//const expect = chai.expect;
 
 /**
  * Web API tests
@@ -477,7 +477,7 @@ export function verbify(my: Scenario) {
 
   return my;
 }
-
+/*
 function checkAllInventory(
   invs: Partial<{
     [name in "al"|"bea"|"chloe"]: Inventory<number>
@@ -498,7 +498,8 @@ function checkAllInventory(
     (name) => checkInv(sc[name], invs[name])
   )).then(() => sc);
 }
-
+*/
+/*
 function expectGoodCrud<T>(
   crud: CrudResponse<T>, type?: string, name?: string
 ): CrudResponse<T> {
@@ -522,7 +523,7 @@ function expectGoodCrud<T>(
 
   return crud;
 }
-
+*/
 export async function ready(): Promise<Scenario> {
 
   let prep: Promise<Scenario>;

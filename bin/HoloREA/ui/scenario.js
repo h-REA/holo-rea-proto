@@ -6,10 +6,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import chai from "./chai/chai";
+//import chai from "./chai/chai";
 import "./zomes";
-console.log('Chai inited:', chai);
-const expect = chai.expect;
+//console.log('Chai inited:', chai)
+//const expect = chai.expect;
 /**
  * Web API tests
  * Agents
@@ -21,7 +21,6 @@ function scenario() {
         al: new Person(),
         bea: new Person(),
         chloe: new Person(),
-        david: new Person(),
         types: {
             resource: {},
             transfer: {},
@@ -35,6 +34,60 @@ function scenario() {
         //processes: {},
         timeline: {}
     };
+}
+class TreeGraphNode {
+    constructor(element, branch = new Set()) {
+        this.element = element;
+        this.branch = branch;
+    }
+}
+class TreeGraph {
+    constructor(step, ...topLevel) {
+        this.step = step;
+        this.done = false;
+        const nodes = topLevel.map((el) => new TreeGraphNode(el));
+        this.topLevel = new Set(nodes);
+        this.visited = new Map();
+        for (let node of nodes) {
+            this.visited.set(node.element.hash, node);
+        }
+    }
+    notVisited(set) {
+        const { visited } = this;
+        return new Set([...set].filter(el => !visited.has(el.hash)));
+    }
+    existing(set) {
+        const { visited } = this;
+        return new Set([...set].filter((el) => visited.has(el.hash)));
+    }
+    grow() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.done)
+                return this;
+            const visited = this.visited;
+            let deck = new Set(this.topLevel);
+            while (deck.size) {
+                for (let node of [...deck]) {
+                    let branch = yield this.step(node.element);
+                    this.notVisited(branch).forEach((el) => {
+                        let tgn = new TreeGraphNode(el);
+                        node.branch.add(tgn);
+                        deck.add(tgn);
+                        visited.set(el.hash, tgn);
+                    });
+                    this.existing(branch).forEach((el) => {
+                        node.branch.add(visited.get(el.hash));
+                    });
+                    deck.delete(node);
+                }
+            }
+            this.done = true;
+            return this;
+        });
+    }
+    get(hash) {
+        return this.visited.get(hash);
+    }
 }
 function ms(n) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -143,7 +196,7 @@ export function verbify(my) {
                     provider: chloe.hash,
                     receiver: chloe.hash,
                     start: when,
-                    duration: 1000 * cups * facts.mlPerCup * facts.secondsPerHour / facts.coffeePerHour,
+                    duration: Math.ceil(1000 * cups * facts.mlPerCup * facts.secondsPerHour / facts.coffeePerHour),
                     affects: coffeeRes,
                     affectedQuantity: { units: `mL`, quantity: cups * facts.mlPerCup }
                 })
@@ -216,42 +269,155 @@ export function verbify(my) {
             return res;
         });
     }
+    function traceStep(after) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const before = new Set();
+            switch (after.type) {
+                case "EconomicEvent":
+                    {
+                        const event = after.entry;
+                        if (event.inputOf) {
+                            let [res] = yield resources.readResources([event.affects]);
+                            before.add(res);
+                        }
+                        if (event.outputOf) {
+                            const fns = yield events.traceEvents([after.hash]);
+                            for (let fn of fns)
+                                before.add(fn);
+                        }
+                    }
+                    break;
+                case "Process":
+                case "Transfer":
+                    {
+                        const ev = yield events.traceTransfers([after.hash]);
+                        for (let e of ev)
+                            before.add(e);
+                    }
+                    break;
+                case "EconomicResource": {
+                    const hashes = yield resources.getAffectingEvents({ resource: after.hash });
+                    const evs = yield events.readEvents(hashes);
+                    evs.filter((ev) => !!ev.entry.outputOf || !ev.entry.inputOf).forEach((ev) => before.add(ev));
+                }
+            }
+            return before;
+        });
+    }
+    function trackStep(before) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const after = new Set();
+            switch (before.type) {
+                case "EconomicEvent":
+                    {
+                        const ev = before.entry;
+                        if (ev.outputOf) {
+                            const [res] = yield resources.readResources([ev.affects]);
+                            after.add(res);
+                        }
+                        if (ev.inputOf) {
+                            (yield events.trackEvents([before.hash])).forEach((fn) => after.add(fn));
+                        }
+                    }
+                    break;
+                case "Transfer":
+                case "Process":
+                    {
+                        (yield events.trackTransfers([before.hash])).forEach((ev) => after.add(ev));
+                    }
+                    break;
+                case "EconomicResource": {
+                    const hashes = yield resources.getAffectingEvents({ resource: before.hash });
+                    const evts = yield events.readEvents(hashes);
+                    evts.filter((ev) => !!ev.entry.inputOf).forEach((ev) => after.add(ev));
+                }
+            }
+            return after;
+        });
+    }
     my.verbs = {
         pickApples, gatherBeans, trade: transfer, bakeTurnovers, brewCoffee,
-        inventory
+        inventory,
+        traceStep: function (...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const map = new Map();
+                for (let element of elements) {
+                    let set = yield traceStep(element);
+                    map.set(element, set);
+                }
+                return map;
+            });
+        },
+        trackStep: function (...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const map = new Map();
+                for (let element of elements) {
+                    let set = yield trackStep(element);
+                    map.set(element, set);
+                }
+                return map;
+            });
+        },
+        trace(...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new TreeGraph(traceStep, ...elements).grow();
+            });
+        },
+        track(...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new TreeGraph(trackStep, ...elements).grow();
+            });
+        }
     };
     return my;
 }
-function checkAllInventory(invs) {
-    function checkInv(person, inv) {
-        return __awaiter(this, void 0, void 0, function* () {
-            for (let resName of Object.keys(inv)) {
-                let resHash = person[resName].hash;
-                let [res] = yield resources.readResources([resHash]);
-                expectGoodCrud(res, `EconomicResource`, `inventory crud: ${person.agent.entry.name} ${resName}`);
-                expect(res.entry.currentQuantity, `inventory quantity: ${person.agent.entry.name} ${resName}`)
-                    .to.have.property(`quantity`, inv[resName]);
-            }
-        });
+/*
+function checkAllInventory(
+  invs: Partial<{
+    [name in "al"|"bea"|"chloe"]: Inventory<number>
+  }>
+): (sc: Scenario) => Promise<Scenario> {
+
+  async function checkInv(person: Person, inv: Inventory<number>) {
+    for (let resName of Object.keys(inv)) {
+      let resHash: Hash<resources.EconomicResource> = person[resName].hash;
+      let [res] = await resources.readResources([resHash]);
+      expectGoodCrud(res, `EconomicResource`, `inventory crud: ${person.agent.entry.name} ${resName}`);
+      expect(res.entry.currentQuantity, `inventory quantity: ${person.agent.entry.name} ${resName}`)
+        .to.have.property(`quantity`, inv[resName]);
     }
-    return (sc) => Promise.all(Object.keys(invs).map((name) => checkInv(sc[name], invs[name]))).then(() => sc);
+  }
+
+  return (sc) => Promise.all(Object.keys(invs).map(
+    (name) => checkInv(sc[name], invs[name])
+  )).then(() => sc);
 }
-function expectGoodCrud(crud, type, name) {
-    name = name || "(CRUD)";
-    expect(crud).to.be.an(`object`);
-    expect(crud.error, `${name}'s error`).to.not.exist;
-    if (type) {
-        expect(crud.type, `type of ${name}`).to.be.a(`string`).equals(type);
-    }
-    expect(crud, name).to.have.property(`hash`)
-        .a(`string`)
-        .that.does.exist
-        .that.has.length.gt(1);
-    expect(crud, name).to.have.property(`entry`)
-        .an(`object`)
-        .that.does.exist;
-    return crud;
+*/
+/*
+function expectGoodCrud<T>(
+  crud: CrudResponse<T>, type?: string, name?: string
+): CrudResponse<T> {
+  name = name || "(CRUD)";
+  expect(crud).to.be.an(`object`);
+
+  expect(crud.error, `${name}'s error`).to.not.exist;
+
+  if (type) {
+    expect(crud.type, `type of ${name}`).to.be.a(`string`).equals(type);
+  }
+
+  expect(crud, name).to.have.property(`hash`)
+    .a(`string`)
+    .that.does.exist
+    .that.has.length.gt(1);
+
+  expect(crud, name).to.have.property(`entry`)
+    .an(`object`)
+    .that.does.exist;
+
+  return crud;
 }
+*/
 export function ready() {
     return __awaiter(this, void 0, void 0, function* () {
         let prep;

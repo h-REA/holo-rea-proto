@@ -1,4 +1,4 @@
-import { ready, verbify } from "./scenario.js";
+import { ready, verbify } from "./scenario-test.js";
 import { resources, agents, events } from "./zomes.js";
 
 window.agents = agents;

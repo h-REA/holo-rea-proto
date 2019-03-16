@@ -18,7 +18,6 @@
         "PubKey": null
     },
     "Zomes": [
-        
         {
           "Name": "agents",
           "Description": "All things related to agents and agent relationships",

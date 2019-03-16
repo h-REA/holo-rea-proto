@@ -6,8 +6,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import * as chai from "./chai/chai";
+import "./chai/chai";
 import "./zomes";
+console.log('Chai inited:', chai);
 const expect = chai.expect;
 /**
  * Web API tests
@@ -20,7 +21,6 @@ function scenario() {
         al: new Person(),
         bea: new Person(),
         chloe: new Person(),
-        david: new Person(),
         types: {
             resource: {},
             transfer: {},
@@ -34,6 +34,60 @@ function scenario() {
         //processes: {},
         timeline: {}
     };
+}
+class TreeGraphNode {
+    constructor(element, branch = new Set()) {
+        this.element = element;
+        this.branch = branch;
+    }
+}
+class TreeGraph {
+    constructor(step, ...topLevel) {
+        this.step = step;
+        this.done = false;
+        const nodes = topLevel.map((el) => new TreeGraphNode(el));
+        this.topLevel = new Set(nodes);
+        this.visited = new Map();
+        for (let node of nodes) {
+            this.visited.set(node.element.hash, node);
+        }
+    }
+    notVisited(set) {
+        const { visited } = this;
+        return new Set([...set].filter(el => !visited.has(el.hash)));
+    }
+    existing(set) {
+        const { visited } = this;
+        return new Set([...set].filter((el) => visited.has(el.hash)));
+    }
+    grow() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.done)
+                return this;
+            const visited = this.visited;
+            let deck = new Set(this.topLevel);
+            while (deck.size) {
+                for (let node of [...deck]) {
+                    let branch = yield this.step(node.element);
+                    this.notVisited(branch).forEach((el) => {
+                        let tgn = new TreeGraphNode(el);
+                        node.branch.add(tgn);
+                        deck.add(tgn);
+                        visited.set(el.hash, tgn);
+                    });
+                    this.existing(branch).forEach((el) => {
+                        node.branch.add(visited.get(el.hash));
+                    });
+                    deck.delete(node);
+                }
+            }
+            this.done = true;
+            return this;
+        });
+    }
+    get(hash) {
+        return this.visited.get(hash);
+    }
 }
 function ms(n) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -125,7 +179,7 @@ export function verbify(my) {
             let beansHad = (yield resources.readResources([beanRes]))[0]
                 .entry.currentQuantity.quantity;
             if (beansHad < beansNeeded) {
-                return Promise.reject(`can't make ${cups} cups of coffee with only ${beansHad} kg of coffee beans`);
+                return Promise.reject(`can't make ${cups} cups of coffee with less than ${beansNeeded} kg coffee beans (had ${beansHad} kg)`);
             }
             let [consumeEv, brewEv] = yield Promise.all([
                 events.createEvent({
@@ -142,7 +196,7 @@ export function verbify(my) {
                     provider: chloe.hash,
                     receiver: chloe.hash,
                     start: when,
-                    duration: 1000 * cups * facts.mlPerCup * facts.secondsPerHour / facts.coffeePerHour,
+                    duration: Math.ceil(1000 * cups * facts.mlPerCup * facts.secondsPerHour / facts.coffeePerHour),
                     affects: coffeeRes,
                     affectedQuantity: { units: `mL`, quantity: cups * facts.mlPerCup }
                 })
@@ -215,9 +269,105 @@ export function verbify(my) {
             return res;
         });
     }
+    function traceStep(after) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const before = new Set();
+            switch (after.type) {
+                case "EconomicEvent":
+                    {
+                        const event = after.entry;
+                        if (event.inputOf) {
+                            let [res] = yield resources.readResources([event.affects]);
+                            before.add(res);
+                        }
+                        if (event.outputOf) {
+                            const fns = yield events.traceEvents([after.hash]);
+                            for (let fn of fns)
+                                before.add(fn);
+                        }
+                    }
+                    break;
+                case "Process":
+                case "Transfer":
+                    {
+                        const ev = yield events.traceTransfers([after.hash]);
+                        for (let e of ev)
+                            before.add(e);
+                    }
+                    break;
+                case "EconomicResource": {
+                    const hashes = yield resources.getAffectingEvents({ resource: after.hash });
+                    const evs = yield events.readEvents(hashes);
+                    evs.filter((ev) => !!ev.entry.outputOf || !ev.entry.inputOf).forEach((ev) => before.add(ev));
+                }
+            }
+            return before;
+        });
+    }
+    function trackStep(before) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const after = new Set();
+            switch (before.type) {
+                case "EconomicEvent":
+                    {
+                        const ev = before.entry;
+                        if (ev.outputOf) {
+                            const [res] = yield resources.readResources([ev.affects]);
+                            after.add(res);
+                        }
+                        if (ev.inputOf) {
+                            (yield events.trackEvents([before.hash])).forEach((fn) => after.add(fn));
+                        }
+                    }
+                    break;
+                case "Transfer":
+                case "Process":
+                    {
+                        (yield events.trackTransfers([before.hash])).forEach((ev) => after.add(ev));
+                    }
+                    break;
+                case "EconomicResource": {
+                    const hashes = yield resources.getAffectingEvents({ resource: before.hash });
+                    const evts = yield events.readEvents(hashes);
+                    evts.filter((ev) => !!ev.entry.inputOf).forEach((ev) => after.add(ev));
+                }
+            }
+            return after;
+        });
+    }
     my.verbs = {
         pickApples, gatherBeans, trade: transfer, bakeTurnovers, brewCoffee,
-        inventory
+        inventory,
+        traceStep: function (...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const map = new Map();
+                for (let element of elements) {
+                    let set = yield traceStep(element);
+                    map.set(element, set);
+                }
+                return map;
+            });
+        },
+        trackStep: function (...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const map = new Map();
+                for (let element of elements) {
+                    let set = yield trackStep(element);
+                    map.set(element, set);
+                }
+                return map;
+            });
+        },
+        trace(...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new TreeGraph(traceStep, ...elements).grow();
+            });
+        },
+        track(...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new TreeGraph(trackStep, ...elements).grow();
+            });
+        }
     };
     return my;
 }
@@ -426,10 +576,6 @@ export function ready() {
         }));
         // Time to start making events and resources
         prep = prep.then((my) => __awaiter(this, void 0, void 0, function* () {
-            let david = yield agents.createAgent({
-                name: `David`,
-                primaryLocation: [`412 kongstun st`, `hullodeysbarg, QB 27759`]
-            });
             let time = yield tick();
             my.timeline.begin = time;
             let al = my.al.agent, bea = my.bea.agent, chloe = my.chloe.agent;
@@ -531,7 +677,7 @@ export function ready() {
                     .that.deep.equals({ units: ``, quantity: 100 });
                 return my.al.apples = alApples;
             }));
-            let beaBeans = resources.createResource({
+            let beaBeans = yield resources.createResource({
                 properties: {
                     resourceClassifiedAs: beans.hash,
                     owner: bea.hash,
@@ -547,7 +693,7 @@ export function ready() {
                 }
             }).then((bb) => (my.bea.beans = bb));
             // TEST events.resourceCreationEvent
-            let chloeCoffee = events.resourceCreationEvent({
+            let chloeCoffee = yield events.resourceCreationEvent({
                 resource: {
                     currentQuantity: { units: `mL`, quantity: 300 },
                     resourceClassifiedAs: coffee.hash,
@@ -614,16 +760,17 @@ export function ready() {
                 agents: [al.agent.hash, bea.agent.hash, chloe.agent.hash],
                 types: [apples.hash, turnovers.hash]
             });
+            console.log(invs);
             for (let agent of [al, bea, chloe]) {
                 let inventory = invs[agent.agent.hash];
                 let turnoverRes = inventory[turnovers.hash];
-                yield resources.readResources([turnoverRes]).then(([crud]) => {
+                yield resources.readResources(turnoverRes).then(([crud]) => {
                     expectGoodCrud(crud, `EconomicResource`, `turnover res crud`);
                     expect(crud.entry.currentQuantity.quantity, `turnovers in inventory`)
                         .to.equal(0);
                 });
             }
-            let [alApples] = yield resources.readResources([invs[al.agent.hash][apples.hash]]);
+            let [alApples] = yield resources.readResources([invs[al.agent.hash][apples.hash][0]]);
             expect(alApples.entry.currentQuantity.quantity, `al's quantity of apples`)
                 .to.equal(100);
             return my;
@@ -689,9 +836,11 @@ export function ready() {
                 expect(inputs.entry, `inputs`).to.have.property(`provider`, al.agent.hash);
                 expect(inputs.entry, `inputs`).to.have.property(`receiver`, chloe.agent.hash);
                 expect(inputs.entry, `inputs`).to.have.property(`affects`, src.hash);
+                expect(inputs.entry, `inputs`).to.have.property(`inputOf`, xfer.hash);
                 expect(outputs.entry, `outputs`).to.have.property(`provider`, al.agent.hash);
                 expect(outputs.entry, `outputs`).to.have.property(`receiver`, chloe.agent.hash);
                 expect(outputs.entry, `outputs`).to.have.property(`affects`, dest.hash);
+                expect(outputs.entry, `outputs`).to.have.property(`outputOf`, xfer.hash);
                 return xfer;
             }));
             // Chloe gives Al a 300 mL cup of coffee. Al receives it.
@@ -721,15 +870,17 @@ export function ready() {
                 let [inputs, outputs] = yield events.readEvents([xfer.entry.inputs, xfer.entry.outputs]);
                 expectGoodCrud(inputs, `EconomicEvent`, `chloe give coffee to al crud`);
                 expectGoodCrud(outputs, `EconomicEvent`, `al take coffee from chloe crud`);
-                expect(inputs.entry, `chloe give coffee to all`).to.deep.equal({
+                expect(inputs.entry, `chloe give coffee to al`).to.deep.include({
                     action: my.actions.give.hash,
                     provider: chloe.agent.hash,
-                    receiver: al.agent.hash
+                    receiver: al.agent.hash,
+                    inputOf: xfer.hash
                 });
-                expect(outputs.entry, `al take coffee from chloe`).to.deep.equal({
+                expect(outputs.entry, `al take coffee from chloe`).to.deep.include({
                     action: my.actions.take.hash,
                     provider: chloe.agent.hash,
-                    receiver: al.agent.hash
+                    receiver: al.agent.hash,
+                    outputOf: xfer.hash
                 });
                 return xfer;
             }));
@@ -781,11 +932,15 @@ export function ready() {
         })).then(checkAllInventory({
             chloe: { apples: 0, turnovers: 1 }
         })).then((my) => __awaiter(this, void 0, void 0, function* () {
-            let { chloe, bea } = my;
+            let { chloe, bea, facts } = my;
             yield my.verbs.trade({ units: ``, quantity: 1 }, chloe.turnovers.hash, bea.turnovers.hash, yield tick());
             yield my.verbs.trade({ units: `kg`, quantity: 0.5 }, bea.beans.hash, chloe.coffee.hash, yield tick());
-            yield my.verbs.brewCoffee(1000, yield tick());
+            yield my.verbs.brewCoffee(1000 / facts.mlPerCup, yield tick());
             return my;
+        })).then(checkAllInventory({
+            al: { apples: 97, beans: 0, coffee: 300, turnovers: 0 },
+            bea: { apples: 0, beans: 1.5, coffee: 0, turnovers: 1 },
+            chloe: { apples: 0, coffee: 1000, turnovers: 0 }
         }));
         return prep;
     });

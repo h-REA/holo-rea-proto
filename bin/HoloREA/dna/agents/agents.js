@@ -222,6 +222,13 @@ var LinkSet = /** @class */ (function (_super) {
     __extends(LinkSet, _super);
     /**
      * Don't new this.
+     * @param {holochain.GetLinksResponse[]} array the links that exist on the DHT
+     * @param {LinkRepo} origin The repo creating this object
+     * @param {Hash} baseHash The hash of the object that is the base of these links
+     * @param {string} onlyTag Vestigial
+     * @param {boolean} loaded Are the entries loaded? default true
+     * @param {boolean} sync Do mutations to this object happen on the DHT?  default true
+     * @constructor
      */
     function LinkSet(array, origin, baseHash, onlyTag, loaded, sync) {
         if (loaded === void 0) { loaded = true; }
@@ -232,14 +239,11 @@ var LinkSet = /** @class */ (function (_super) {
         _this.loaded = loaded;
         _this.sync = true;
         _this.sync = sync;
+        debug("new LinkSet => " + _this);
         return _this;
-        /*// I do not recall what I was doing here.
-        if (onlyTag) {
-          this.forEach((item: holochain.GetLinksResponse) => {
-            item.Tag = onlyTag;
-          });
-        }
-        */
+    }
+    LinkSet.prototype.toString = function () {
+      return this.origin.name + ' ' + this.baseHash + " { " + this.desc().join(" ; ") + '}';
     }
     /**
      * Filter by any number of tags.  Returns a new LinkSet of the same type.
@@ -278,6 +282,7 @@ var LinkSet = /** @class */ (function (_super) {
     };
     /**
      * Returns an array of Hashes from the LinkSet, typed appropriately
+     * @returns {Hash} Hash<T>[]
      */
     LinkSet.prototype.hashes = function () {
         return this.map(function (_a) {
@@ -296,7 +301,8 @@ var LinkSet = /** @class */ (function (_super) {
     };
     /**
      * Filters by source.
-     * @param {holochain.Hash} ... allowed sources to be allowed
+     * @param {Hash} allowed... sources to be allowed
+     * @returns {LinkSet} LinkSet
      */
     LinkSet.prototype.sources = function () {
         var allowed = [];
@@ -315,6 +321,7 @@ var LinkSet = /** @class */ (function (_super) {
      */
     LinkSet.prototype.removeAll = function () {
         var _this = this;
+        debug(''+this + ".removeAll()")
         //*
         if (this.sync)
             this.forEach(function (link, index) {
@@ -326,6 +333,7 @@ var LinkSet = /** @class */ (function (_super) {
                     // don't care, just keep deleting them.
                 }
             });
+        debug("removeAll => void");
         this.splice(0, this.length);
         /*/// Why did I think this would work?
         if (this.sync) {
@@ -352,7 +360,8 @@ var LinkSet = /** @class */ (function (_super) {
      * the link alone.  Return null to have the link deleted, both from the set
      * and the DHT.  Return false to remove the link from the set without deleting
      * on the DHT.  Otherwise, return the new {hash, tag, type}.
-     * @returns {this}
+     * @param {Function} fn ({hash, tag, type, entry}) => {hash, tag, type} | null | undefined | false
+     * @returns {this} LinkSet
      */
     LinkSet.prototype.replace = function (fn) {
         var _a = this, length = _a.length, origin = _a.origin;
@@ -401,9 +410,12 @@ var LinkSet = /** @class */ (function (_super) {
      * Go through the set link by link, accepting or rejecting them for a new
      * LinkSet as you go.  The callback should accept a {type, entry, hash, tag}
      * and return a boolean.
+     * @param fn  Callback function
+     * @returns {LinkSet} LinkSet
      */
     LinkSet.prototype.select = function (fn) {
-        var chosen = new LinkSet([], this.origin, this.baseHash);
+      debug(''+this + ".select()");
+        var chosen = new LinkSet([], this.origin, this.baseHash, undefined, this.loaded, this.sync);
         var _loop_1 = function (response) {
             var type = response.EntryType, hash = response.Hash;
             var tag = response.Tag;
@@ -420,7 +432,47 @@ var LinkSet = /** @class */ (function (_super) {
             var response = _a[_i];
             _loop_1(response);
         }
+        debug("select() => " + chosen);
         return chosen;
+    };
+    /**
+     * Removes links with duplicate hashes and tags
+     * @param {Boolean} cleanDht should the duplicates be removed from the DHT,
+     *  too?  Defaults to the value of this.sync
+     * @returns {LinkSet} LinkSet
+     */
+    LinkSet.prototype.unique = function (cleanDht) {
+        if (cleanDht === void 0) { cleanDht = this.sync; }
+        debug(''+this + ".unique(" + cleanDht + ")");
+        var inSet = new Set();
+        var result = new LinkSet([], this.origin, this.baseHash, undefined, this.loaded, this.sync);
+        for (var _i = 0, _a = this; _i < _a.length; _i++) {
+            var link = _a[_i];
+            var desc = this.descEntry(link);
+            if (!inSet.has(desc)) {
+                inSet.add(desc);
+                result.push(link);
+            }
+            else if (cleanDht) {
+                this.origin.remove(this.baseHash, link.Hash, link.Tag);
+            }
+        }
+        return result;
+    };
+    /**
+     * Is this link in my LinkSet?
+     * @param {Tags} tag The tag to search
+     * @param {Hash} hash The hash to search
+     * @returns {Boolean} Boolean
+     */
+    LinkSet.prototype.has = function (tag, hash) {
+        var i = this.length;
+        while (i--) {
+            var link = this[i];
+            if (link.Tag === tag && link.Hash === hash)
+                return true;
+        }
+        return false;
     };
     LinkSet.prototype.descEntry = function (args) {
         var Hash = args.Hash, Tag = args.Tag, EntryType = args.EntryType;
@@ -440,10 +492,12 @@ var LinkSet = /** @class */ (function (_super) {
      */
     LinkSet.prototype.notIn = function (ls) {
         var _this = this;
+        debug(''+this + ".notIn(" + ls + ")");
         if (ls.origin !== this.origin || ls.baseHash !== this.baseHash) {
             return new LinkSet(this, this.origin, this.baseHash);
         }
         var inLs = new Set(ls.desc());
+        debug("notIn =>");
         return new LinkSet(this.filter(function (link) {
             return !inLs.has(_this.descEntry(link));
         }), this.origin, this.baseHash, undefined, this.loaded, this.sync);
@@ -456,13 +510,23 @@ var LinkSet = /** @class */ (function (_super) {
      */
     LinkSet.prototype.andIn = function (ls) {
         var _this = this;
+        debug(''+this + ".andIn(" + ls + ")");
         if (this.baseHash !== ls.baseHash) {
             return new LinkSet([], this.origin, this.baseHash);
         }
         var inLs = new Set(ls.desc());
+        debug("andIn =>");
         return new LinkSet(this.filter(function (link) { return inLs.has(_this.descEntry(link)); }), this.origin, this.baseHash, undefined, this.loaded, this.sync);
     };
+    /**
+     * Add additional links to the set.  If this.sync, it will be added to the DHT too
+     * @param {Tags} tag The tag of the link
+     * @param {Hash} hash The hash of the object to be added with that tag
+     * @param {String} type The type name of the entry
+     * @returns {LinkSet} LinkSet
+     */
     LinkSet.prototype.add = function (tag, hash, type) {
+        debug(''+this + ".add(" + tag + ' ' + hash + ':' + type + ")");
         if (this.sync)
             this.origin.put(this.baseHash, hash, tag);
         this.push({
@@ -471,9 +535,17 @@ var LinkSet = /** @class */ (function (_super) {
             EntryType: type,
             Source: App.Agent.Hash
         });
+        debug("=> " + this);
         return this;
     };
+    /**
+     * Pushes the current set to the DHT if it isn't synced already
+     * @param {Boolean} add Should additional links be added to the DHT?  Default true
+     * @param {Boolean} rem Should missing links be deleted from the DHT?  Default false
+     * @returns {LinkSet} LinkSet for chaining
+     */
     LinkSet.prototype.save = function (add, rem) {
+        debug(''+this + ".save(" + (add && "add" || "!add") + ' ' + (rem && "rem" || "!rem") + ")");
         if (add === void 0) { add = true; }
         if (rem === void 0) { rem = false; }
         if (this.sync)
@@ -489,38 +561,18 @@ var LinkSet = /** @class */ (function (_super) {
                 for (var _b = 0, _c = this.notIn(existing).hashes(); _b < _c.length; _b++) {
                     var hash = _c[_b];
                     this.origin.put(this.baseHash, hash, tag);
+
                 }
             if (rem) {
                 existing.notIn(this).removeAll();
             }
         }
+        debug("save => " + this);
         return this;
     };
     return LinkSet;
 }(ExArray));
 // no. LinkSet = LinkSet;
-/**
- * Problems:
- *  The actual links entry type is not filtered in the response from getLinks.
- *  That kind of undermines the concept of it being a repository.
- *    Can't fake it with tags, since tag strings are types and are gone at runtime
- *
- *  FIXED: The recursion guard seems overzealous, stopping the application of a reciprocal
- *  tag unnecessarily.  Sometimes.  Maybe not the first time?
- *    Fixed by entering a full description of the event ("A +tag B") in the RG,
- *    doing away with the notion of how many times a tag can be repeated in the
- *    stack.
- *
- *  update() does not appear to work in the test system for load/store repos.
- *
- *  Remove() does not appear to be effective.  Of course removeAll() is broken
- *  too.
- *    Given that the test system assumes there is only one result for querying
- *    repos, it is possible that it is finding old versions by using the first
- *    of an array of all of its versions.  BUT it shouldn't be able to find
- *    an old version without asking for it specifically, right?
- *
- */
 /**
  * LinkRepo encapsulates all kinds of links.  Used for keeping track of reciprocal
  * links, managing DHT interactions that are otherwise nuanced, producing
@@ -554,7 +606,9 @@ var LinkRepo = /** @class */ (function () {
     }
     LinkRepo.prototype.guard = function (base, link, tag, op, fn) {
         var descript = base + " " + op + tag + " " + link;
+
         if (!this.recurseGuard.has(descript)) {
+          debug("LinkRepo" + this.name + ': ' + descript);
             this.recurseGuard.add(descript);
             fn();
             this.recurseGuard.delete(descript);
@@ -562,6 +616,14 @@ var LinkRepo = /** @class */ (function () {
     };
     LinkRepo.prototype.tag = function (t) {
         return { tag: t, repo: this };
+    };
+    /**
+     * Sets up an empty LinkSet that can interact with this repo.
+     * @param {Hash} base Any added links will use this hash as the base
+     * @returns {LinkSet} an empty LinkSet
+     */
+    LinkRepo.prototype.emptySet = function (base) {
+        return new LinkSet([], this, base, undefined);
     };
     /**
      * Produce a LinkSet including all parameter-specified queries.
@@ -617,23 +679,23 @@ var LinkRepo = /** @class */ (function () {
         /*
         const rg = this.recurseGuard;
         let rgv = rg.has(tag) ? rg.get(tag) : 1;
-    
+
         if (!rgv--) return this;
-    
+
         if (this.exclusive.has(tag)) {
           this.get(base, tag).removeAll();
         }
         rg.set(tag, rgv);
-    
-    
-    
+
+
+
         if (this.predicates.has(tag)) {
           this.addPredicate(tag, base, link);
         }
-    
+
         const hash = commit(this.name, { Links: [{Base: base, Link: link, Tag: tag}] });
-    
-    
+
+
         if (this.backLinks.has(tag)) {
           for (let backLink of this.backLinks.get(tag)) {
             let {repo, tag: revTag} = backLink;
@@ -648,7 +710,7 @@ var LinkRepo = /** @class */ (function () {
         if (backRepo && backTag) {
           backRepo.put(link, base, backTag);
         }
-    
+
         rg.set(tag, ++rgv);
         /*/
         this.guard(base, link, tag, '+', function () {
@@ -708,7 +770,6 @@ var LinkRepo = /** @class */ (function () {
     // on A -insideOf B, for N: B contains N { N -nextTo A; A -nextTo N }
     // on A +insideOf B, for N: B contains N { N +nextTo A; A +nextTo N }
     /**
-     * NOT WELL TESTED
      * Expresses a rule between 3 tags that ensures that any A triggerTag B,
      * all C where B query.tag C, also C dependent.tag A
      * The reverse should also be true; if not A triggerTag B, any C where
@@ -818,14 +879,14 @@ var LinkRepo = /** @class */ (function () {
         if (!rgv--) {
           return this;
         }
-    
+
         //if (get(hash) === HC.HashNotFound) return this;
-    
+
         presentLink.Links[0].LinkAction = HC.LinkAction.Del;
         hash = notError<LinkHash>(commit(this.name, presentLink));
-    
+
         rg.set(tag, rgv);
-    
+
         if (this.backLinks.has(tag)) {
           for (let {repo, tag: backTag} of this.backLinks.get(tag)) {
             repo.remove(link, base, backTag);
@@ -839,7 +900,7 @@ var LinkRepo = /** @class */ (function () {
         if (this.predicates.has(tag)) {
           this.removePredicate(tag, base, link);
         }
-    
+
         rg.set(tag, ++rgv);
         /*/
         this.guard(base, link, tag, '-', function () {
@@ -890,6 +951,7 @@ var LinkRepo = /** @class */ (function () {
 //import "./es6";
 import "./holochain-proto";
 import "./LinkRepo";
+import { LinkRepo, Set, Map } from "./LinkRepo";
 /*/
 /**/
 var __extends = (this && this.__extends) || (function () {
@@ -935,7 +997,19 @@ export /**/ function bisect(array, min) {
 /* EXPORT
 export/**/ function reader(Hc) {
     function crudR(hashes) {
-        return hashes.map(function (hash) { return Hc.get(hash).portable(); });
+        try {
+            return hashes.map(function (hash) {
+                try {
+                    return Hc.get(hash).portable();
+                }
+                catch (e) {
+                    return { hash: hash, error: e };
+                }
+            });
+        }
+        catch (e) {
+            return [{ error: e }];
+        }
     }
     return crudR;
 }
@@ -1125,6 +1199,11 @@ export /**/ function responseOf(thing) {
     }
     return response;
 }
+/* EXPORT
+export/**/ function debugRet(it) {
+    debug('' + it);
+    return it;
+}
 ;
 /**
  * A pretty robust implementation of QuantityValue that will some day enable
@@ -1142,9 +1221,6 @@ export /**/ var QuantityValue = /** @class */ (function () {
         this.units = units;
         this.quantity = quantity;
     }
-    QuantityValue.prototype.valueOf = function () {
-        return this.quantity;
-    };
     QuantityValue.prototype.toString = function () {
         return this.quantity + " " + this.units;
     };
@@ -1154,13 +1230,14 @@ export /**/ var QuantityValue = /** @class */ (function () {
      */
     QuantityValue.prototype.add = function (_a) {
         var units = _a.units, quantity = _a.quantity;
+        debug('' + this + " + " + quantity + " " + units + " =>");
         if (units === this.units) {
-            return new QuantityValue({ units: this.units, quantity: this.quantity + quantity });
+            return debugRet(new QuantityValue({ units: this.units, quantity: this.quantity + quantity }));
         }
         else if (units === "%") {
-            return this.mul({ units: "%", quantity: 100 + quantity });
+            return debugRet(this.mul({ units: "%", quantity: 100 + quantity }));
         }
-        throw new Error("Can't add quantity in " + units + " to quantity in " + this.units);
+        throw new TypeError("Can't add quantity in " + units + " to quantity in " + this.units);
     };
     /**
      * Return a QV that is the product of this and another QV, complete with derived
@@ -1170,6 +1247,7 @@ export /**/ var QuantityValue = /** @class */ (function () {
      */
     QuantityValue.prototype.mul = function (_a) {
         var units = _a.units, quantity = _a.quantity;
+        debug('' + this + " * " + quantity + " " + units + " =>");
         if (units === "%") {
             quantity /= 100;
             units = "";
@@ -1181,7 +1259,7 @@ export /**/ var QuantityValue = /** @class */ (function () {
         else {
             units = this.units;
         }
-        return new QuantityValue({ units: units, quantity: quantity * this.quantity });
+        return debugRet(new QuantityValue({ units: units, quantity: quantity * this.quantity }));
     };
     /**
      * Returns the difference between this and another QV.  If a % is given, the
@@ -1190,15 +1268,16 @@ export /**/ var QuantityValue = /** @class */ (function () {
      */
     QuantityValue.prototype.sub = function (_a) {
         var units = _a.units, quantity = _a.quantity;
+        debug('' + this + " - " + quantity + " " + units + " =>");
         if (units === "%") {
             quantity = 100 - quantity;
             return this.mul({ units: units, quantity: quantity });
         }
         else if (units === this.units) {
-            return new QuantityValue({ units: units, quantity: this.quantity - quantity });
+            return debugRet(new QuantityValue({ units: units, quantity: this.quantity - quantity }));
         }
         else {
-            throw new Error("Can't subtract " + units + " from " + this.units);
+            throw new TypeError("Can't subtract " + units + " from " + this.units);
         }
     };
     /**
@@ -1208,6 +1287,9 @@ export /**/ var QuantityValue = /** @class */ (function () {
      */
     QuantityValue.prototype.div = function (_a) {
         var units = _a.units, quantity = _a.quantity;
+        debug('' + this + " / " + quantity + " " + units + " =>");
+        if (!quantity)
+            throw new Error("Can't divide by 0 " + units);
         if (units === "%") {
             units = "";
             quantity = 100 / quantity;
@@ -1218,9 +1300,11 @@ export /**/ var QuantityValue = /** @class */ (function () {
         else {
             units = this.units;
         }
-        return new QuantityValue({ units: units, quantity: this.quantity / quantity });
+        return debugRet(new QuantityValue({ units: units, quantity: this.quantity / quantity }));
     };
     QuantityValue.decomposeUnits = function (units) {
+        if (!units)
+            return {};
         var decomp = units.split("*"), dict = {};
         for (var _i = 0, decomp_1 = decomp; _i < decomp_1.length; _i++) {
             var unit = decomp_1[_i];
@@ -1277,13 +1361,27 @@ export /**/ var QuantityValue = /** @class */ (function () {
     QuantityValue.recomposeUnits = function (decomp) {
         return Object.keys(decomp).map(function (unit) {
             var expo = decomp[unit];
-            if (expo !== 1) {
+            if (expo === 1) {
                 return unit;
             }
             else {
                 return unit + "^" + expo;
             }
         }).join("*");
+    };
+    QuantityValue.isEqualUnits = function (a, b) {
+        var adict = this.decomposeUnits(a);
+        var bdict = this.decomposeUnits(b);
+        for (var _i = 0, _a = Object.keys(adict); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if (adict[key] !== bdict[key])
+                return false;
+        }
+        var aset = new Set(Object.keys(adict));
+        var bset = new Set(Object.keys(bdict));
+        if (bset.disjunct(aset).size)
+            return false;
+        return true;
     };
     QuantityValue.prototype.isCount = function () {
         return this.units === "";
@@ -1683,6 +1781,52 @@ function wtf(crud) {
 export/**/ function callZome(zome, fn, arg) {
     return JSON.parse(call(zome, fn, arg));
 }
+// Now moving all the link definitions here.
+/* EXPORT
+export/**/ var AgentProperty = new LinkRepo("AgentProperty");
+AgentProperty
+    .linkBack("owns", "owner")
+    .linkBack("owner", "owns")
+    .singular("owner");
+/* EXPORT
+export/**/ var Classifications = new LinkRepo("Classifications");
+Classifications
+    .linkBack("classifiedAs", "classifies")
+    .linkBack("classifies", "classifiedAs")
+    .singular("classifiedAs");
+/* EXPORT
+export/**/ var EventLinks = new LinkRepo("EventLinks");
+EventLinks.linkBack("inputs", "inputOf")
+    .linkBack("outputs", "outputOf")
+    .linkBack("inputOf", "inputs")
+    .linkBack("outputOf", "outputs")
+    .linkBack("action", "actionOf")
+    .linkBack("actionOf", "action")
+    .singular("inputOf")
+    .singular("outputOf")
+    .singular("action");
+/* EXPORT
+export/**/ var ResourceClasses = new LinkRepo("ResourceClasses");
+ResourceClasses
+    .linkBack("classifiedAs", "classifies")
+    .linkBack("classifies", "classifiedAs")
+    .singular("classifiedAs");
+/* EXPORT
+export/**/ var ResourceRelationships = new LinkRepo("ResourceRelationships");
+ResourceRelationships
+    .linkBack("underlyingResource", "underlies")
+    .linkBack("underlies", "underlyingResource")
+    .singular("underlies")
+    .singular("underlyingResource")
+    .linkBack("contains", "inside")
+    .linkBack("inside", "contains")
+    .singular("inside");
+/* EXPORT
+export/**/ var TrackTrace = new LinkRepo("TrackTrace");
+TrackTrace
+    .linkBack("affects", "affectedBy")
+    .linkBack("affectedBy", "affects")
+    .singular("affects");
 var Agent = /** @class */ (function (_super) {
     __extends(Agent, _super);
     function Agent(entry, hash) {
@@ -1702,7 +1846,6 @@ var Agent = /** @class */ (function (_super) {
     });
     return Agent;
 }(VfObject));
-var AgentProperty = new LinkRepo("AgentProperty");
 /* TYPE-SCOPE
 }
 /*/

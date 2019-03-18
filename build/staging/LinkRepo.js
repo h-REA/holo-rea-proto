@@ -222,6 +222,13 @@ var LinkSet = /** @class */ (function (_super) {
     __extends(LinkSet, _super);
     /**
      * Don't new this.
+     * @param {holochain.GetLinksResponse[]} array the links that exist on the DHT
+     * @param {LinkRepo} origin The repo creating this object
+     * @param {Hash} baseHash The hash of the object that is the base of these links
+     * @param {string} onlyTag Vestigial
+     * @param {boolean} loaded Are the entries loaded? default true
+     * @param {boolean} sync Do mutations to this object happen on the DHT?  default true
+     * @constructor
      */
     function LinkSet(array, origin, baseHash, onlyTag, loaded, sync) {
         if (loaded === void 0) { loaded = true; }
@@ -233,13 +240,6 @@ var LinkSet = /** @class */ (function (_super) {
         _this.sync = true;
         _this.sync = sync;
         return _this;
-        /*// I do not recall what I was doing here.
-        if (onlyTag) {
-          this.forEach((item: holochain.GetLinksResponse) => {
-            item.Tag = onlyTag;
-          });
-        }
-        */
     }
     /**
      * Filter by any number of tags.  Returns a new LinkSet of the same type.
@@ -278,6 +278,7 @@ var LinkSet = /** @class */ (function (_super) {
     };
     /**
      * Returns an array of Hashes from the LinkSet, typed appropriately
+     * @returns {Hash} Hash<T>[]
      */
     LinkSet.prototype.hashes = function () {
         return this.map(function (_a) {
@@ -296,7 +297,8 @@ var LinkSet = /** @class */ (function (_super) {
     };
     /**
      * Filters by source.
-     * @param {holochain.Hash} ... allowed sources to be allowed
+     * @param {Hash} allowed... sources to be allowed
+     * @returns {LinkSet} LinkSet
      */
     LinkSet.prototype.sources = function () {
         var allowed = [];
@@ -352,7 +354,8 @@ var LinkSet = /** @class */ (function (_super) {
      * the link alone.  Return null to have the link deleted, both from the set
      * and the DHT.  Return false to remove the link from the set without deleting
      * on the DHT.  Otherwise, return the new {hash, tag, type}.
-     * @returns {this}
+     * @param {Function} fn ({hash, tag, type, entry}) => {hash, tag, type} | null | undefined | false
+     * @returns {this} LinkSet
      */
     LinkSet.prototype.replace = function (fn) {
         var _a = this, length = _a.length, origin = _a.origin;
@@ -401,9 +404,11 @@ var LinkSet = /** @class */ (function (_super) {
      * Go through the set link by link, accepting or rejecting them for a new
      * LinkSet as you go.  The callback should accept a {type, entry, hash, tag}
      * and return a boolean.
+     * @param fn  Callback function
+     * @returns {LinkSet} LinkSet
      */
     LinkSet.prototype.select = function (fn) {
-        var chosen = new LinkSet([], this.origin, this.baseHash);
+        var chosen = new LinkSet([], this.origin, this.baseHash, undefined, this.loaded, this.sync);
         var _loop_1 = function (response) {
             var type = response.EntryType, hash = response.Hash;
             var tag = response.Tag;
@@ -421,6 +426,44 @@ var LinkSet = /** @class */ (function (_super) {
             _loop_1(response);
         }
         return chosen;
+    };
+    /**
+     * Removes links with duplicate hashes and tags
+     * @param {Boolean} cleanDht should the duplicates be removed from the DHT,
+     *  too?  Defaults to the value of this.sync
+     * @returns {LinkSet} LinkSet
+     */
+    LinkSet.prototype.unique = function (cleanDht) {
+        if (cleanDht === void 0) { cleanDht = this.sync; }
+        var inSet = new Set();
+        var result = new LinkSet([], this.origin, this.baseHash, undefined, this.loaded, this.sync);
+        for (var _i = 0, _a = this; _i < _a.length; _i++) {
+            var link = _a[_i];
+            var desc = this.descEntry(link);
+            if (!inSet.has(desc)) {
+                inSet.add(desc);
+                result.push(link);
+            }
+            else if (cleanDht) {
+                this.origin.remove(this.baseHash, link.Hash, link.Tag);
+            }
+        }
+        return result;
+    };
+    /**
+     * Is this link in my LinkSet?
+     * @param {Tags} tag The tag to search
+     * @param {Hash} hash The hash to search
+     * @returns {Boolean} Boolean
+     */
+    LinkSet.prototype.has = function (tag, hash) {
+        var i = this.length;
+        while (i--) {
+            var link = this[i];
+            if (link.Tag === tag && link.Hash === hash)
+                return true;
+        }
+        return false;
     };
     LinkSet.prototype.descEntry = function (args) {
         var Hash = args.Hash, Tag = args.Tag, EntryType = args.EntryType;
@@ -462,6 +505,13 @@ var LinkSet = /** @class */ (function (_super) {
         var inLs = new Set(ls.desc());
         return new LinkSet(this.filter(function (link) { return inLs.has(_this.descEntry(link)); }), this.origin, this.baseHash, undefined, this.loaded, this.sync);
     };
+    /**
+     * Add additional links to the set.  If this.sync, it will be added to the DHT too
+     * @param {Tags} tag The tag of the link
+     * @param {Hash} hash The hash of the object to be added with that tag
+     * @param {String} type The type name of the entry
+     * @returns {LinkSet} LinkSet
+     */
     LinkSet.prototype.add = function (tag, hash, type) {
         if (this.sync)
             this.origin.put(this.baseHash, hash, tag);
@@ -473,6 +523,12 @@ var LinkSet = /** @class */ (function (_super) {
         });
         return this;
     };
+    /**
+     * Pushes the current set to the DHT if it isn't synced already
+     * @param {Boolean} add Should additional links be added to the DHT?  Default true
+     * @param {Boolean} rem Should missing links be deleted from the DHT?  Default false
+     * @returns {LinkSet} LinkSet for chaining
+     */
     LinkSet.prototype.save = function (add, rem) {
         if (add === void 0) { add = true; }
         if (rem === void 0) { rem = false; }
@@ -499,28 +555,6 @@ var LinkSet = /** @class */ (function (_super) {
     return LinkSet;
 }(ExArray));
 // no. LinkSet = LinkSet;
-/**
- * Problems:
- *  The actual links entry type is not filtered in the response from getLinks.
- *  That kind of undermines the concept of it being a repository.
- *    Can't fake it with tags, since tag strings are types and are gone at runtime
- *
- *  FIXED: The recursion guard seems overzealous, stopping the application of a reciprocal
- *  tag unnecessarily.  Sometimes.  Maybe not the first time?
- *    Fixed by entering a full description of the event ("A +tag B") in the RG,
- *    doing away with the notion of how many times a tag can be repeated in the
- *    stack.
- *
- *  update() does not appear to work in the test system for load/store repos.
- *
- *  Remove() does not appear to be effective.  Of course removeAll() is broken
- *  too.
- *    Given that the test system assumes there is only one result for querying
- *    repos, it is possible that it is finding old versions by using the first
- *    of an array of all of its versions.  BUT it shouldn't be able to find
- *    an old version without asking for it specifically, right?
- *
- */
 /**
  * LinkRepo encapsulates all kinds of links.  Used for keeping track of reciprocal
  * links, managing DHT interactions that are otherwise nuanced, producing
@@ -562,6 +596,14 @@ var LinkRepo = /** @class */ (function () {
     };
     LinkRepo.prototype.tag = function (t) {
         return { tag: t, repo: this };
+    };
+    /**
+     * Sets up an empty LinkSet that can interact with this repo.
+     * @param {Hash} base Any added links will use this hash as the base
+     * @returns {LinkSet} an empty LinkSet
+     */
+    LinkRepo.prototype.emptySet = function (base) {
+        return new LinkSet([], this, base, undefined);
     };
     /**
      * Produce a LinkSet including all parameter-specified queries.
@@ -708,7 +750,6 @@ var LinkRepo = /** @class */ (function () {
     // on A -insideOf B, for N: B contains N { N -nextTo A; A -nextTo N }
     // on A +insideOf B, for N: B contains N { N +nextTo A; A +nextTo N }
     /**
-     * NOT WELL TESTED
      * Expresses a rule between 3 tags that ensures that any A triggerTag B,
      * all C where B query.tag C, also C dependent.tag A
      * The reverse should also be true; if not A triggerTag B, any C where

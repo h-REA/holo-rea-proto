@@ -1,11 +1,14 @@
 // <reference path="./es6.d.ts"/>
 // <reference path="./holochain-proto.d.ts"/>
 /* IMPORT
-import "./es6";
+//import "./es6";
 import "./holochain-proto";
-
+import "./LinkRepo";
+import { LinkRepo, Set, Map } from "./LinkRepo";
 /*/
 /**/
+
+// Now commenting out everything now defined in LinkRepo
 
 /**
  * We aren't going to be able to pass real Maps around between zomes and agents.
@@ -25,6 +28,9 @@ export /**/type Catalog<K extends string, T> = {[key: string]: T}
  */
 /* EXPORT
 export /**/type PhysicalLocation = string[];
+
+/* EXPORT
+export/**/type Fixture<T> = { [k:string]: Hash<T>};
 
 /**
  * I can write a good bisect of a sorted list in my sleep.  And I think I did,
@@ -59,18 +65,66 @@ export /**/function bisect(array: number[], min: number): number {
  */
 /* EXPORT
 export /**/interface CrudResponse<T extends object> {
-  /** @prop {Error} error this error is why you can't have the other fields */
+  /** @prop {Error} this error is why you can't have the other fields */
   error?: {
     name: string;
     message: string;
     stack?: string;
   };
-  /** @prop {Hash<T>} hash the hash of a T; if there is an entry, this is its hash */
+  /** @prop {Hash} the hash of a T; if there is an entry, this is its hash */
   hash?: Hash<T>;
-  /** @prop {T} entry this is the T you asked for/gave */
+  /** @prop {T} this is the T you asked for/gave */
   entry?: T;
-  /** @prop {string} type this is the name of T as specified in the DNA. */
+  /** @prop {string} this is the name of T as specified in the DNA. */
   type?: string;
+}
+
+/* EXPORT
+export/**/function reader<
+  I extends HoloObject<T["entryType"]>,
+  T extends HoloClass<I,E> = HoloClass<I,E>,
+  E extends holochain.JsonEntry = T["entryType"]
+>( Hc: T ): (hashes: Hash<E>[]) => CrudResponse<E>[] {
+  function crudR(hashes: Hash<E>[]): CrudResponse<E>[] {
+    try {
+      return hashes.map(hash => {
+        try {
+          return Hc.get(hash).portable();
+        } catch (e) {
+          return { hash, error: e }
+        }
+      });
+
+    } catch (e) {
+      return [{error:e}];
+    }
+  }
+
+  return crudR;
+}
+
+/* EXPORT
+export/**/function creator<
+  I extends HoloObject<T["entryType"]>,
+  T extends HoloClass<I, E>,
+  E extends holochain.JsonEntry
+>( Hc: T ): (props: E) => CrudResponse<E> {
+
+  return function crudC(props: E): CrudResponse<E> {
+    let it: I;
+    try {
+      it = Hc.create(props);
+      it.commit();
+      return it.portable();
+    } catch (e) {
+      return {
+        error: e || null,
+        hash: it && it.hash,
+        entry: it && it.entry,
+        type: Hc.className
+      };
+    }
+  }
 }
 
 /**
@@ -88,9 +142,18 @@ export /**/interface CrudResponse<T extends object> {
 /* EXPORT
 export /**/function deepAssign<T extends object, U extends object>(dest: T, src: U, ...more: object[]): T & U {
   for (let p of Object.keys(src)) {
-    let v: U[keyof U];
+    let v: any; // FIXME: this makes me want to cry.
     if (typeof src[p] == `object`) {
-      v = deepAssign(dest[p] || {}, src[p]);
+      if (src[p] instanceof Array) {
+        let d = dest[p];
+        if (d && d instanceof Array) {
+          v = d.concat(src[p]);
+        } else {
+          v = [].concat(src[p]);
+        }
+      } else {
+        v = deepAssign(dest[p] || {}, src[p]);
+      }
     } else {
       v = src[p];
     }
@@ -103,6 +166,50 @@ export /**/function deepAssign<T extends object, U extends object>(dest: T, src:
   } else {
     return <T&U>dest;
   }
+}
+
+/* EXPORT
+export/**/ type Initializer<T, U = T> =
+  (
+    T extends Array<infer V> ? Array<V> :
+    T extends object
+      ? { [K in keyof T]?: Initializer<T[K], T> }
+      : T
+  ) | (
+    (it:U) => T
+  );
+
+/* EXPORT
+export/**/ function deepInit<T extends holochain.JsonEntry>(
+  target: Partial<T>,
+  ...inits: Initializer<T>[]
+): T {
+  target = target || {};
+
+  for (let init of inits) {
+
+    for (let key of Object.keys(init)) {
+
+      let val = init[key];
+      while (typeof val === `function` && !(key in target)) {
+        val = val.call(target, target);
+      }
+      if (typeof val === `object`) {
+        let over = target[key];
+        if (val instanceof Array) {
+          val = over || val;
+        } else if (over && typeof over === `object`) {
+          val = deepInit({}, over, val);
+        } else if (over !== undefined) {
+          val = over;
+        }
+      } else if (key in target) {
+        val = target[key];
+      }
+      target[key] = val;
+    }
+  }
+  return <T>target;
 }
 
 /**
@@ -132,7 +239,7 @@ function isCrud<T extends object>(thing: HoloThing<T>): thing is CrudResponse<T>
  *  and without that, it can't be hashed.
  */
 /* EXPORT
-export /**/function hashOf<T extends object>(thing: HoloThing<T>): Hash<T> {
+export /**/function hashOf<T extends object>(thing: HoloThing<T>, type?: string): Hash<T> {
   if (typeof thing == `string`) {
     return thing;
   } else if (thing instanceof HoloObject) {
@@ -142,6 +249,8 @@ export /**/function hashOf<T extends object>(thing: HoloThing<T>): Hash<T> {
       thing.hash = notError(makeHash(thing.type, thing.entry));
     }
     return thing.hash;
+  } else if (type && typeof thing === `object`) {
+    return notError(commit(type, thing));
   } else {
     throw new Error(`hashOf can't hash ${thing} without a typename`);
   }
@@ -158,13 +267,13 @@ export /**/function hashOf<T extends object>(thing: HoloThing<T>): Hash<T> {
 export /**/function entryOf<T extends object>(thing: HoloThing<T>): T {
   if (typeof thing == `string`) {
     let got: holochain.CanError<T> = get(thing);
-    return isError(got) ? null : got;
+    return isErr(got) ? null : got;
   } else if (thing instanceof HoloObject) {
     return thing.entry;
   } else if (isCrud(thing)) {
     if (!thing.entry) {
       let entry = get(thing.hash);
-      if (!isError(entry)) thing.entry = entry;
+      if (!isErr(entry)) thing.entry = entry;
     }
     return thing.entry;
   } else {
@@ -183,6 +292,9 @@ export /**/function responseOf<T extends object>(thing: HoloThing<T>): CrudRespo
   try {
     let hash = response.hash = hashOf(thing);
     let entry = response.entry = entryOf(thing);
+    if (isCrud(thing)) {
+      response.type = thing.type;
+    }
   } catch (e) {
     response.error = e;
   }
@@ -204,6 +316,12 @@ export /**/type HoloClass<T,U> = (new (o:U, h:Hash<T>) => T) &
     className: string,
     entryType: U
   };
+
+/* EXPORT
+export/**/function debugRet<T>(it: T): T {
+  debug(''+it);
+  return it;
+}
 
 /**
  * It's just as good as a QuantityValue as far as a real QV knows, and it can
@@ -235,18 +353,22 @@ export /**/class QuantityValue implements QVlike {
     this.quantity = quantity;
   }
 
+  toString() {
+    return `${this.quantity} ${this.units}`
+  }
+
   /**
    * Check unit compatibility and return the sum of two QVs
    * if a % is added (not to a %) the addition is relative to the original quantity
    */
   add({units, quantity}: QVlike): QuantityValue {
-
+    debug(`${''+this} + ${quantity} ${units} =>`);
     if (units === this.units) {
-      return new QuantityValue({units: this.units, quantity: this.quantity + quantity});
+      return debugRet(new QuantityValue({units: this.units, quantity: this.quantity + quantity}));
     } else if (units === `%`) {
-      return this.mul({units: `%`, quantity: 100 + quantity});
+      return debugRet(this.mul({units: `%`, quantity: 100 + quantity}));
     }
-    throw new Error(`Can't add quantity in ${units} to quantity in ${this.units}`);
+    throw new TypeError(`Can't add quantity in ${units} to quantity in ${this.units}`);
   }
 
   /**
@@ -256,6 +378,7 @@ export /**/class QuantityValue implements QVlike {
    * a unitless ratio.
    */
   mul({units, quantity}: QVlike): QuantityValue {
+    debug(`${''+this} * ${quantity} ${units} =>`)
     if (units === `%`) {
       quantity /= 100;
       units = ``;
@@ -268,7 +391,7 @@ export /**/class QuantityValue implements QVlike {
       units = this.units;
     }
 
-    return new QuantityValue({units, quantity: quantity*this.quantity});
+    return debugRet(new QuantityValue({units, quantity: quantity*this.quantity}));
   }
 
   /**
@@ -277,13 +400,14 @@ export /**/class QuantityValue implements QVlike {
    * units must match.
    */
   sub({units, quantity}: QVlike): QuantityValue {
+    debug(`${''+this} - ${quantity} ${units} =>`)
     if (units === `%`) {
       quantity = 100 - quantity;
       return this.mul({units, quantity});
     } else if (units === this.units) {
-      return new QuantityValue({units, quantity: this.quantity - quantity});
+      return debugRet(new QuantityValue({units, quantity: this.quantity - quantity}));
     } else {
-      throw new Error(`Can't subtract ${units} from ${this.units}`);
+      throw new TypeError(`Can't subtract ${units} from ${this.units}`);
     }
   }
 
@@ -293,6 +417,8 @@ export /**/class QuantityValue implements QVlike {
    * the same as the input.
    */
   div({units, quantity}: QVlike): QuantityValue {
+    debug(`${''+this} / ${quantity} ${units} =>`)
+    if (!quantity) throw new Error(`Can't divide by 0 ${units}`);
     if (units === `%`) {
       units = ``;
       quantity = 100/quantity;
@@ -305,10 +431,12 @@ export /**/class QuantityValue implements QVlike {
     } else {
       units = this.units;
     }
-    return new QuantityValue({units, quantity: this.quantity/quantity});
+    return debugRet(new QuantityValue({units, quantity: this.quantity/quantity}));
   }
 
   static decomposeUnits(units: string): {[key: string]: number} {
+    if (!units) return {};
+
     let decomp: string[] = units.split(`*`),
       dict: {[key: string]: number} = {};
 
@@ -368,7 +496,7 @@ export /**/class QuantityValue implements QVlike {
   static recomposeUnits(decomp: {[key: string]: number}): string {
     return Object.keys(decomp).map((unit) => {
       let expo = decomp[unit];
-      if (expo !== 1) {
+      if (expo === 1) {
         return unit;
       } else {
         return `${unit}^${expo}`;
@@ -376,9 +504,25 @@ export /**/class QuantityValue implements QVlike {
     }).join(`*`);
   }
 
+  static isEqualUnits(a: string, b: string): boolean {
+    const adict = this.decomposeUnits(a);
+    const bdict = this.decomposeUnits(b);
+
+    for (let key of Object.keys(adict)) {
+      if (adict[key] !== bdict[key]) return false;
+    }
+
+    const aset = new Set(Object.keys(adict));
+    const bset = new Set(Object.keys(bdict));
+    if (bset.disjunct(aset).size) return false;
+
+    return true;
+  }
+
   isCount(): boolean {
     return this.units === "";
   }
+
 }
 
 /**
@@ -388,7 +532,7 @@ export /**/class QuantityValue implements QVlike {
  */
 /* EXPORT
 export /**/function notError<T>(maybeErr: holochain.CanError<T>): T {
-  if (isError(maybeErr)) {
+  if (isErr(maybeErr)) {
     throw new Error(`That was an error! ${``+maybeErr}`);
   } else {
     return (<T> maybeErr);
@@ -401,471 +545,7 @@ export /**/function notError<T>(maybeErr: holochain.CanError<T>): T {
 /* EXPORT
 export /**/type LinkHash = Hash<holochain.LinksEntry>
 
-/* EXPORT
-export/**/interface LinkReplacement<T, Tags> {
-  hash: Hash<T>;
-  tag: Tags;
-  type: string;
-}
-
-/* EXPORT
-export/**/interface LinkReplace<T, Tags> extends LinkReplacement<T, Tags> {
-  readonly entry: T;
-}
-
-/**
- * Tool for getting what you need from linkRepo.get() and preserving Hash types
- * and iterating with for...of
- * The type parameter is the type of the Link elements
- * It provides filter methods (tags, types, sources) to narrow your results,
- * and the output will be another LinkSet.
- * Get an array of entries (data()) or hashes (hashes())
- * It wants to be a Set, but targetting compilation to ES5 will only allow
- * arrays to be for..of'ed
- *
- */
-/* EXPORT
-export /**/class LinkSet<B, L, Tags extends string = string, T extends L = L> extends Array<holochain.GetLinksResponse> {
-
-  constructor(array: Array<holochain.GetLinksResponse>, private origin: LinkRepo<B,L,Tags>, private baseHash: string, private onlyTag?: string) {
-    super(...array);
-    if (onlyTag) {
-      this.forEach((item: holochain.GetLinksResponse) => {
-        item.Tag = onlyTag;
-      });
-    }
-  }
-  /**
-   * Filter by any number of tags.  Returns a new LinkSet of the same type.
-   * @param {string[]} narrowing An array of the tag names wanted.
-   */
-  tags<Tx extends T>(...narrowing: string[]): LinkSet<B, L, Tags, Tx> {
-    let uniques = new Set(narrowing);
-    return new LinkSet<B, L, Tags, Tx>( this.filter( ({Tag}) => uniques.has(Tag) ), this.origin, this.baseHash );
-  }
-
-  /**
-   * Filter by any number of entryTypes, which you should probably get from HoloObj.className
-   * returns a new LinkSet.
-   * if you like typesafety, use the type parameter to narrow the types, too.
-   * @arg C Type or union of types that the result should contain.  These are classes, not names.
-   * @params {string} typeNames is the list of types that the result should have.
-   *  these are the type names, not the classes.
-   * @returns {LinkSet<C>}
-   * @deprecated
-   * FIXME.  Super deprecated.
-   */
-  types<C extends T = T>(...typeNames: string[]): LinkSet<B,L,Tags,C> {
-    let uniques = new Set<string>(typeNames);
-    return new LinkSet<B,L,Tags,C>(this.filter( ({EntryType}) => uniques.has(EntryType) ), this.origin, this.baseHash);
-  }
-
-  /**
-   * Returns an array of Hashes from the LinkSet, typed appropriately
-   */
-  hashes(): Hash<T>[] {
-    return this.map( ({Hash}) => Hash);
-  }
-
-  /**
-   * Returns the entries in the LinkSet as a typesafe array.
-   */
-  data(): T[] {
-    return this.map( ({Hash}) => <T>notError(get(Hash)));
-  }
-
-  /**
-   * Filters by source.
-   */
-  sources(...allowed: holochain.Hash[]): LinkSet<B,L,Tags,T> {
-    let uniques = new Set<holochain.Hash>(allowed);
-    return new LinkSet<B,L,Tags,T>(this.filter( ({Source}) => uniques.has(Source) ), this.origin, this.baseHash);
-  }
-
-  removeAll(): void {
-    this.forEach( (link: holochain.GetLinksResponse, index:number) => {
-      let target = link.Hash, tag = link.Tag;
-      try {
-        this.origin.remove(this.baseHash, target, <Tags>tag);
-      } catch (e) {
-        // don't care, just keep deleting them.
-      }
-    });
-    this.splice(0, this.length);
-  }
-
-  /**
-   * Filters and replaces elements of the set.  Provide a function that accepts
-   * a LinkReplace ({hash, tag, type, entry}) and returns a LinkReplacement
-   * ({hash, tag, type}).  Return undefined or the unmodified argument to leave
-   * the link alone.  Return null to have the link deleted, both from the set
-   * and the DHT.  Return false to remove the link from the set without deleting
-   * on the DHT.  Otherwise, return the new {hash, tag, type}.
-   * @returns {this}
-   */
-  replace(fn: (obj: LinkReplace<T, Tags>) => LinkReplacement<T, Tags>|false): this {
-    const {length, origin} = this;
-    const removals: number[] = [];
-
-    for (let i = 0; i < length; i++) {
-      const {EntryType: type} = this[i];
-      let hash = <Hash<T>>this[i].Hash;
-      let tag = <Tags>this[i].Tag;
-
-      let entry = get(hash);
-
-      if (!isError(entry)) {
-        let rep = fn({hash, tag, type, entry});
-        if (rep === null) {
-          origin.remove(this.baseHash, hash, tag);
-          removals.push(i);
-        } else if (rep === false) {
-          removals.push(i);
-        } else if (rep && (tag !== rep.tag || hash !== rep.hash)) {
-          if (hash === rep.hash && type !== rep.type) {
-            throw new TypeError(`can't link to ${type} ${hash} as type ${rep.type}`);
-          }
-          origin.remove(this.baseHash, hash, tag);
-          tag = rep.tag;
-          hash = rep.hash;
-          origin.put(this.baseHash, hash, tag);
-          this[i] = {
-            EntryType: rep.type,
-            Tag: tag,
-            Hash: hash
-          };
-        }
-      } else {
-        removals.push(i);
-      }
-    }
-
-    for (let i of removals) {
-      this.splice(i, 1);
-    }
-
-    return this;
-  }
-
-  /**
-   * Go through the set link by link, accepting or rejecting them for a new
-   * LinkSet as you go.  The callback should accept a {type, entry, hash, tag}
-   * and return a boolean.
-   */
-  select(fn: (lr: LinkReplace<T, Tags>) => boolean): LinkSet<B, L, Tags, T> {
-    let chosen = new LinkSet<B, L, Tags, T>([], this.origin, this.baseHash);
-
-    for (let response of this) {
-      let {EntryType: type, Hash: hash} = response;
-      let tag = <Tags> response.Tag;
-      let entry = <T>notError(get(hash));
-      if (fn({type, entry, hash, tag})) chosen.push(response);
-    }
-
-    return chosen;
-  }
-}
-
-interface Tag<B,L, T extends string> {
-  tag: T,
-  repo: LinkRepo<B,L,T>
-}
-
-/**
- * LinkRepo encapsulates all kinds of links.  I name them like NormalClasses when they
- * are encapsulating a whole entry type.  Used for keeping track of reciprocal
- * links, managing DHT interactions that are otherwise nuanced, producing
- * LinkSet objects, maintaining type-safe Hash types, and defending against
- * recursive reciprocal links.
- * @arg B: object extends HoloObject.  The union of types that can be the Base of the Links
- * @arg L: object extends HoloObject.  The union of types that can be the Link of the Links
- *  If there are reciprocal links within this LinkRepo, it's safest for B and L
- *  to be identical.
- * @arg T: any extends string.  This is a union of the tag strings used in this repo.
- *  If you don't want to know when you put the wrong tag in the wrong Repo, go
- *  ahead and let it default to string.  Do not use tags that include the pipe
- *  character, '|'
- */
-/* EXPORT
-export /**/class LinkRepo<B, L, T extends string = string> {
-  /**
-   * @param {string} name the exact dna.zomes[].Entries.Name that this repo will
-   *  represent.
-   */
-  constructor (protected name: string) {}
-
-  protected backLinks = new Map<T, Tag<L|B,B|L, T|string>[]>();
-  protected recurseGuard = new Map<T, number>();
-  protected selfLinks = new Map<T, T[]>();
-  protected predicates = new Map<
-    T,
-    { query: Tag<L|B, B|L, T|string>, dependent: Tag<L|B, B|L, T|string> }[]
-  >();
-  protected exclusive = new Set<T>();
-  readonly BASE: B;
-  readonly LINK: L;
-  readonly TAGS: T;
-
-  tag<Ts extends T>(t: Ts): Tag<B, L, T> {
-    return { tag: t, repo: this };
-  }
-  /**
-   * Produce a LinkSet including all parameter-specified queries.
-   * @param {Hash<B>} base this is the Base entry  whose outward links will
-   *  be recovered.
-   * @param {string} tag this is the tag or tags you want to filter by.
-   *  If given an empty string or omitted, all links in this repo are retrieved.
-   *  To allow multiple tags to be returned, put them in this string separated
-   *  by the pipe character ('|')
-   * @param {holochain.LinksOptions} options options that will be passed to getLinks
-   *  Be aware that the LinkSet will NOT know about these.  Defaults to the default
-   *  LinksOptions.
-   * @returns {LinkSet<B>} containing the query result.
-   */
-  get<RT extends L = L>(base: Hash<B>, tag: string = ``, options: holochain.LinksOptions = {}): LinkSet<B,L,T,RT> {
-    if (!tag) {
-      return new LinkSet<B,L,T,RT>(<holochain.GetLinksResponse[]> notError(getLinks(base, tag, options)), this, base);
-    }
-    let tags = tag.split(`|`),
-      responses: holochain.GetLinksResponse[] = [];
-
-    for (tag of tags) {
-      let response = <holochain.GetLinksResponse[]>getLinks(base, tag, options);
-      responses = responses.concat(response);
-    }
-
-    return new LinkSet<B,L,T,RT>(responses, this, base);
-  }
-
-  /**
-   * Commits a new link to the DHT.
-   * @param {Hash<B>} base the base of the link.  This is the object you can query by.
-   * @param {Hash<L>} link the linked object of the link.  This is the object you
-   *  CAN'T query by, which is the object of the tag.
-   * @param {T} tag the tag for the link, of which base is the object.
-   * @param {LinkRepo<L, B>?} backRepo optional repo that will contain a reciprocal
-   *  link.  Any reciprocals already registered via linkBack() are already covered;
-   *  Use that method instead when possible.
-   * @param {string?} backTag optional but mandatory if backRepo is specified.
-   *  this is the tag used for the reciprocal link in addition to those already
-   *  entered into the repo; there is no need to repeat this information if
-   *  the reciprocal has been entered already via linkBack
-   * @returns {LinkHash} a hash of the link, but that's pretty useless, so I'll probably end up changing
-   *  it to be chainable.
-   */
-  put(base: Hash<B>, link: Hash<L>, tag: T, backRepo?: LinkRepo<L, B>, backTag?: string): this {
-    const rg = this.recurseGuard;
-    let rgv = rg.get(tag);
-
-    if (!rgv--) return this;
-
-    rg.set(tag, rgv);
-
-    if (this.exclusive.has(tag)) {
-      this.get(base, tag).removeAll();
-    }
-
-    if (this.predicates.has(tag)) {
-      this.addPredicate(tag, base, link);
-    }
-
-    const hash = commit(this.name, { Links: [{Base: base, Link: link, Tag: tag}] });
-
-
-    if (this.backLinks.has(tag)) {
-      for (let backLink of this.backLinks.get(tag)) {
-        let {repo, tag: revTag} = backLink;
-        repo.put(link, base, revTag);
-      }
-    }
-    if (this.selfLinks.has(tag)) {
-      for (let revTag of this.selfLinks.get(tag)) {
-        this.put(link, base, revTag);
-      }
-    }
-    if (backRepo && backTag) {
-      backRepo.put(link, base, backTag);
-    }
-
-    rg.set(tag, ++rgv);
-    return this;
-  }
-
-  /**
-   * Adds a reciprocal to a tag that, when put(), will trigger an additional
-   * put() from the linked object from the base object.
-   * @param {T} tag the tag that will trigger the reciprocal to be put().
-   * @param {LinkRepo<L,B,string>} repo The repo that will contain the reciprocal.
-   * @param {string} backTag the tag that will be used for the reciprocal link.
-   * @returns {ThisType}
-   */
-  linkBack(tag: T, backTag?: T|string, repo?: LinkRepo<L, B, string>): this {
-    backTag = backTag || tag;
-    if (!repo) {
-      return this.internalLinkback(tag, <T>backTag);
-    }
-    const entry = { repo, tag: backTag };
-    if (this.backLinks.has(tag)) {
-      let existing = this.backLinks.get(tag);
-      existing.push(entry);
-    } else {
-      this.backLinks.set(tag, [entry]);
-    }
-    this.recurseGuard.set(tag, 1);
-    return this;
-  }
-  // box example:
-  // B -contains A: for N insideOf B { N -nextTo A; A -nextTo N }
-  // TODO: repo should default to this, right?
-  predicate<T2 extends string = T, T3 extends string = T>(
-    triggerTag: T,
-    query: { tag: T2, repo: LinkRepo<L|B, B|L, T2|T> },
-    dependent: { tag: T3, repo: LinkRepo<L|B, B|L, T3|T> }
-  ): this {
-    let {predicates} = this;
-    if (!query.repo) query.repo = this;
-    if (!dependent.repo) dependent.repo = this;
-
-    if (predicates.has(triggerTag)) {
-      predicates.get(triggerTag).push({query, dependent});
-    } else {
-      predicates.set(triggerTag, [{query, dependent}]);
-    }
-
-    return this;
-  }
-
-  singular(tag: T): this {
-    this.exclusive.add(tag);
-    return this;
-  }
-
-  private addPredicate(trigger: T, subj: Hash<B>, obj: Hash<L>) {
-    const triggered = this.predicates.get(trigger);
-
-    for (let {query, dependent} of triggered) {
-      let queried = query.repo.get(subj, query.tag).hashes();
-      for (let q of queried) {
-        dependent.repo.put(q, obj, dependent.tag);
-      }
-    }
-  }
-
-  private removePredicate(trigger: T, subj: Hash<B>, obj: Hash<L>) {
-    const triggered = this.predicates.get(trigger);
-
-    for (let {query, dependent} of triggered) {
-      let queried = query.repo.get(subj, query.tag).hashes();
-      for (let q of queried) {
-        dependent.repo.remove(q, obj, dependent.tag);
-      }
-    }
-  }
-
-  private internalLinkback(fwd: T, back: T): this {
-    const mutual = fwd === back;
-    if (this.selfLinks.has(fwd)) {
-      this.selfLinks.get(fwd).push(back);
-    } else {
-      this.selfLinks.set(fwd, [back]);
-    }
-    if (mutual) {
-      this.recurseGuard.set(fwd, 2);
-    } else {
-      this.recurseGuard.set(fwd, 1).set(back, 1);
-    }
-    return this;
-  }
-  private toLinks(base: Hash<B>, link: Hash<L>, tag: T): holochain.LinksEntry {
-    return { Links: [{ Base: base, Link: link, Tag: tag }] }
-  }
-
-  private unLinks(links: holochain.LinksEntry): {Base: Hash<B>, Link: Hash<L>, Tag: T} {
-    let {Base, Link, Tag} = links.Links[0];
-
-    return {Base: <Hash<B>>Base, Link: <Hash<L>>Link, Tag: <T>Tag};
-  }
-
-  /**
-   * Gets the hash that a link would have if it existed.  Good to know if you use
-   * update() and remove()
-   * @param {Hash<B>} base the subject of the hypothetical link.
-   * @param {Hash<L>} link the object of the hypothetical link.
-   * @param {T} tag the tag of the hypothetical link.
-   * @returns {LinkHash} if the list does or will exist, this is the hash it
-   *  would have.
-   */
-  getHash(base: Hash<B>, link: Hash<L>, tag: T): LinkHash {
-    return notError<LinkHash>(
-      makeHash(this.name, this.toLinks(base, link, tag))
-    );
-  }
-
-  // FIXME this looks pretty gnarly
-  /**
-   * Remove the link with the specified base, link, and tag.  Reciprocal links
-   * entered by linkBack() will also be removed.
-   * @param {Hash<B>} base the base of the link to remove.
-   * @param {Hash<L>} link the base of the link to remove.
-   * @param {T} tag the tag of the link to remove
-   * @returns {LinkHash} but not really useful.  Expect to change.
-   */
-  remove(base: Hash<B>, link: Hash<L>, tag: T): this {
-    let presentLink = this.toLinks(base, link, tag);
-    let hash = notError<LinkHash>(makeHash(this.name, presentLink));
-
-    const rg = this.recurseGuard;
-    let rgv = rg.get(tag);
-    if (!rgv--) {
-      return this;
-    }
-
-    if (get(hash) === HC.HashNotFound) return this;
-
-    presentLink.Links[0].LinkAction = HC.LinkAction.Del;
-    hash = notError<LinkHash>(commit(this.name, presentLink));
-
-    rg.set(tag, rgv);
-
-    if (this.backLinks.has(tag)) {
-      for (let {repo, tag: backTag} of this.backLinks.get(tag)) {
-        repo.remove(link, base, backTag);
-      }
-    }
-    if (this.selfLinks.has(tag)) {
-      for (let back of this.selfLinks.get(tag)) {
-        this.remove(link, base, back);
-      }
-    }
-    if (this.predicates.has(tag)) {
-      this.removePredicate(tag, base, link);
-    }
-
-    rg.set(tag, ++rgv);
-    return this;
-  }
-
-  /**
-   * If the old link exists, remove it and replace it with the new link.  If
-   * the old link doesn't exist, put() the new one.  As always, reciprocal links
-   * are managed with no additional work.  Note that both arguments are the
-   * holochain.Links type, complete with CamelCaseNames.
-   * @param {holochain.Link} old The link to be replaced.
-   * @param {holochain.Link} update The link to replace it with.
-   * @returns {LinkHash} A hash that you can't use for much.  Expect to change.
-   */
-  replace(old: holochain.Link, update: holochain.Link): this {
-    let oldHash = this.getHash(old.Base, old.Link, <T>old.Tag);
-    if (get(oldHash) === HC.HashNotFound) {
-      return this.put(update.Base, update.Link, <T>update.Tag)
-    }
-
-    this.remove(old.Base, old.Link, <T>old.Tag);
-    return this.put(update.Base, update.Link, <T>update.Tag);
-  }
-
-
-}
+// LinkRepo was here
 
 
 interface Named {
@@ -895,12 +575,13 @@ interface Named {
  * @example class LayeredSubclass<T> extends SubclassOfHoloObject<MyEntryType>
  */
 /* EXPORT
-export /**/class HoloObject<tE extends Object = {}> implements Named {
+export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Named {
   /**
    * You must delcare an override of static className to reflect the name of the entry type
    * as listed in the DNA.  Yes, both static and instance className.
    * @static
    * @type {string}
+   * @abstract
    */
   static className:string;
 
@@ -908,22 +589,33 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
    * You must override className to the identical string as the static className,
    * which is the entry type as listed in the DNA.  Yes, both.
    * @type {string}
+   * @abstract
    */
   className: string;
 
   private openCount: number = 0;
   private openError: Error = null;
+
   private isCommitted: boolean = false;
 
+  /**
+   * Subclasses may call hasChanged() to determine whether their entry has been
+   * changed since the last update() or commit()
+   */
   protected hasChanged(): boolean {
     if (this.myHash) {
-      return this.myHash === this.makeHash();
+      return this.lastHash !== this.makeHash();
     } else {
       return true;
     }
   }
-  protected commited(): boolean {
-    return this.isCommitted;
+  /**
+   * Subclasses may call committed() to determine whether any version of the entry
+   * is in the DHT.
+   */
+  protected committed(): boolean {
+    if (this.isCommitted) return true;
+    return !!this.myHash || !!this.lastHash || !!this.originalHash;
   }
 
   /**
@@ -939,15 +631,37 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
   static entryType: holochain.JsonEntry;
 
   /**
-   * These are the default values that will be assigned to the entry of
+   * These are the default values that will be assigned to the entry when not
+   * specified to the constructor or create().
+   * @abstract
+   * @static
    */
-  static entryDefaults: holochain.JsonEntry = {};
+  static entryDefaults: Initializer<holochain.JsonEntry> = {};
 
-  static create(entryProps?: typeof HoloObject.entryType): HoloObject {
-    let entry: typeof entryProps = {};
-    Object.assign(entry, this.entryDefaults);
-    if (entryProps) Object.assign(entry, entryProps);
-    return new this(entry);
+  /**
+   * Create a brand new entry and return the HoloObject that handles it.
+   * Override this to get the argument type (typeof MyClass.entryType) and the
+   * return type (MyClass) right.  You can also hook in here for object initialization
+   * @static
+   * @abstract
+   * @param {holochain.JsonEntry} entryProps The new entry properties
+   * @returns {HoloObject}
+   */
+  static create(entryProps?: holochain.JsonEntry): HoloObject<holochain.JsonEntry> {
+    //let entry: typeof entryProps = {};
+    let defs = this.entryDefaults;
+    let entry = deepInit({}, entryProps, defs);
+    let it = new this(entry);
+    // must test for existing entry here.
+    let hash = notError(it.makeHash());
+    let old = get(hash);
+    if (old && !isErr(old)) {
+      it.originalHash = hash;
+      it.myHash = hash;
+      it.lastHash = notError(makeHash(it.className, old));
+      it.isCommitted = true;
+    }
+    return it;
   }
 
   /**
@@ -963,14 +677,15 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
    * @protected
    */
   protected myHash: Hash<this>;
-
+  protected originalHash: Hash<this>;
+  protected lastHash: Hash<this>;
   /**
    * Returns the POD struct that is stored in the DHT. Modifying the object
    * will have no effect.
    * @returns {tE & typeof Superclass.entryType} the entry
    */
   get entry(): typeof HoloObject.entryType & tE {
-    return Object.assign({}, this.myEntry);
+    return deepAssign({}, this.myEntry);
   }
 
   /**
@@ -978,15 +693,24 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
    * class instance based on it.
    * @override if you need to prepare instance properties from the entry data,
    *  or to provide better type safety; it is recommended to get the types right,
-   *  even if the body is just returns super.get(hash);  it is truly impossible
-   *  to do this in a DRY way.
+   *  even if the body is just returns super.get(hash).  If the entry has aliased
+   *  link properties, you should load them up here.
    * @static
+   * @abstract
    * @param {Hash<this>} hash the hash of the entry on the DHT
    * @returns {this} an instance of this class
    */
-  static get(hash: Hash<object>): HoloObject<object> {
-    let obj = new this(null, hash);
-    return obj;
+  static get(hash: Hash<holochain.JsonEntry>): HoloObject<holochain.JsonEntry> {
+    let it = new this(null, hash);
+    if (it && it.myEntry) {
+      it.isCommitted = true;
+      it.myHash = hash;
+      it.originalHash = hash;
+      it.lastHash = notError(makeHash(this.className, it.myEntry));
+    } else {
+      throw new RangeError(`Hash of ${this.className} ${hash} not found`);
+    }
+    return it;
   }
 
   /**
@@ -998,7 +722,7 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
   get hash(): Hash<this> {
     if (this.myHash) return this.myHash;
     let hash = makeHash(this.className, this.myEntry);
-    if (isError(hash)) {
+    if (isErr(hash)) {
       throw new TypeError(`entry type mismatch`);
     } else {
       return <Hash<this>>notError(hash);
@@ -1006,7 +730,9 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
   }
 
   /**
-   * constructs a HoloObject that has the given entry and hash.
+   * constructs a HoloObject that has the given entry and hash.  Don't call this.
+   * use the static create() or get() depending on your needs.
+   * Override this with the correct entry types as arguments.
    * @param {tE|null} entry the entry that will be represented by this instance.
    *  Use null if you know the hash.  Do not use both.
    * @param {Hash<object>} hash the hash that you are absolutely sure exists as
@@ -1018,44 +744,64 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
    * @throws {holochain.HolochainError} if the DHT didn't know about the given hash
    * @throws {TypeError} if the entry doesn't pass the DHT's inspection
    */
-  protected constructor(entry?: tE|null, hash?: Hash<object>) {
+  protected constructor(entry?: tE|null, hash?: Hash<tE>) {
     if (!entry == !hash) throw new Error(`use either entry or hash arguments; can't use both or none`)
 
     if (entry) {
       this.myEntry = entry;
+      // can't do any makeHash here because the subclass constructor hasn't yet
+      // assigned className.  It has to be moved into create() and get()
 
     } else {
       this.myEntry = <tE>notError(get(hash));
-      this.isCommitted = true;
-      this.myHash = hash;
+
     }
 
   }
 
   /**
-   * Retrieve a hypothetical hash of the entry.
+   * Retrieve a hypothetical hash of the entry.  Note that this hash is not
+   * necessarily in the DHT.
    * @returns {Hash<this>} that hypothetically, the entry would have if committed.
    */
   makeHash(): Hash<this> {
     return notError<Hash<this>>(makeHash(this.className, this.entry));
   }
 
+  private _commit(): Hash<this> {
+
+    let hash = commit(this.className, <holochain.JsonEntry>this.myEntry);
+    if (!hash || isErr(hash)) {
+      throw new TypeError(`entry type mismatch or invalid data; hash ${this.myHash} is not a ${this.className}`);
+    } else {
+      this.isCommitted = true;
+      this.originalHash = this.originalHash || hash;
+      this.lastHash = hash;
+      this.myHash = hash;
+      return hash;
+    }
+
+  }
+
   /**
    * Commit the entry to the chain.  If it's already up there, update it.
+   * Override this method and update if there are link-aliased properties you
+   * need to update here.
    * @returns {Hash<this>}
    */
   commit(): Hash<this> {
-    if (this.isCommitted) {
-      return this.update();
+    if (!!this.openCount) return this.myHash;
+    if (this.openError) throw this.openError;
+
+    if (this.committed() && this.hasChanged()) {
+      return this._update();
     } else {
-      let hash = commit(this.className, <holochain.JsonEntry>this.myEntry);
-      if (isError(hash)) {
-        throw new TypeError(`entry type mismatch or invalid data; hash ${this.myHash} is not a ${this.className}`);
-      } else {
-        this.isCommitted = true;
-        return hash;
-      }
+      return this._commit();
     }
+  }
+
+  private _update(): Hash<this> {
+    return this.myHash = notError<Hash<this>>(update(this.className, this.entry, this.myHash));
   }
 
   /**
@@ -1065,13 +811,14 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
    */
   update(): Hash<this> {
     if (!!this.openCount) return this.myHash;
-    if (!this.isCommitted) {
-      return this.commit();
-    }
-    if (this.hasChanged()) {
-      return this.myHash = notError<Hash<this>>(update(this.className, this.entry, this.myHash));
+    if (this.openError) throw this.openError;
+
+    if (!this.committed()) {
+      return this._commit();
+    } else if (this.hasChanged()) {
+      return this._update();
     } else {
-      return this.myHash;
+      return this.myHash
     }
   }
 
@@ -1082,15 +829,29 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
    * @returns {this}
    */
   remove(msg = ""): this {
-    if (!!this.myHash && this.isCommitted) {
+    if (!!this.myHash && this.committed()) {
       remove(this.myHash, msg);
+      this.isCommitted = false;
+      this.myHash = null;
       return this;
     }
     return this;
   }
 
-  open(mutator: (t: tE) => tE): this {
-    ++this.openCount;
+  /**
+   * Perform any number of mutation operations as a batch, preventing each of
+   * the inner functions from updating the entry until all operations are
+   * complete and without error.  This method is chainable, allowing you to
+   * call update() or close() immediately.
+   * @param {(this.entryType) => this.entryType} mutator A function that will
+   *  possibly mutate the entry or throw an error.  It will receive the current
+   *  entry.  To make changes, the function may return a new entry of the same
+   *  type, change the argument and return nothing, or make changes through the
+   *  HoloObject's methods and return nothing.
+   * @returns {ThisType}
+   */
+  open(mutator: (t: tE) => tE|null): this {
+    const stack = this.openCount++;
     let mutant: tE = Object.assign({}, this.myEntry),
       error: Error = null;
     try {
@@ -1100,8 +861,8 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
       } else {
         this.myEntry = Object.assign({}, this.myEntry, mutant);
       }
-      if (!this.openCount) this.openError = null;
-      --this.openCount;
+
+      if (--this.openCount === stack) this.openError = null;
     } catch (e) {
       error = this.openError = e;
     }
@@ -1109,23 +870,34 @@ export /**/class HoloObject<tE extends Object = {}> implements Named {
     return this;
   }
 
-  close(e: Error, fn?: (t: this) => void): boolean {
-    if (!!this.openError && this.openError !== e) return false;
-    if (!this.openCount) return false;
-    --this.openCount;
-    fn = fn || ((t) => { this.update(); });
-    try {
-      fn(this);
-      return true;
-    } catch (e) {
-      return false;
+  /**
+   * If the recent open() operation threw, examine the error to determine
+   * whether the entry should be updated anyway.  If there was no error, update
+   * the entry unless it is holding for another open call.
+   * @param {(Error) => boolean} fn This is a catch function that will receive
+   *  the recent error if it exists.  It should return true if the error is not
+   *  unforgivable.
+   * @returns {ThisType}
+   */
+  close(fn?: (e: Error) => boolean): this {
+    let shouldUpdate = !this.openError;
+    if (this.openError && fn) {
+      shouldUpdate = fn(this.openError) && !!this.openCount--;
     }
+    if (shouldUpdate) {
+      this.update();
+    }
+    return this;
   }
 
+  /**
+   * Returns a CrudResponse for the entry.
+   * @returns {CrudResponse<this.entryType>}
+   */
   portable(): CrudResponse<tE> {
     return {
-      hash: this.hash,
-      entry: deepAssign({}, this.entry),
+      hash: this.commit(),
+      entry: this.entry,
       error: this.openError && deepAssign({}, this.openError),
       type: this.className
     };
@@ -1238,3 +1010,91 @@ export /**/class VfObject<T extends object = {}> extends HoloObject<VfEntry & ty
     this.myEntry.url = to;
   }
 }
+
+//* HOLO-SCOPE
+function wtf<T extends holochain.JsonEntry>(crud: CrudResponse<T>): CrudResponse<object>[] {
+
+  return [];
+}
+/**/
+/* EXPORT
+export/**/function callZome(zome: string, fn: string, arg: holochain.JsonEntry): holochain.JsonEntry {
+  return JSON.parse(call(zome, fn, arg));
+}
+
+// Now moving all the link definitions here.
+/* EXPORT
+export/**/const AgentProperty: LinkRepo<
+  agents.Agent|resources.EconomicResource,
+  resources.EconomicResource|agents.Agent,
+  "owns"|"owner"
+> = new LinkRepo("AgentProperty");
+AgentProperty
+  .linkBack(`owns`, `owner`)
+  .linkBack(`owner`, `owns`)
+  .singular(`owner`);
+
+/* EXPORT
+export/**/const Classifications: LinkRepo<
+  events.Transfer|events.TransferClassification|events.Process|events.ProcessClassification,
+  events.Transfer|events.TransferClassification|events.Process|events.ProcessClassification,
+  "classifiedAs"|"classifies"
+> = new LinkRepo("Classifications");
+Classifications
+  .linkBack("classifiedAs", "classifies")
+  .linkBack("classifies", "classifiedAs")
+  .singular("classifiedAs");
+
+
+/* EXPORT
+export/**/const EventLinks: LinkRepo<
+  events.EconomicEvent|events.Transfer|events.Process|events.Action,
+  events.EconomicEvent|events.Transfer|events.Process|events.Action,
+  "inputs"|"inputOf"|"outputs"|"outputOf"|"actionOf"|"action"
+> = new LinkRepo("EventLinks");
+EventLinks.linkBack("inputs", "inputOf")
+  .linkBack("outputs", "outputOf")
+  .linkBack("inputOf", "inputs")
+  .linkBack("outputOf", "outputs")
+  .linkBack("action", "actionOf")
+  .linkBack("actionOf", "action")
+  .singular(`inputOf`)
+  .singular(`outputOf`)
+  .singular(`action`);
+
+/* EXPORT
+export/**/const ResourceClasses: LinkRepo<
+  resources.EconomicResource|resources.ResourceClassification,
+  resources.EconomicResource|resources.ResourceClassification,
+  "classifiedAs"|"classifies"
+> = new LinkRepo("ResourceClasses");
+ResourceClasses
+  .linkBack("classifiedAs","classifies")
+  .linkBack("classifies", "classifiedAs")
+  .singular("classifiedAs");
+
+/* EXPORT
+export/**/const ResourceRelationships: LinkRepo<
+  resources.EconomicResource,
+  resources.EconomicResource,
+  "underlyingResource"|"contains"|"underlies"|"inside"
+> = new LinkRepo("ResourceRelationships");
+ResourceRelationships
+  .linkBack(`underlyingResource`, `underlies`)
+  .linkBack(`underlies`, `underlyingResource`)
+  .singular(`underlies`)
+  .singular(`underlyingResource`)
+  .linkBack(`contains`, `inside`)
+  .linkBack(`inside`, `contains`)
+  .singular(`inside`);
+
+/* EXPORT
+export/**/const TrackTrace: LinkRepo<
+  resources.EconomicResource|events.EconomicEvent,
+  events.EconomicEvent|resources.EconomicResource,
+"affects"|"affectedBy">
+= new LinkRepo("TrackTrace");
+TrackTrace
+  .linkBack("affects", "affectedBy")
+  .linkBack("affectedBy", "affects")
+  .singular("affects");

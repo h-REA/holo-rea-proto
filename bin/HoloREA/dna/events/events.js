@@ -239,11 +239,7 @@ var LinkSet = /** @class */ (function (_super) {
         _this.loaded = loaded;
         _this.sync = true;
         _this.sync = sync;
-        debug("new LinkSet => " + _this);
         return _this;
-    }
-    LinkSet.prototype.toString = function () {
-      return this.origin.name + ' ' + this.baseHash + " { " + this.desc().join(" ; ") + '}';
     }
     /**
      * Filter by any number of tags.  Returns a new LinkSet of the same type.
@@ -321,7 +317,6 @@ var LinkSet = /** @class */ (function (_super) {
      */
     LinkSet.prototype.removeAll = function () {
         var _this = this;
-        debug(''+this + ".removeAll()")
         //*
         if (this.sync)
             this.forEach(function (link, index) {
@@ -333,7 +328,6 @@ var LinkSet = /** @class */ (function (_super) {
                     // don't care, just keep deleting them.
                 }
             });
-        debug("removeAll => void");
         this.splice(0, this.length);
         /*/// Why did I think this would work?
         if (this.sync) {
@@ -414,7 +408,6 @@ var LinkSet = /** @class */ (function (_super) {
      * @returns {LinkSet} LinkSet
      */
     LinkSet.prototype.select = function (fn) {
-      debug(''+this + ".select()");
         var chosen = new LinkSet([], this.origin, this.baseHash, undefined, this.loaded, this.sync);
         var _loop_1 = function (response) {
             var type = response.EntryType, hash = response.Hash;
@@ -432,7 +425,6 @@ var LinkSet = /** @class */ (function (_super) {
             var response = _a[_i];
             _loop_1(response);
         }
-        debug("select() => " + chosen);
         return chosen;
     };
     /**
@@ -443,7 +435,6 @@ var LinkSet = /** @class */ (function (_super) {
      */
     LinkSet.prototype.unique = function (cleanDht) {
         if (cleanDht === void 0) { cleanDht = this.sync; }
-        debug(''+this + ".unique(" + cleanDht + ")");
         var inSet = new Set();
         var result = new LinkSet([], this.origin, this.baseHash, undefined, this.loaded, this.sync);
         for (var _i = 0, _a = this; _i < _a.length; _i++) {
@@ -492,12 +483,10 @@ var LinkSet = /** @class */ (function (_super) {
      */
     LinkSet.prototype.notIn = function (ls) {
         var _this = this;
-        debug(''+this + ".notIn(" + ls + ")");
         if (ls.origin !== this.origin || ls.baseHash !== this.baseHash) {
             return new LinkSet(this, this.origin, this.baseHash);
         }
         var inLs = new Set(ls.desc());
-        debug("notIn =>");
         return new LinkSet(this.filter(function (link) {
             return !inLs.has(_this.descEntry(link));
         }), this.origin, this.baseHash, undefined, this.loaded, this.sync);
@@ -510,12 +499,10 @@ var LinkSet = /** @class */ (function (_super) {
      */
     LinkSet.prototype.andIn = function (ls) {
         var _this = this;
-        debug(''+this + ".andIn(" + ls + ")");
         if (this.baseHash !== ls.baseHash) {
             return new LinkSet([], this.origin, this.baseHash);
         }
         var inLs = new Set(ls.desc());
-        debug("andIn =>");
         return new LinkSet(this.filter(function (link) { return inLs.has(_this.descEntry(link)); }), this.origin, this.baseHash, undefined, this.loaded, this.sync);
     };
     /**
@@ -526,7 +513,6 @@ var LinkSet = /** @class */ (function (_super) {
      * @returns {LinkSet} LinkSet
      */
     LinkSet.prototype.add = function (tag, hash, type) {
-        debug(''+this + ".add(" + tag + ' ' + hash + ':' + type + ")");
         if (this.sync)
             this.origin.put(this.baseHash, hash, tag);
         this.push({
@@ -535,7 +521,6 @@ var LinkSet = /** @class */ (function (_super) {
             EntryType: type,
             Source: App.Agent.Hash
         });
-        debug("=> " + this);
         return this;
     };
     /**
@@ -545,7 +530,6 @@ var LinkSet = /** @class */ (function (_super) {
      * @returns {LinkSet} LinkSet for chaining
      */
     LinkSet.prototype.save = function (add, rem) {
-        debug(''+this + ".save(" + (add && "add" || "!add") + ' ' + (rem && "rem" || "!rem") + ")");
         if (add === void 0) { add = true; }
         if (rem === void 0) { rem = false; }
         if (this.sync)
@@ -561,13 +545,11 @@ var LinkSet = /** @class */ (function (_super) {
                 for (var _b = 0, _c = this.notIn(existing).hashes(); _b < _c.length; _b++) {
                     var hash = _c[_b];
                     this.origin.put(this.baseHash, hash, tag);
-
                 }
             if (rem) {
                 existing.notIn(this).removeAll();
             }
         }
-        debug("save => " + this);
         return this;
     };
     return LinkSet;
@@ -606,9 +588,7 @@ var LinkRepo = /** @class */ (function () {
     }
     LinkRepo.prototype.guard = function (base, link, tag, op, fn) {
         var descript = base + " " + op + tag + " " + link;
-
         if (!this.recurseGuard.has(descript)) {
-          debug("LinkRepo" + this.name + ': ' + descript);
             this.recurseGuard.add(descript);
             fn();
             this.recurseGuard.delete(descript);
@@ -679,23 +659,23 @@ var LinkRepo = /** @class */ (function () {
         /*
         const rg = this.recurseGuard;
         let rgv = rg.has(tag) ? rg.get(tag) : 1;
-
+    
         if (!rgv--) return this;
-
+    
         if (this.exclusive.has(tag)) {
           this.get(base, tag).removeAll();
         }
         rg.set(tag, rgv);
-
-
-
+    
+    
+    
         if (this.predicates.has(tag)) {
           this.addPredicate(tag, base, link);
         }
-
+    
         const hash = commit(this.name, { Links: [{Base: base, Link: link, Tag: tag}] });
-
-
+    
+    
         if (this.backLinks.has(tag)) {
           for (let backLink of this.backLinks.get(tag)) {
             let {repo, tag: revTag} = backLink;
@@ -710,7 +690,7 @@ var LinkRepo = /** @class */ (function () {
         if (backRepo && backTag) {
           backRepo.put(link, base, backTag);
         }
-
+    
         rg.set(tag, ++rgv);
         /*/
         this.guard(base, link, tag, '+', function () {
@@ -879,14 +859,14 @@ var LinkRepo = /** @class */ (function () {
         if (!rgv--) {
           return this;
         }
-
+    
         //if (get(hash) === HC.HashNotFound) return this;
-
+    
         presentLink.Links[0].LinkAction = HC.LinkAction.Del;
         hash = notError<LinkHash>(commit(this.name, presentLink));
-
+    
         rg.set(tag, rgv);
-
+    
         if (this.backLinks.has(tag)) {
           for (let {repo, tag: backTag} of this.backLinks.get(tag)) {
             repo.remove(link, base, backTag);
@@ -900,7 +880,7 @@ var LinkRepo = /** @class */ (function () {
         if (this.predicates.has(tag)) {
           this.removePredicate(tag, base, link);
         }
-
+    
         rg.set(tag, ++rgv);
         /*/
         this.guard(base, link, tag, '-', function () {
@@ -2376,14 +2356,12 @@ var EconomicEvent = /** @class */ (function (_super) {
     }
     EconomicEvent.get = function (hash) {
         var it = _super.get.call(this, hash);
-        it.loadLinks();
-        debug(typeof it);
+        //it.loadLinks();
         return it;
     };
     EconomicEvent.create = function (entry) {
         var it = _super.create.call(this, entry);
-        it.loadLinks();
-        debug(typeof it);
+        //it.loadLinks();
         return it;
     };
     Object.defineProperty(EconomicEvent.prototype, "action", {
@@ -2523,9 +2501,6 @@ var EconomicEvent = /** @class */ (function (_super) {
         set: function (res) {
             var hash = hashOf(res);
             var my = this.myEntry;
-            if (my.affects && my.affects !== hash) {
-                TrackTrace.remove(this.hash, my.affects, "affects");
-            }
             my.affects = hash;
             //this.update();
         },
@@ -2537,25 +2512,20 @@ var EconomicEvent = /** @class */ (function (_super) {
         if (hash) {
             my.action = EventLinks.get(hash, "action").hashes()[0];
             my.affects = TrackTrace.get(hash, "affects").hashes()[0];
-
             var links = EventLinks.get(hash, "inputOf");
             if (links.length) {
                 my.inputOf = links.hashes()[0];
             }
-            /*
             else {
                 my.inputOf = null;
             }
-            */
-            var links2 = EventLinks.get(hash, "outputOf");
-            if (links2.length) {
-                my.outputOf = links2.hashes()[0];
+            links = EventLinks.get(hash, "outputOf");
+            if (links.length) {
+                my.outputOf = links.hashes()[0];
             }
-            /*
             else {
                 my.outputOf = null;
             }
-            */
         }
     };
     EconomicEvent.prototype.updateLinks = function (hash) {

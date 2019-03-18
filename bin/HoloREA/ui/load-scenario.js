@@ -5,8 +5,9 @@ window.agents = agents;
 window.resources = resources;
 window.events = events;
 
-repl(async function loader () {
+repl(async function loading () {
   let storage = localStorage.getItem("gfdScenario");
+  storage = storage && JSON.parse(storage);
   let needReload = false;
 
   if (!storage) {
@@ -15,6 +16,11 @@ repl(async function loader () {
     let [apples] = await resources.readResources([storage.types.resource.apples.hash]);
     if (!apples || apples.error) {
       needReload = true;
+    } else {
+      let events = await resources.getAffectingEvents({ resource: apples.hash });
+      if (!events || !events.length) {
+        needReload = true;
+      }
     }
   }
 
@@ -22,7 +28,7 @@ repl(async function loader () {
     return ready().then((it) => {
       window.scenario = it;
       let saving = Object.assign({}, it, { verbs: null });
-      localStorage.setItem("gfdScenario", saving);
+      localStorage.setItem("gfdScenario", JSON.stringify(saving));
       return saving;
     });
   } else {

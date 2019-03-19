@@ -7,7 +7,9 @@
  * @flow
  */
 
-const HTTP_HOST = `${process.env.DHT_HOSTNAME}`;
+// default to an empty host (same server) if no Webpack / node env, for
+// compatibility with Holochain DHT app environment.
+const HTTP_HOST = (process && process.env) ? `${process.env.DHT_HOSTNAME}` : '';
 
 // clone response and attempt decoding JSON
 // (needed in both success and error cases)

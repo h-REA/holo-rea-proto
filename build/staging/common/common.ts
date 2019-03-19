@@ -362,11 +362,11 @@ export /**/class QuantityValue implements QVlike {
    * if a % is added (not to a %) the addition is relative to the original quantity
    */
   add({units, quantity}: QVlike): QuantityValue {
-    debug(`${''+this} + ${quantity} ${units} =>`);
+    //debug(`${''+this} + ${quantity} ${units} =>`);
     if (units === this.units) {
-      return debugRet(new QuantityValue({units: this.units, quantity: this.quantity + quantity}));
+      return new QuantityValue({units: this.units, quantity: this.quantity + quantity});
     } else if (units === `%`) {
-      return debugRet(this.mul({units: `%`, quantity: 100 + quantity}));
+      return this.mul({units: `%`, quantity: 100 + quantity});
     }
     throw new TypeError(`Can't add quantity in ${units} to quantity in ${this.units}`);
   }
@@ -378,7 +378,7 @@ export /**/class QuantityValue implements QVlike {
    * a unitless ratio.
    */
   mul({units, quantity}: QVlike): QuantityValue {
-    debug(`${''+this} * ${quantity} ${units} =>`)
+    //debug(`${''+this} * ${quantity} ${units} =>`)
     if (units === `%`) {
       quantity /= 100;
       units = ``;
@@ -391,7 +391,7 @@ export /**/class QuantityValue implements QVlike {
       units = this.units;
     }
 
-    return debugRet(new QuantityValue({units, quantity: quantity*this.quantity}));
+    return new QuantityValue({units, quantity: quantity*this.quantity});
   }
 
   /**
@@ -400,12 +400,12 @@ export /**/class QuantityValue implements QVlike {
    * units must match.
    */
   sub({units, quantity}: QVlike): QuantityValue {
-    debug(`${''+this} - ${quantity} ${units} =>`)
+    //debug(`${''+this} - ${quantity} ${units} =>`)
     if (units === `%`) {
       quantity = 100 - quantity;
       return this.mul({units, quantity});
     } else if (units === this.units) {
-      return debugRet(new QuantityValue({units, quantity: this.quantity - quantity}));
+      return new QuantityValue({units, quantity: this.quantity - quantity});
     } else {
       throw new TypeError(`Can't subtract ${units} from ${this.units}`);
     }
@@ -417,7 +417,7 @@ export /**/class QuantityValue implements QVlike {
    * the same as the input.
    */
   div({units, quantity}: QVlike): QuantityValue {
-    debug(`${''+this} / ${quantity} ${units} =>`)
+    //debug(`${''+this} / ${quantity} ${units} =>`)
     if (!quantity) throw new Error(`Can't divide by 0 ${units}`);
     if (units === `%`) {
       units = ``;
@@ -431,7 +431,7 @@ export /**/class QuantityValue implements QVlike {
     } else {
       units = this.units;
     }
-    return debugRet(new QuantityValue({units, quantity: this.quantity/quantity}));
+    return new QuantityValue({units, quantity: this.quantity/quantity});
   }
 
   static decomposeUnits(units: string): {[key: string]: number} {

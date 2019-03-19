@@ -1,5 +1,5 @@
 //import chai from "./chai/chai";
-import "./zomes";
+import "./zomes.js";
 
 //console.log('Chai inited:', chai)
 //const expect = chai.expect;

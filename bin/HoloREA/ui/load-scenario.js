@@ -128,7 +128,7 @@ repl(async function loading () {
           </p>
 
           <code>
-            ${a(`scenario.verbs.trade({quantity: 1, units: ''}, scenario.chloe.turnovers.hash, scenario.bea.turnovers.hash).then((it) => transfer = it)`)}<br/>
+            ${a(`scenario.trade({quantity: 1, units: ''}, scenario.chloe.turnovers.hash, scenario.bea.turnovers.hash).then((it) => transfer = it)`)}<br/>
           </code>
         `;
 
@@ -138,7 +138,7 @@ repl(async function loading () {
           </p>
 
           <code>
-            ${a(`scenario.verbs.trade({quantity: 0.5, units: 'kg'}, scenario.bea.beans.hash, scenario.chloe.beans.hash).then((it) => transfer = it)`)}<br/>
+            ${a(`scenario.trade({quantity: 0.5, units: 'kg'}, scenario.bea.beans.hash, scenario.chloe.beans.hash).then((it) => transfer = it)`)}<br/>
           </code>
         `;
 

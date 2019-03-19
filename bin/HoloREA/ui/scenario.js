@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 //import chai from "./chai/chai";
-import "./zomes";
+import "./zomes.js";
 //console.log('Chai inited:', chai)
 //const expect = chai.expect;
 /**

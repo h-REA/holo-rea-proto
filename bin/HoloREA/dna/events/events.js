@@ -1210,12 +1210,12 @@ export /**/ var QuantityValue = /** @class */ (function () {
      */
     QuantityValue.prototype.add = function (_a) {
         var units = _a.units, quantity = _a.quantity;
-        debug('' + this + " + " + quantity + " " + units + " =>");
+        //debug(`${''+this} + ${quantity} ${units} =>`);
         if (units === this.units) {
-            return debugRet(new QuantityValue({ units: this.units, quantity: this.quantity + quantity }));
+            return new QuantityValue({ units: this.units, quantity: this.quantity + quantity });
         }
         else if (units === "%") {
-            return debugRet(this.mul({ units: "%", quantity: 100 + quantity }));
+            return this.mul({ units: "%", quantity: 100 + quantity });
         }
         throw new TypeError("Can't add quantity in " + units + " to quantity in " + this.units);
     };
@@ -1227,7 +1227,7 @@ export /**/ var QuantityValue = /** @class */ (function () {
      */
     QuantityValue.prototype.mul = function (_a) {
         var units = _a.units, quantity = _a.quantity;
-        debug('' + this + " * " + quantity + " " + units + " =>");
+        //debug(`${''+this} * ${quantity} ${units} =>`)
         if (units === "%") {
             quantity /= 100;
             units = "";
@@ -1239,7 +1239,7 @@ export /**/ var QuantityValue = /** @class */ (function () {
         else {
             units = this.units;
         }
-        return debugRet(new QuantityValue({ units: units, quantity: quantity * this.quantity }));
+        return new QuantityValue({ units: units, quantity: quantity * this.quantity });
     };
     /**
      * Returns the difference between this and another QV.  If a % is given, the
@@ -1248,13 +1248,13 @@ export /**/ var QuantityValue = /** @class */ (function () {
      */
     QuantityValue.prototype.sub = function (_a) {
         var units = _a.units, quantity = _a.quantity;
-        debug('' + this + " - " + quantity + " " + units + " =>");
+        //debug(`${''+this} - ${quantity} ${units} =>`)
         if (units === "%") {
             quantity = 100 - quantity;
             return this.mul({ units: units, quantity: quantity });
         }
         else if (units === this.units) {
-            return debugRet(new QuantityValue({ units: units, quantity: this.quantity - quantity }));
+            return new QuantityValue({ units: units, quantity: this.quantity - quantity });
         }
         else {
             throw new TypeError("Can't subtract " + units + " from " + this.units);
@@ -1267,7 +1267,7 @@ export /**/ var QuantityValue = /** @class */ (function () {
      */
     QuantityValue.prototype.div = function (_a) {
         var units = _a.units, quantity = _a.quantity;
-        debug('' + this + " / " + quantity + " " + units + " =>");
+        //debug(`${''+this} / ${quantity} ${units} =>`)
         if (!quantity)
             throw new Error("Can't divide by 0 " + units);
         if (units === "%") {
@@ -1280,7 +1280,7 @@ export /**/ var QuantityValue = /** @class */ (function () {
         else {
             units = this.units;
         }
-        return debugRet(new QuantityValue({ units: units, quantity: this.quantity / quantity }));
+        return new QuantityValue({ units: units, quantity: this.quantity / quantity });
     };
     QuantityValue.decomposeUnits = function (units) {
         if (!units)

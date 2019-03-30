@@ -63,7 +63,7 @@ export namespace agents {
     }
   ): Promise<{
     [k:string]: {
-      [l:string]: Hash<resources.EconomicResource>
+      [l:string]: Hash<resources.EconomicResource>[];
     }
   }>;
 
@@ -121,9 +121,9 @@ export namespace resources {
   ): Promise<Hash<events.EconomicEvent>[]>
 
   export interface ResourceClassificationFixture {
-    Thing: Hash<ResourceClassification>;
-    Currency: Hash<ResourceClassification>;
-    Work: Hash<ResourceClassification>;
+    thing: Hash<ResourceClassification>;
+    currency: Hash<ResourceClassification>;
+    work: Hash<ResourceClassification>;
   }
 
   export function getFixtures(

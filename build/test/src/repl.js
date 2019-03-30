@@ -78,10 +78,11 @@ function repl(code) {
   output.append(div);
   const codeDiv = el(`<a.user>`)
     .append($(`<kbd>`).text(codeDescription))
-    .attr({href: '#'})
+    .attr({href: '#input'})
     .click((ev) => {
-      ev.preventDefault();
+      //ev.preventDefault();
       input.val(code);
+      return true;
     })
   .appendTo(div);
 
@@ -124,7 +125,7 @@ function repl(code) {
   const waiting = el(`<div.client.waiting>`).text(`Waiting for response...`).appendTo(div);
   div.addClass(`pending`);
 
-  result.then((response) => {
+  return result.then((response) => {
     div.removeClass(`pending`).addClass(`complete`);
 
     if (typeof response === `string`) {
@@ -176,7 +177,6 @@ function repl(code) {
       .replaceAll(waiting);
   });
 
-  return false;
 }
 
 function deepAssign(dest, src, ...more) {

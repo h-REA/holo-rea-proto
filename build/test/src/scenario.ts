@@ -1,5 +1,6 @@
 //import chai from "./chai/chai";
 import "./zomes.js";
+//import {window, localStorage} from "dom";
 
 //console.log('Chai inited:', chai)
 //const expect = chai.expect;
@@ -73,7 +74,6 @@ export interface Scenario {
     process: { [name:string]: CrudResponse<events.ProcessClassification> },
     transfer: { [name:string]: CrudResponse<events.TransferClassification> }
   },
-
   actions: { [name:string]: CrudResponse<events.Action> },
   verbs: Verbs,
   facts: { [name:string]: number },
@@ -203,7 +203,7 @@ export function verbify(my: Scenario) {
   ): Promise<CrudResponse<events.EconomicEvent>> {
     when = when || await tick();
 
-    return events.createEvent({
+    return await events.createEvent({
       action: pick.hash,
       provider: al.hash,
       receiver: al.hash,
@@ -222,7 +222,7 @@ export function verbify(my: Scenario) {
   ): Promise<CrudResponse<events.EconomicEvent>> {
     when = when || await tick();
 
-    return events.createEvent({
+    return await events.createEvent({
       action: gather.hash,
       provider: bea.hash,
       receiver: bea.hash,
@@ -243,7 +243,7 @@ export function verbify(my: Scenario) {
 
     let [from, to] = await resources.readResources([fromHash, toHash]);
 
-    return events.createTransfer({
+    return await events.createTransfer({
       transferClassifiedAs: trade.hash,
       inputs: {
         action: my.actions.give.hash,
@@ -306,7 +306,7 @@ export function verbify(my: Scenario) {
       })
     ]);
 
-    return events.createProcess({
+    return await events.createProcess({
       processClassifiedAs: brew.hash,
       inputs: [consumeEv.hash],
       outputs: [brewEv.hash],
@@ -353,7 +353,7 @@ export function verbify(my: Scenario) {
       })
     ]);
 
-    return events.createProcess({
+    return await events.createProcess({
       processClassifiedAs: bake.hash,
       plannedStart: when,
       plannedDuration: facts.bakeTime,
@@ -524,8 +524,8 @@ function expectGoodCrud<T>(
   return crud;
 }
 */
-export async function ready(): Promise<Scenario> {
 
+function initTypes(): Promise<Scenario> {
   let prep: Promise<Scenario>;
 
   {
@@ -629,10 +629,12 @@ export async function ready(): Promise<Scenario> {
     return p.then(() => my);
   });
 
+  return prep;
+}
 
-
+async function initEvents(prep: Promise<Scenario>): Promise<Scenario> {
   // Time to start making events and resources
-  prep = prep.then(async (my) => {
+  return prep.then(async (my) => {
 
     let time = await tick();
     my.timeline.begin = time;
@@ -666,6 +668,8 @@ export async function ready(): Promise<Scenario> {
           }
         });
       }
+
+      console.log(`before inventory setup, ${person.agent.entry.name}'s beans was ${person.beans && person.beans.entry.trackingIdentifier}'`);
 
       person.beans = person.beans || await events.resourceCreationEvent({
         resource: {
@@ -723,7 +727,7 @@ export async function ready(): Promise<Scenario> {
       return my.al.apples = alApples;
     });
 
-    let beaBeans = resources.createResource({
+    let beaBeans = await resources.createResource({
       properties: {
         resourceClassifiedAs: beans.hash,
         owner: bea.hash,
@@ -740,7 +744,7 @@ export async function ready(): Promise<Scenario> {
     }).then((bb) => (my.bea.beans = bb));
 
     // TEST events.resourceCreationEvent
-    let chloeCoffee = events.resourceCreationEvent({
+    let chloeCoffee = await events.resourceCreationEvent({
       resource: {
         currentQuantity: { units: `mL`, quantity: 300 },
         resourceClassifiedAs: coffee.hash,
@@ -758,6 +762,7 @@ export async function ready(): Promise<Scenario> {
     });
 
     await Promise.all([my.al, my.bea, my.chloe].map(person => setupInventory(person)));
+    console.log(`after setup, Bea's beans are ${my.bea.beans.entry.trackingIdentifier}`);
 
     my.facts = (() => {
       let gramsPerSpoon: number = 2.5;
@@ -784,4 +789,129 @@ export async function ready(): Promise<Scenario> {
   });
 
   return prep;
+}
+
+async function recoverInventory(scenario: Scenario): Promise<Scenario> {
+  const { al, bea, chloe } = scenario;
+  const types = scenario.types.resource;
+  const typeHashes = Object.keys(types).map(key => types[key].hash);
+  const stuff = await agents.getOwnedResources({
+    agents: [al, bea, chloe].map(who => who.agent.hash),
+    types: typeHashes
+  });
+
+  for (let person of [al, bea, chloe]) {
+    const own = stuff[person.agent.hash];
+    [person.apples] = await resources.readResources(own[types.apples.hash]);
+    [person.beans] = await resources.readResources(own[types.beans.hash]);
+    [person.coffee] = await resources.readResources(own[types.coffee.hash]);
+    [person.turnovers] = await resources.readResources(own[types.turnovers.hash]);
+  }
+
+  return scenario;
+}
+
+export async function ready (): Promise<Scenario> {
+
+  return initTypes().then(async (scenario) => {
+    let owned = await agents.getOwnedResources({ agents: [scenario.al.agent.hash], types: [scenario.types.resource.apples.hash] });
+    console.log(`Al's inventory from DHT =>`);
+    console.log(owned);
+
+    if (!owned) {
+      console.log(`nothing returned by getOwnedResources.  Initializing inventories. (this probably shouldn't happen)`);
+      return initEvents(Promise.resolve(scenario));
+    }
+
+    let alStuff = owned[scenario.al.agent.hash];
+    if (!alStuff) {
+      console.log(`Al had no stuff.  Initializing.`);
+      return initEvents(Promise.resolve(scenario));
+    }
+
+    let apples = alStuff[scenario.types.resource.apples.hash];
+
+    if (!apples || apples.length === 0) {
+      console.log(`No apples in Al's inventory.  Initializing.`);
+      return initEvents(Promise.resolve(scenario));
+    } else if (apples.length > 1) {
+      throw new Error(`Al has ${apples.length} piles of apples.  He should have exactly 1.  Restart the DHT server and try again.`);
+    }
+
+    // be sure that the apples we found are good first.
+    let [apple] = await resources.readResources(apples);
+    console.log(`Al's apples on the DHT:`);
+    console.log(apple);
+    if (!apple) {
+      console.warn(`Fishy disappearing apples from Al's pocket.  Initializing anyway.`);
+      return initEvents(Promise.resolve(scenario));
+    } else if (apple.error) {
+      throw new Error(`Al's apples are illegitimate due to ${apple.error}; restart the DHT server to continue.`);
+    }
+
+    let eventHashes = await resources.getAffectingEvents({resource: apple.hash});
+    console.log(`Events affecting Al's apples: ${eventHashes}`);
+
+    if (!eventHashes || eventHashes.length === 0) {
+      console.log(`No events set up Al's apples in the DHT.  Initializing.`);
+      return initEvents(Promise.resolve(scenario));
+    } else if (eventHashes.length > 1) {
+      console.warn(`WARNING: found ${eventHashes.length} events acting on Al's apples.  There should be only 1.  Restart the DHT server unless you intended to join an existing scenario.`);
+      return recoverInventory(verbify(scenario));
+    } else {
+      console.log(`DHT appears to be initialized normally already.`);
+      return recoverInventory(verbify(scenario));
+    }
+  });
+  /*
+  let scenarioP = initTypes();
+  let scenario = await scenarioP;
+
+  let [apples] = await resources.readResources([scenario.al.apples.hash]);
+  if (!apples || apples.error) {
+    return await initEvents(scenario)
+  }
+
+  let storage = localStorage.getItem("gfdScenario");
+  storage = storage && JSON.parse(storage);
+  let needReload = false;
+
+  if (!storage) {
+    console.log(`scenario is not in storage.`);
+    needReload = true;
+  } else {
+    console.log(`storage has a scenario; checking Al's apples`);
+    let [apples] = await resources.readResources([storage.al.apples.hash]);
+    console.log(apples);
+    if (!apples || apples.error) {
+      console.log(`DHT did not have Al's apples under the previous hash.`);
+      needReload = true;
+    } else {
+      console.log(`DHT has Al's apples; checking related events`);
+      let events = await resources.getAffectingEvents({ resource: apples.hash });
+      console.log(events);
+      if (!events || !events.length) {
+        console.log(`No events on Al's apples; re-initializing`);
+        needReload = true;
+      } else if (events.length > 1) {
+        console.warn(`WARNING: scenario is not pristine (too many events)`);
+      }
+    }
+  }
+
+  let using;
+  if (needReload) {
+    using = init().then((it) => {
+      window.scenario = it;
+      let saving = Object.assign({}, it, { verbs: null });
+      localStorage.setItem("gfdScenario", JSON.stringify(saving));
+      return it;
+    });
+  } else {
+    let scenario = window.scenario = verbify(storage);
+    using = Promise.resolve(scenario);
+  }
+
+  return using;
+  */
 }

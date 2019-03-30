@@ -114,7 +114,7 @@ li.property {
 /* The response to a command whose status is ok */
 .ok {
 
-  background-color: #0f8;
+  background-color: #084;
 }
 
 /* part of a response that failed on the server */

@@ -58,6 +58,7 @@ function putJson(json) {
             $(this).closest(`p.help`).after(putJson(json[det]));
           }).after($(`<span>`).text(` | `));
         });
+        deets.children(`span`).last().remove();
       }
       return it;
     } else if (json.help) {
@@ -158,7 +159,17 @@ function repl(code) {
 
   }, (e) => {
     div.removeClass(`pending`).addClass(`fail`);
-
+    if (e instanceof Error) {
+      let {message, name} = e;
+      let stack = e.stack || undefined;
+      if (stack) {
+        stack = stack.replace('&', `&amp;`)
+          .replace('<', `&lt;`)
+          .replace('>', `&gt;`)
+          .replace('\n', `<br/>`);
+      }
+      e = {message, name, stack};
+    }
     el(`<div.server.response.error>`)
       .text(`Server error:`)
       .append(putJson(e))

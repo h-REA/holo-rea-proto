@@ -125,7 +125,7 @@ function repl(code) {
   const waiting = el(`<div.client.waiting>`).text(`Waiting for response...`).appendTo(div);
   div.addClass(`pending`);
 
-  return result.then((response) => {
+  result.then((response) => {
     div.removeClass(`pending`).addClass(`complete`);
 
     if (typeof response === `string`) {
@@ -176,7 +176,7 @@ function repl(code) {
       .append(putJson(e))
       .replaceAll(waiting);
   });
-
+  return false;
 }
 
 function deepAssign(dest, src, ...more) {

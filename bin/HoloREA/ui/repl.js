@@ -23,6 +23,13 @@ function el(str) {
   return $(`<${tag}>`, attr);
 }
 
+function looksLikeHash(s) {
+  if (typeof s !== `string`) return false;
+  if (s.length !== 46) return false;
+  if (!/^[A-Za-z0-9]$/.test(s)) return false;
+  return true;
+}
+
 function putJson(json) {
   if (json instanceof Array) {
     const ol = el(`<ol.array>`);
@@ -51,6 +58,7 @@ function putJson(json) {
             $(this).closest(`p.help`).after(putJson(json[det]));
           }).after($(`<span>`).text(` | `));
         });
+        deets.children(`span`).last().remove();
       }
       return it;
     } else if (json.help) {
@@ -70,10 +78,11 @@ function repl(code) {
   output.append(div);
   const codeDiv = el(`<a.user>`)
     .append($(`<kbd>`).text(codeDescription))
-    .attr({href: '#'})
+    .attr({href: '#input'})
     .click((ev) => {
-      ev.preventDefault();
+      //ev.preventDefault();
       input.val(code);
+      return true;
     })
   .appendTo(div);
 
@@ -124,20 +133,25 @@ function repl(code) {
     }
 
     const out = el(`<div.server.response>`).replaceAll(waiting);
-    let tail;
+    const tail = el(`<div.server.status-message.head>`);
+    let isAnError = (
+      !response ||
+      (`error` in response && !!response.error) ||
+      (`errorMessage` in response && !!response.errorMessage)
+    );
 
-    if (response && `error` in response) {
-
-      let crud = response;
-      tail = el(`<div.server.status-message.head>`).text(msg);
-      if (!crud.error) {
-        tail.addClass(`ok`);
-        div.addClass(`success`);
-        tail.text(`ok`);
-      } else {
-        tail.addClass(`error`);
-        div.addClass(`fail`);
+    if (!isAnError) {
+      tail.addClass(`ok`);
+      div.addClass(`success`);
+      tail.text(`ok`);
+    } else {
+      tail.addClass(`error`);
+      div.addClass(`fail`);
+      tail.text(`error`);
+      if (response.error) {
         tail.append(putJson(response.error));
+      } else {
+        tail.append(putJson(response));
       }
     }
 
@@ -146,13 +160,22 @@ function repl(code) {
 
   }, (e) => {
     div.removeClass(`pending`).addClass(`fail`);
-
+    if (e instanceof Error) {
+      let {message, name} = e;
+      let stack = e.stack || undefined;
+      if (stack) {
+        stack = stack.replace('&', `&amp;`)
+          .replace('<', `&lt;`)
+          .replace('>', `&gt;`)
+          .replace('\n', `<br/>`);
+      }
+      e = {message, name, stack};
+    }
     el(`<div.server.response.error>`)
       .text(`Server error:`)
       .append(putJson(e))
       .replaceAll(waiting);
   });
-
   return false;
 }
 

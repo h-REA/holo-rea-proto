@@ -1,23 +1,38 @@
+/**
+ * Zome API helper
+ *
+ * @package: HoloREA
+ * @author:  David Hand <sqykly@users.noreply.github.com>
+ * @since:   2018-12-17
+ * @flow
+ */
 
-declare type Hash<T> = string;
+export type Hash<T> = string;
 
-declare interface QuantityValue {
+export interface QuantityValue {
   units: string;
   quantity: number;
 }
 
-declare type IntDate = number;
+export type IntDate = number;
 
-declare type PhysicalLocation = string[];
+export type PhysicalLocation = string[];
 
-declare interface VfObject {
+export interface VfObject {
   name?: string;
   note?: string;
   url?: string;
   image?: string;
 }
 
-declare type CrudResponse<T> = {
+export type DHTResponse<T> = {  // success only
+  error?: null;
+  hash: Hash<T>;
+  entry: T;
+  type: string;
+}
+
+export type CrudResponse<T> = {  // success or error
   error: {
     name: string;
     message: string;
@@ -26,43 +41,38 @@ declare type CrudResponse<T> = {
   hash?: Hash<T>;
   entry?: T;
   type?: string
-} | {
-  error?: null;
-  hash: Hash<T>;
-  entry: T;
-  type: string;
-};
+} | DHTResponse<T>;
 
-declare type Anything<T> = T | Hash<T> | CrudResponse<T>;
+export type Anything<T> = T | Hash<T> | CrudResponse<T>;
 
-declare type ZomeFn<Arg, Ret> = (args: Arg) => Promise<Ret>;
+export type ZomeFn<Arg, Ret> = (args: Arg) => Promise<Ret>;
 
-declare namespace agents {
+export namespace agents {
   export interface Agent extends VfObject {
     primaryLocation?: PhysicalLocation;
     name: string;
   }
   export type EconomicAgent = Agent;
 
-  export function createAgent(props: Agent): Promise<CrudResponse<Agent>>;
+  export function createAgent(props: Agent): Promise<DHTResponse<Agent>>;
 
   export function getOwnedResources(
     args: {
       agents: Hash<Agent>[],
-      types: Hash<resources.ResourceClassification>[]
+      types?: Hash<resources.ResourceClassification>[]
     }
   ): Promise<{
     [k:string]: {
-      [l:string]: Hash<resources.EconomicResource>[]
+      [l:string]: Hash<resources.EconomicResource>[];
     }
   }>;
 
   export function readAgents(which: Hash<Agent>[]):
-    Promise<CrudResponse<Agent>[]>;
+    Promise<DHTResponse<Agent>[]>;
 
 }
 
-declare namespace resources {
+export namespace resources {
   export interface ResourceClassification extends VfObject {
     defaultUnits: string;
   }
@@ -82,20 +92,10 @@ declare namespace resources {
 
   export function readResourceClasses(
     which: Hash<ResourceClassification>[]
-  ): Promise<CrudResponse<ResourceClassification>[]>
+  ): Promise<DHTResponse<ResourceClassification>[]>
 
   export function createResource(
     props: {
-      properties: EconomicResource;
-      event: {
-        action: Hash<events.Action>;
-        provider?: Hash<agents.Agent>;
-        receiver?: Hash<agents.Agent>;
-        scope?: any;
-        start?: IntDate;
-        duration?: IntDate;
-      }
-    } | {
       resource: EconomicResource;
       event: {
         action: Hash<events.Action>;
@@ -110,7 +110,7 @@ declare namespace resources {
 
   export function readResources(
     which: Hash<EconomicResource>[]
-  ): Promise<CrudResponse<EconomicResource>[]>
+  ): Promise<DHTResponse<EconomicResource>[]>
 
   export function getResourcesInClass(
     args: {classification: Hash<EconomicResource>}
@@ -120,18 +120,20 @@ declare namespace resources {
     args: {resource:Hash<EconomicResource>}
   ): Promise<Hash<events.EconomicEvent>[]>
 
+  export interface ResourceClassificationFixture {
+    thing: Hash<ResourceClassification>;
+    currency: Hash<ResourceClassification>;
+    work: Hash<ResourceClassification>;
+  }
+
   export function getFixtures(
-    dontCare: object
+    dontCare?: object
   ): Promise<{
-    ResourceClassification: {
-      Thing: Hash<ResourceClassification>;
-      Currency: Hash<ResourceClassification>;
-      Work: Hash<ResourceClassification>;
-    }
+    ResourceClassification: ResourceClassificationFixture
   }>
 }
 
-declare namespace events {
+export namespace events {
   export interface TransferClassification extends VfObject {
     name: string;
   }
@@ -204,7 +206,7 @@ declare namespace events {
 
   export function readTransferClasses(
     which: Hash<TransferClassification>[]
-  ): Promise<CrudResponse<TransferClassification>[]>
+  ): Promise<DHTResponse<TransferClassification>[]>
 
   export function createTransfer(
     props: Transfer | TransferInitializer
@@ -212,7 +214,7 @@ declare namespace events {
 
   export function readTransfers(
     which: Hash<Transfer>[]
-  ): Promise<CrudResponse<Transfer>[]>
+  ): Promise<DHTResponse<Transfer>[]>
 
   export function createProcessClass(
     props: ProcessClassification
@@ -220,7 +222,7 @@ declare namespace events {
 
   export function readProcessClasses(
     which: Hash<ProcessClassification>[]
-  ): Promise<CrudResponse<ProcessClassification>[]>
+  ): Promise<DHTResponse<ProcessClassification>[]>
 
   export function createProcess(
     props: Process
@@ -228,7 +230,7 @@ declare namespace events {
 
   export function readProcesses(
     which: Hash<Process>[]
-  ): Promise<CrudResponse<Process>[]>
+  ): Promise<DHTResponse<Process>[]>
 
   export function createAction(
     props: Action
@@ -236,7 +238,7 @@ declare namespace events {
 
   export function readActions(
     which: Hash<Action>[]
-  ): Promise<CrudResponse<Action>[]>
+  ): Promise<DHTResponse<Action>[]>
 
   export function createEvent(
     props: EconomicEvent
@@ -244,7 +246,7 @@ declare namespace events {
 
   export function readEvents(
     which: Hash<EconomicEvent>[]
-  ): Promise<CrudResponse<EconomicEvent>[]>
+  ): Promise<DHTResponse<EconomicEvent>[]>
 
   export function traceEvents(
     eventHashes: Hash<EconomicEvent>[]
@@ -270,23 +272,23 @@ declare namespace events {
       start?: IntDate,
       end?: IntDate
     }
-  ): Promise<CrudResponse<EconomicEvent>[]>
+  ): Promise<DHTResponse<EconomicEvent>[]>
 
   export function eventsStartedBefore(
     when: TimeFilter
-  ): Promise<CrudResponse<EconomicEvent>[]>
+  ): Promise<DHTResponse<EconomicEvent>[]>
 
   export function eventsStartedAfter(
     when: TimeFilter
-  ): Promise<CrudResponse<EconomicEvent>>
+  ): Promise<DHTResponse<EconomicEvent>>
 
   export function eventsEndedBefore(
     when: TimeFilter
-  ): Promise<CrudResponse<EconomicEvent>>
+  ): Promise<DHTResponse<EconomicEvent>>
 
   export function eventsEndedAfter(
     when: TimeFilter
-  ): Promise<CrudResponse<EconomicEvent>>
+  ): Promise<DHTResponse<EconomicEvent>>
 
   export function eventSubtotals(
     events: Hash<EconomicEvent>[]
@@ -304,11 +306,14 @@ declare namespace events {
 
   type Fixture<T, K extends string> = { [P in K]: Hash<T> };
 
+  export type ActionsFixture = Fixture<Action, "give"|"receive"|"adjust"|"produce"|"consume">
+  export type ProcessClassificationFixture = Fixture<ProcessClassification, "stub">
+
   export function getFixtures(
     dontCare?: any
   ): Promise<{
-    Action: Fixture<Action, "give"|"receive"|"adjust"|"produce"|"consume">;
+    Action: ActionsFixture;
     TransferClassification: Fixture<TransferClassification, "stub">;
-    ProcessClassification: Fixture<ProcessClassification, "stub">;
+    ProcessClassification: ProcessClassificationFixture;
   }>
 }

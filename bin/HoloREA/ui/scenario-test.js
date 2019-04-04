@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import "./chai/chai";
-import "./zomes";
+import { agents, events, resources } from "./zomes";
 console.log('Chai inited:', chai);
 const expect = chai.expect;
 /**
@@ -388,7 +388,7 @@ function checkAllInventory(invs) {
 function expectGoodCrud(crud, type, name) {
     name = name || "(CRUD)";
     expect(crud).to.be.an(`object`);
-    expect(crud.error, `${name}'s error`).to.not.exist;
+    expect(crud.error, `${name}'s error: ${crud.error}`).to.not.exist;
     if (type) {
         expect(crud.type, `type of ${name}`).to.be.a(`string`).equals(type);
     }
@@ -637,7 +637,7 @@ export function ready() {
             }
             // Too many requests, it seems.
             let alApples = yield resources.createResource({
-                properties: {
+                resource: {
                     resourceClassifiedAs: apples.hash,
                     owner: al.hash,
                     currentQuantity: { units: '', quantity: 100 },
@@ -678,7 +678,7 @@ export function ready() {
                 return my.al.apples = alApples;
             }));
             let beaBeans = yield resources.createResource({
-                properties: {
+                resource: {
                     resourceClassifiedAs: beans.hash,
                     owner: bea.hash,
                     currentQuantity: { units: 'kg', quantity: 2 },
@@ -934,7 +934,7 @@ export function ready() {
         })).then((my) => __awaiter(this, void 0, void 0, function* () {
             let { chloe, bea, facts } = my;
             yield my.verbs.trade({ units: ``, quantity: 1 }, chloe.turnovers.hash, bea.turnovers.hash, yield tick());
-            yield my.verbs.trade({ units: `kg`, quantity: 0.5 }, bea.beans.hash, chloe.coffee.hash, yield tick());
+            yield my.verbs.trade({ units: `kg`, quantity: 0.5 }, bea.beans.hash, chloe.beans.hash, yield tick());
             yield my.verbs.brewCoffee(1000 / facts.mlPerCup, yield tick());
             return my;
         })).then(checkAllInventory({

@@ -7,7 +7,9 @@
  * @flow
  */
 
-const HTTP_HOST = `${process.env.DHT_HOSTNAME}`;
+// default to an empty host (same server) if no Webpack / node env, for
+// compatibility with Holochain DHT app environment.
+const HTTP_HOST = (typeof process !== `undefined` && process && process.env) ? `${process.env.DHT_HOSTNAME}` : '';
 
 // clone response and attempt decoding JSON
 // (needed in both success and error cases)
@@ -15,8 +17,9 @@ async function tryParseJson(response) {
   const responseCopy = response.clone();
   try {
     const result = await responseCopy.json();
-
+    // Don't do that.
     // :SHONK: fix `null` error causing problems in `scenario.ts`
+    /*
     if (result.error === null) {
       result.error = undefined;
     }
@@ -27,14 +30,18 @@ async function tryParseJson(response) {
         }
       });
     }
+    */
 
     return result;
   } catch (err) {
+    return responseCopy.text();
+    /*
     if (err instanceof SyntaxError) {
       return responseCopy.text();
     } else {
       throw err;
     }
+    */
   }
 }
 
@@ -60,6 +67,7 @@ function Zome(name, fnTypes) {
       },
       body: data
     }).then(async response => {
+
       if (!response.ok) {
         // handle Zome API handler errors
         let content = null
@@ -67,16 +75,16 @@ function Zome(name, fnTypes) {
           content = await tryParseJson(response)
         } catch (e) { /* swallow unhandled parse errors, server msg is not always required */ }
         if (content && content.errorMessage) {
-          return Promise.reject(new Error(`[DHT] ${content.errorMessage}`));
+          return Promise.reject(content);
         }
 
         // handle HTTP errors
-        const resultErr = new Error(`HTTP error ${response.status}`);
+        const resultErr = new Error(`HTTP error ${response.status} ${response.statusText}`);
         resultErr.context = response;
         return Promise.reject(resultErr);
       }
 
-      return await tryParseJson(response)
+      return await tryParseJson(response);
     });
   }
 
@@ -98,6 +106,7 @@ export const resources = new Zome(`resources`, [
 
 export const events = new Zome(`events`, [
   `createEvent`, `createAction`, `createTransfer`, `createProcessClass`, `createTransferClass`,
+  `createProcess`, `readProcesses`,
   `getFixtures`, `readActions`, 'readProcessClasses', 'readTransferClasses', 'readEvents',
   `traceEvents`, `trackEvents`, `traceTransfers`, `trackTransfers`,
   `eventSubtotals`, `eventsStartedAfter`, `eventsStartedBefore`, `eventsEndedAfter`,

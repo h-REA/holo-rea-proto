@@ -7,7 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 //import chai from "./chai/chai";
-import "./zomes.js";
+import { agents, events, resources } from "./zomes.js";
+//import {window, localStorage} from "dom";
 //console.log('Chai inited:', chai)
 //const expect = chai.expect;
 /**
@@ -120,7 +121,7 @@ export function verbify(my) {
     function pickApples(howMany, when = 0, resource = my.al.apples.hash) {
         return __awaiter(this, void 0, void 0, function* () {
             when = when || (yield tick());
-            return events.createEvent({
+            return yield events.createEvent({
                 action: pick.hash,
                 provider: al.hash,
                 receiver: al.hash,
@@ -134,7 +135,7 @@ export function verbify(my) {
     function gatherBeans(howMuch, when = 0, resource = my.bea.beans.hash) {
         return __awaiter(this, void 0, void 0, function* () {
             when = when || (yield tick());
-            return events.createEvent({
+            return yield events.createEvent({
                 action: gather.hash,
                 provider: bea.hash,
                 receiver: bea.hash,
@@ -149,7 +150,7 @@ export function verbify(my) {
         return __awaiter(this, void 0, void 0, function* () {
             when = when || (yield tick());
             let [from, to] = yield resources.readResources([fromHash, toHash]);
-            return events.createTransfer({
+            return yield events.createTransfer({
                 transferClassifiedAs: trade.hash,
                 inputs: {
                     action: my.actions.give.hash,
@@ -201,7 +202,7 @@ export function verbify(my) {
                     affectedQuantity: { units: `mL`, quantity: cups * facts.mlPerCup }
                 })
             ]);
-            return events.createProcess({
+            return yield events.createProcess({
                 processClassifiedAs: brew.hash,
                 inputs: [consumeEv.hash],
                 outputs: [brewEv.hash],
@@ -239,7 +240,7 @@ export function verbify(my) {
                     affectedQuantity: { units: ``, quantity: howMany }
                 })
             ]);
-            return events.createProcess({
+            return yield events.createProcess({
                 processClassifiedAs: bake.hash,
                 plannedStart: when,
                 plannedDuration: facts.bakeTime,
@@ -418,93 +419,96 @@ function expectGoodCrud<T>(
   return crud;
 }
 */
-export function ready() {
+function initTypes() {
+    let prep;
+    {
+        prep = agents.createAgent({
+            name: `Al`,
+            note: `a note`,
+            primaryLocation: [`1 roady street`, `placeville, XX 12345`]
+        }).then((al) => {
+            let my = scenario();
+            my.al.agent = al;
+            return my;
+        }).then((my) => Promise.all([
+            agents.createAgent({ name: `Bea` }).then((bea) => {
+                my.bea.agent = bea;
+                return my;
+            }),
+            agents.createAgent({ name: `Chloe` }).then((chloe) => {
+                my.chloe.agent = chloe;
+                return my;
+            })
+        ]).then(() => my));
+    }
+    {
+        prep = Promise.all([
+            prep,
+            // TEST resources.createResourceClassification
+            resources.createResourceClassification({
+                name: `apples`,
+                defaultUnits: ``
+            }),
+            resources.createResourceClassification({
+                name: `coffee beans`,
+                defaultUnits: `kg`
+            }),
+            resources.createResourceClassification({
+                name: `apple turnovers`,
+                defaultUnits: ``
+            }),
+            resources.createResourceClassification({
+                name: `coffee`,
+                defaultUnits: `mL`
+            })
+        ]).then(([my, apples, beans, turnovers, coffee]) => {
+            my.types.resource = { apples, beans, turnovers, coffee };
+            return my;
+        });
+    }
+    let stub;
+    prep = prep.then((my) => __awaiter(this, void 0, void 0, function* () {
+        // TEST events.getFixtures
+        let evFix = yield events.getFixtures(null);
+        let tc = evFix.TransferClassification;
+        let act = evFix.Action;
+        let pc = evFix.ProcessClassification;
+        // TEST events.readTransferClasses & readProcessClasses
+        let p = Promise.all([
+            events.readTransferClasses([tc.stub]).then(([stub]) => {
+                my.types.transfer.stub = stub;
+            }),
+            events.readProcessClasses([pc.stub]).then(([stub]) => {
+                my.types.process.stub = stub;
+            })
+        ]);
+        // TEST events.readActions
+        let [give, take, adjust, produce, consume] = yield events.readActions([
+            act.give, act.receive, act.adjust, act.produce, act.consume
+        ]);
+        my.actions = { give, take, adjust, produce, consume, receive: take };
+        // TEST events.createAction
+        let [pick, gather] = yield Promise.all([
+            events.createAction({ name: `pick`, behavior: '+' }),
+            events.createAction({ name: `gather`, behavior: '+' })
+        ]);
+        Object.assign(my.actions, { pick, gather });
+        // TEST events.createTransferClass
+        let trade = my.types.transfer.trade = yield events.createTransferClass({ name: `trade` });
+        // TEST events.createProcessClass
+        let [bake, brew] = yield Promise.all([
+            events.createProcessClass({ name: `bake`, label: `bake` }),
+            events.createProcessClass({ name: `brew`, label: `brew` })
+        ]);
+        my.types.process = Object.assign(my.types.process, { bake, brew });
+        return p.then(() => my);
+    }));
+    return prep;
+}
+function initEvents(prep) {
     return __awaiter(this, void 0, void 0, function* () {
-        let prep;
-        {
-            prep = agents.createAgent({
-                name: `Al`,
-                note: `a note`,
-                primaryLocation: [`1 roady street`, `placeville, XX 12345`]
-            }).then((al) => {
-                let my = scenario();
-                my.al.agent = al;
-                return my;
-            }).then((my) => Promise.all([
-                agents.createAgent({ name: `Bea` }).then((bea) => {
-                    my.bea.agent = bea;
-                    return my;
-                }),
-                agents.createAgent({ name: `Chloe` }).then((chloe) => {
-                    my.chloe.agent = chloe;
-                    return my;
-                })
-            ]).then(() => my));
-        }
-        {
-            prep = Promise.all([
-                prep,
-                // TEST resources.createResourceClassification
-                resources.createResourceClassification({
-                    name: `apples`,
-                    defaultUnits: ``
-                }),
-                resources.createResourceClassification({
-                    name: `coffee beans`,
-                    defaultUnits: `kg`
-                }),
-                resources.createResourceClassification({
-                    name: `apple turnovers`,
-                    defaultUnits: ``
-                }),
-                resources.createResourceClassification({
-                    name: `coffee`,
-                    defaultUnits: `mL`
-                })
-            ]).then(([my, apples, beans, turnovers, coffee]) => {
-                my.types.resource = { apples, beans, turnovers, coffee };
-                return my;
-            });
-        }
-        let stub;
-        prep = prep.then((my) => __awaiter(this, void 0, void 0, function* () {
-            // TEST events.getFixtures
-            let evFix = yield events.getFixtures(null);
-            let tc = evFix.TransferClassification;
-            let act = evFix.Action;
-            let pc = evFix.ProcessClassification;
-            // TEST events.readTransferClasses & readProcessClasses
-            let p = Promise.all([
-                events.readTransferClasses([tc.stub]).then(([stub]) => {
-                    my.types.transfer.stub = stub;
-                }),
-                events.readProcessClasses([pc.stub]).then(([stub]) => {
-                    my.types.process.stub = stub;
-                })
-            ]);
-            // TEST events.readActions
-            let [give, take, adjust, produce, consume] = yield events.readActions([
-                act.give, act.receive, act.adjust, act.produce, act.consume
-            ]);
-            my.actions = { give, take, adjust, produce, consume, receive: take };
-            // TEST events.createAction
-            let [pick, gather] = yield Promise.all([
-                events.createAction({ name: `pick`, behavior: '+' }),
-                events.createAction({ name: `gather`, behavior: '+' })
-            ]);
-            Object.assign(my.actions, { pick, gather });
-            // TEST events.createTransferClass
-            let trade = my.types.transfer.trade = yield events.createTransferClass({ name: `trade` });
-            // TEST events.createProcessClass
-            let [bake, brew] = yield Promise.all([
-                events.createProcessClass({ name: `bake`, label: `bake` }),
-                events.createProcessClass({ name: `brew`, label: `brew` })
-            ]);
-            my.types.process = Object.assign(my.types.process, { bake, brew });
-            return p.then(() => my);
-        }));
         // Time to start making events and resources
-        prep = prep.then((my) => __awaiter(this, void 0, void 0, function* () {
+        return prep.then((my) => __awaiter(this, void 0, void 0, function* () {
             let time = yield tick();
             my.timeline.begin = time;
             let al = my.al.agent, bea = my.bea.agent, chloe = my.chloe.agent;
@@ -529,6 +533,7 @@ export function ready() {
                             }
                         });
                     }
+                    console.log(`before inventory setup, ${person.agent.entry.name}'s beans was ${person.beans && person.beans.entry.trackingIdentifier}'`);
                     person.beans = person.beans || (yield events.resourceCreationEvent({
                         resource: {
                             resourceClassifiedAs: beans.hash,
@@ -566,7 +571,7 @@ export function ready() {
             }
             // Too many requests, it seems.
             let alApples = yield resources.createResource({
-                properties: {
+                resource: {
                     resourceClassifiedAs: apples.hash,
                     owner: al.hash,
                     currentQuantity: { units: '', quantity: 100 },
@@ -582,8 +587,8 @@ export function ready() {
             }).then((alApples) => {
                 return my.al.apples = alApples;
             });
-            let beaBeans = resources.createResource({
-                properties: {
+            let beaBeans = yield resources.createResource({
+                resource: {
                     resourceClassifiedAs: beans.hash,
                     owner: bea.hash,
                     currentQuantity: { units: 'kg', quantity: 2 },
@@ -598,7 +603,7 @@ export function ready() {
                 }
             }).then((bb) => (my.bea.beans = bb));
             // TEST events.resourceCreationEvent
-            let chloeCoffee = events.resourceCreationEvent({
+            let chloeCoffee = yield events.resourceCreationEvent({
                 resource: {
                     currentQuantity: { units: `mL`, quantity: 300 },
                     resourceClassifiedAs: coffee.hash,
@@ -613,6 +618,7 @@ export function ready() {
                 return my.chloe.coffee = res;
             }));
             yield Promise.all([my.al, my.bea, my.chloe].map(person => setupInventory(person)));
+            console.log(`after setup, Bea's beans are ${my.bea.beans.entry.trackingIdentifier}`);
             my.facts = (() => {
                 let gramsPerSpoon = 2.5;
                 let spoonsPerCup = 1;
@@ -635,5 +641,126 @@ export function ready() {
             return verbify(my);
         }));
         return prep;
+    });
+}
+function recoverInventory(scenario) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { al, bea, chloe } = scenario;
+        const types = scenario.types.resource;
+        const typeHashes = Object.keys(types).map(key => types[key].hash);
+        const stuff = yield agents.getOwnedResources({
+            agents: [al, bea, chloe].map(who => who.agent.hash),
+            types: typeHashes
+        });
+        for (let person of [al, bea, chloe]) {
+            const own = stuff[person.agent.hash];
+            [person.apples] = yield resources.readResources(own[types.apples.hash]);
+            [person.beans] = yield resources.readResources(own[types.beans.hash]);
+            [person.coffee] = yield resources.readResources(own[types.coffee.hash]);
+            [person.turnovers] = yield resources.readResources(own[types.turnovers.hash]);
+        }
+        return scenario;
+    });
+}
+export function ready() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return initTypes().then((scenario) => __awaiter(this, void 0, void 0, function* () {
+            let owned = yield agents.getOwnedResources({ agents: [scenario.al.agent.hash], types: [scenario.types.resource.apples.hash] });
+            console.log(`Al's inventory from DHT =>`);
+            console.log(owned);
+            if (!owned) {
+                console.log(`nothing returned by getOwnedResources.  Initializing inventories. (this probably shouldn't happen)`);
+                return initEvents(Promise.resolve(scenario));
+            }
+            let alStuff = owned[scenario.al.agent.hash];
+            if (!alStuff) {
+                console.log(`Al had no stuff.  Initializing.`);
+                return initEvents(Promise.resolve(scenario));
+            }
+            let apples = alStuff[scenario.types.resource.apples.hash];
+            if (!apples || apples.length === 0) {
+                console.log(`No apples in Al's inventory.  Initializing.`);
+                return initEvents(Promise.resolve(scenario));
+            }
+            else if (apples.length > 1) {
+                throw new Error(`Al has ${apples.length} piles of apples.  He should have exactly 1.  Restart the DHT server and try again.`);
+            }
+            // be sure that the apples we found are good first.
+            let [apple] = yield resources.readResources(apples);
+            console.log(`Al's apples on the DHT:`);
+            console.log(apple);
+            if (!apple) {
+                console.warn(`Fishy disappearing apples from Al's pocket.  Initializing anyway.`);
+                return initEvents(Promise.resolve(scenario));
+            }
+            else if (apple.error) {
+                throw new Error(`Al's apples are illegitimate due to ${apple.error}; restart the DHT server to continue.`);
+            }
+            let eventHashes = yield resources.getAffectingEvents({ resource: apple.hash });
+            console.log(`Events affecting Al's apples: ${eventHashes}`);
+            if (!eventHashes || eventHashes.length === 0) {
+                console.log(`No events set up Al's apples in the DHT.  Initializing.`);
+                return initEvents(Promise.resolve(scenario));
+            }
+            else if (eventHashes.length > 1) {
+                console.warn(`WARNING: found ${eventHashes.length} events acting on Al's apples.  There should be only 1.  Restart the DHT server unless you intended to join an existing scenario.`);
+                return recoverInventory(verbify(scenario));
+            }
+            else {
+                console.log(`DHT appears to be initialized normally already.`);
+                return recoverInventory(verbify(scenario));
+            }
+        }));
+        /*
+        let scenarioP = initTypes();
+        let scenario = await scenarioP;
+      
+        let [apples] = await resources.readResources([scenario.al.apples.hash]);
+        if (!apples || apples.error) {
+          return await initEvents(scenario)
+        }
+      
+        let storage = localStorage.getItem("gfdScenario");
+        storage = storage && JSON.parse(storage);
+        let needReload = false;
+      
+        if (!storage) {
+          console.log(`scenario is not in storage.`);
+          needReload = true;
+        } else {
+          console.log(`storage has a scenario; checking Al's apples`);
+          let [apples] = await resources.readResources([storage.al.apples.hash]);
+          console.log(apples);
+          if (!apples || apples.error) {
+            console.log(`DHT did not have Al's apples under the previous hash.`);
+            needReload = true;
+          } else {
+            console.log(`DHT has Al's apples; checking related events`);
+            let events = await resources.getAffectingEvents({ resource: apples.hash });
+            console.log(events);
+            if (!events || !events.length) {
+              console.log(`No events on Al's apples; re-initializing`);
+              needReload = true;
+            } else if (events.length > 1) {
+              console.warn(`WARNING: scenario is not pristine (too many events)`);
+            }
+          }
+        }
+      
+        let using;
+        if (needReload) {
+          using = init().then((it) => {
+            window.scenario = it;
+            let saving = Object.assign({}, it, { verbs: null });
+            localStorage.setItem("gfdScenario", JSON.stringify(saving));
+            return it;
+          });
+        } else {
+          let scenario = window.scenario = verbify(storage);
+          using = Promise.resolve(scenario);
+        }
+      
+        return using;
+        */
     });
 }

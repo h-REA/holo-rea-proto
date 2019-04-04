@@ -1,5 +1,5 @@
 import "./chai/chai";
-import "./zomes";
+import { agents, events, resources, CrudResponse, IntDate, Hash, QuantityValue } from "./zomes";
 
 console.log('Chai inited:', chai)
 const expect = chai.expect;
@@ -506,7 +506,7 @@ function expectGoodCrud<T>(
   name = name || "(CRUD)";
   expect(crud).to.be.an(`object`);
 
-  expect(crud.error, `${name}'s error`).to.not.exist;
+  expect(crud.error, `${name}'s error: ${crud.error}`).to.not.exist;
 
   if (type) {
     expect(crud.type, `type of ${name}`).to.be.a(`string`).equals(type);
@@ -815,7 +815,7 @@ export async function ready(): Promise<Scenario> {
 
     // Too many requests, it seems.
     let alApples = await resources.createResource({
-      properties: {
+      resource: {
         resourceClassifiedAs: apples.hash,
         owner: al.hash,
         currentQuantity: { units: '', quantity: 100 },
@@ -865,7 +865,7 @@ export async function ready(): Promise<Scenario> {
     });
 
     let beaBeans = await resources.createResource({
-      properties: {
+      resource: {
         resourceClassifiedAs: beans.hash,
         owner: bea.hash,
         currentQuantity: { units: 'kg', quantity: 2 },
@@ -1170,7 +1170,7 @@ export async function ready(): Promise<Scenario> {
     await my.verbs.trade(
       { units: `kg`, quantity: 0.5 },
       bea.beans.hash,
-      chloe.coffee.hash,
+      chloe.beans.hash,
       await tick()
     );
 

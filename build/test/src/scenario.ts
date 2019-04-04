@@ -1,5 +1,5 @@
 //import chai from "./chai/chai";
-import "./zomes.js";
+import { agents, events, resources, CrudResponse, IntDate, Hash, QuantityValue } from "./zomes.js";
 //import {window, localStorage} from "dom";
 
 //console.log('Chai inited:', chai)
@@ -710,7 +710,7 @@ async function initEvents(prep: Promise<Scenario>): Promise<Scenario> {
 
     // Too many requests, it seems.
     let alApples = await resources.createResource({
-      properties: {
+      resource: {
         resourceClassifiedAs: apples.hash,
         owner: al.hash,
         currentQuantity: { units: '', quantity: 100 },
@@ -728,7 +728,7 @@ async function initEvents(prep: Promise<Scenario>): Promise<Scenario> {
     });
 
     let beaBeans = await resources.createResource({
-      properties: {
+      resource: {
         resourceClassifiedAs: beans.hash,
         owner: bea.hash,
         currentQuantity: { units: 'kg', quantity: 2 },

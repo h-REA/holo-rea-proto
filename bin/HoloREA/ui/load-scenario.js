@@ -1,43 +1,14 @@
-import { ready, verbify } from "./scenario.js";
+import { ready } from "./scenario.js";
 import { resources, agents, events } from "./zomes.js";
 
 window.agents = agents;
 window.resources = resources;
 window.events = events;
 
-repl(async function loading () {
-  let storage = localStorage.getItem("gfdScenario");
-  storage = storage && JSON.parse(storage);
-  let needReload = false;
+repl(function loading () {
 
-  if (!storage) {
-    needReload = true;
-  } else {
-    let [apples] = await resources.readResources([storage.types.resource.apples.hash]);
-    if (!apples || apples.error) {
-      needReload = true;
-    } else {
-      let events = await resources.getAffectingEvents({ resource: apples.hash });
-      if (!events || !events.length) {
-        needReload = true;
-      }
-    }
-  }
-
-  let using;
-  if (needReload) {
-    using = ready().then((it) => {
-      window.scenario = it;
-      let saving = Object.assign({}, it, { verbs: null });
-      localStorage.setItem("gfdScenario", JSON.stringify(saving));
-      return saving;
-    });
-  } else {
-    window.scenario = verbify(storage);
-    using = Promise.resolve(storage);
-  }
-
-  using.then((scenario) => {
+  return ready().then((scenario) => {
+    window.scenario = scenario;
     // set up help and story.
     window.al = scenario.al;
     window.bea = scenario.bea;
@@ -45,7 +16,7 @@ repl(async function loading () {
 
     function *story () {
       function a(fnTxt) {
-        return `<a href="#input" onclick="$('#input').get(0).value = &quot;${fnTxt}&quot;">${fnTxt}</a>`;
+        return `<a href="#input" onclick="$('#input').get(0).value = &quot;${fnTxt}&quot;" class="story-action">${fnTxt}</a>`;
       }
 
       yield `
@@ -65,7 +36,8 @@ repl(async function loading () {
         <output>
           ${a(`scenario.verbs.inventory(scenario.bea)`)}<br/>
           ${a(`resources.getAffectingEvents({resource: scenario.bea.beans.hash}).then((it) => hashes = it)`)}<br/>
-          ${a(`events.readEvents(hashes)`)}<br/>
+          ${a(`events.readEvents(hashes).then(ev => ecEvent = ev[0])`)}<br/>
+          ${a(`events.readActions([ecEvent.entry.action])`)}
         </output>
       `;
 
@@ -77,7 +49,8 @@ repl(async function loading () {
         <output>
           ${a(`scenario.verbs.inventory(scenario.chloe)`)}<br/>
           ${a(`resources.getAffectingEvents({resource: scenario.chloe.coffee.hash}).then((it) => hashes = it)`)}<br/>
-          ${a(`events.readEvents(hashes)`)}<br/>
+          ${a(`events.readEvents(hashes).then(ev => ecEvent = ev[0])`)}<br/>
+          ${a(`events.readActions([ecEvent.entry.action])`)}
         </output>
       `;
 
@@ -87,26 +60,27 @@ repl(async function loading () {
             Al brings his apples to Chloe's Coffee.
           </p>
           <p>
-            <b>Al:</b><q>I'd like some coffee, please, say, 300 mL.</q>
+            <b>Al:</b> <q>I'd like some coffee, please, say, 300 mL.</q>
           </p>
 
           <code>
             ${a(`scenario.verbs.trade({quantity: 300, units: 'mL'}, chloe.coffee.hash, al.coffee.hash).then((it) => transfer = it)`)}<br/>
-          </code>
-          <output>
+            <br/>
             ${a(`scenario.verbs.inventory(scenario.chloe)`)}<br/>
             ${a(`scenario.verbs.inventory(scenario.al)`)}<br/>
             ${a(`events.readEvents([transfer.entry.inputs, transfer.entry.outputs])`)}<br/>
-          </output>
+          </code>
         `;
 
         yield `
           <p>
-            <b>Chloe:</b><q>In exchange, I need 3 apples.  Thank you!</q>
+            <b>Chloe:</b> <q>In exchange, I need 3 apples.  Thank you!</q>
           </p>
 
           <code>
             ${a(`scenario.verbs.trade({quantity: 3, units: ''}, scenario.al.apples.hash, scenario.chloe.apples.hash).then((it) => transfer = it)`)}<br/>
+            <br/>
+            ${a(`events.readEvents([transfer.entry.inputs, transfer.entry.outputs])`)}
           </code>
         `;
 
@@ -118,27 +92,33 @@ repl(async function loading () {
 
           <code>
             ${a(`scenario.verbs.bakeTurnovers(1).then((it) => process = it)`)}<br/>
+            <br/>
+            ${a(`events.readEvents([...process.entry.inputs, ...process.entry.outputs])`)}
           </code>
         `
 
         yield `
           <p>As predicted, Bea arrives shortly with her stock of coffee beans.</p>
           <p>
-            <b>Bea:</b><q>One apple turnover please.</q>
+            <b>Bea:</b> <q>One apple turnover please.</q>
           </p>
 
           <code>
-            ${a(`scenario.trade({quantity: 1, units: ''}, scenario.chloe.turnovers.hash, scenario.bea.turnovers.hash).then((it) => transfer = it)`)}<br/>
+            ${a(`scenario.verbs.trade({quantity: 1, units: ''}, scenario.chloe.turnovers.hash, scenario.bea.turnovers.hash).then((it) => transfer = it)`)}<br/>
+            <br/>
+            ${a(`events.readEvents([transfer.entry.inputs, transfer.entry.outputs])`)}
           </code>
         `;
 
         yield `
           <p>
-            <b>Chloe:</b><q>And I'll take 1/2 kg of your finest coffee beans.</q>
+            <b>Chloe:</b> <q>And I'll take 1/2 kg of your finest coffee beans.</q>
           </p>
 
           <code>
-            ${a(`scenario.trade({quantity: 0.5, units: 'kg'}, scenario.bea.beans.hash, scenario.chloe.beans.hash).then((it) => transfer = it)`)}<br/>
+            ${a(`scenario.verbs.trade({quantity: 0.5, units: 'kg'}, scenario.bea.beans.hash, scenario.chloe.beans.hash).then((it) => transfer = it)`)}<br/>
+            <br/>
+            ${a(`events.readEvents([transfer.entry.inputs, transfer.entry.outputs])`)}
           </code>
         `;
 
@@ -150,6 +130,8 @@ repl(async function loading () {
 
           <code>
             ${a(`scenario.verbs.brewCoffee(6).then((it) => process = it)`)}<br/>
+            <br/>
+            ${a(`events.readEvents([...process.entry.inputs, ...process.entry.outputs])`)}
           </code>
         `;
 
@@ -227,5 +209,4 @@ repl(async function loading () {
     return scenario;
   });
 
-  return using;
 });

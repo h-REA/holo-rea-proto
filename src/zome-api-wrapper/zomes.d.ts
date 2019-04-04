@@ -94,17 +94,22 @@ export namespace resources {
     which: Hash<ResourceClassification>[]
   ): Promise<DHTResponse<ResourceClassification>[]>
 
+  interface EventToCreateResource {
+    action: Hash<events.Action>;
+    provider?: Hash<agents.Agent>;
+    receiver?: Hash<agents.Agent>;
+    scope?: any;
+    start?: IntDate;
+    duration?: IntDate;
+  }
+
   export function createResource(
     props: {
       resource: EconomicResource;
-      event: {
-        action: Hash<events.Action>;
-        provider?: Hash<agents.Agent>;
-        receiver?: Hash<agents.Agent>;
-        scope?: any;
-        start?: IntDate;
-        duration?: IntDate;
-      }
+      event?: EventToCreateResource;
+    } | {
+      properties: EconomicResource;
+      event?: EventToCreateResource;
     }
   ): Promise<CrudResponse<EconomicResource>>
 

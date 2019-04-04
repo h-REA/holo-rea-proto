@@ -1440,7 +1440,7 @@ export /**/ var HoloObject = /** @class */ (function () {
      * changed since the last update() or commit()
      */
     HoloObject.prototype.hasChanged = function () {
-        if (this.myHash) {
+        if (this.lastHash) {
             return this.lastHash !== this.makeHash();
         }
         else {
@@ -1454,7 +1454,7 @@ export /**/ var HoloObject = /** @class */ (function () {
     HoloObject.prototype.committed = function () {
         if (this.isCommitted)
             return true;
-        return !!this.myHash || !!this.lastHash || !!this.originalHash;
+        return !!this.lastHash || !!this.originalHash;
     };
     /**
      * Create a brand new entry and return the HoloObject that handles it.
@@ -1550,7 +1550,7 @@ export /**/ var HoloObject = /** @class */ (function () {
     HoloObject.prototype._commit = function () {
         var hash = commit(this.className, this.myEntry);
         if (!hash || isErr(hash)) {
-            throw new TypeError("entry type mismatch or invalid data; hash " + this.myHash + " is not a " + this.className);
+            throw new TypeError("Failed to commit: " + JSON.stringify(hash));
         }
         else {
             this.isCommitted = true;
@@ -1560,6 +1560,18 @@ export /**/ var HoloObject = /** @class */ (function () {
             return hash;
         }
     };
+    /*
+    protected entryChanged(): boolean {
+      if (!this.lastHash) return true;
+      return this.lastHash !== this.makeHash();
+    }
+  
+    protected linksChanged(hash?: Hash<this>): boolean {
+      return false;
+    };
+  
+    protected saveLinks: (hash: Hash<this>) => Hash<this> = null;
+    /**/
     /**
      * Commit the entry to the chain.  If it's already up there, update it.
      * Override this method and update if there are link-aliased properties you
@@ -1618,6 +1630,7 @@ export /**/ var HoloObject = /** @class */ (function () {
         return this;
     };
     /**
+     * !!DO NOT USE!!
      * Perform any number of mutation operations as a batch, preventing each of
      * the inner functions from updating the entry until all operations are
      * complete and without error.  This method is chainable, allowing you to
@@ -2356,12 +2369,12 @@ var EconomicEvent = /** @class */ (function (_super) {
     }
     EconomicEvent.get = function (hash) {
         var it = _super.get.call(this, hash);
-        //it.loadLinks();
+        it.loadLinks();
         return it;
     };
     EconomicEvent.create = function (entry) {
         var it = _super.create.call(this, entry);
-        //it.loadLinks();
+        it.loadLinks();
         return it;
     };
     Object.defineProperty(EconomicEvent.prototype, "action", {
@@ -2510,6 +2523,8 @@ var EconomicEvent = /** @class */ (function (_super) {
     EconomicEvent.prototype.loadLinks = function () {
         var my = this.myEntry, hash = this.myHash;
         if (hash) {
+            // think about checking for no links found; nothing to be done about it if
+            // it happens, the DHT just doesn't sync fast enough.
             my.action = EventLinks.get(hash, "action").hashes()[0];
             my.affects = TrackTrace.get(hash, "affects").hashes()[0];
             var links = EventLinks.get(hash, "inputOf");
@@ -2517,14 +2532,17 @@ var EconomicEvent = /** @class */ (function (_super) {
                 my.inputOf = links.hashes()[0];
             }
             else {
-                my.inputOf = null;
+                // may need to not set to null for otto
+                // I hate this.
+                my.inputOf = ''; //null;
             }
             links = EventLinks.get(hash, "outputOf");
             if (links.length) {
                 my.outputOf = links.hashes()[0];
             }
             else {
-                my.outputOf = null;
+                // may need to not set to null for otto
+                my.outputOf = ''; //null;
             }
         }
     };

@@ -603,7 +603,7 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
    * changed since the last update() or commit()
    */
   protected hasChanged(): boolean {
-    if (this.myHash) {
+    if (this.lastHash) {
       return this.lastHash !== this.makeHash();
     } else {
       return true;
@@ -615,7 +615,7 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
    */
   protected committed(): boolean {
     if (this.isCommitted) return true;
-    return !!this.myHash || !!this.lastHash || !!this.originalHash;
+    return !!this.lastHash || !!this.originalHash;
   }
 
   /**
@@ -672,12 +672,29 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
    */
   protected myEntry: tE & holochain.JsonEntry;
 
+  // This formal definition is long overdue.  HoloObject keeps 3 hashes.
   /**
-   * myHash stores the hash of your entry.  Protected for tamper-proofing.
+   * myHash is the hash that is intended to be used as the base/target of
+   * any links.  It's left undefined if the object has no record on the DHT yet,
+   * as the base of a link must be an object on the DHT.
    * @protected
    */
   protected myHash: Hash<this>;
+  /**
+   * originalHash is the hash that was given to fetch this object from links,
+   * the user, or other objects.  In addition, if a HoloObject is created as new
+   * but already has an identical record on the DHT, originalHash will be the
+   * hash it was stored as first.  If the object truly doesn't correspond to any
+   * DHT object, the originalHash will be undefined until it is saved.
+   * @protected
+   */
   protected originalHash: Hash<this>;
+  /**
+   * lastHash is the computed hash of the data returned when you
+   * get(this.originalHash).  If the object has been modified before, this is
+   * the hash of the object as it was most recently update()ed.  lastHash is
+   * undefined if the object is not stored on the DHT yet.
+   */
   protected lastHash: Hash<this>;
   /**
    * Returns the POD struct that is stored in the DHT. Modifying the object
@@ -772,7 +789,7 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
 
     let hash = commit(this.className, <holochain.JsonEntry>this.myEntry);
     if (!hash || isErr(hash)) {
-      throw new TypeError(`entry type mismatch or invalid data; hash ${this.myHash} is not a ${this.className}`);
+      throw new TypeError(`Failed to commit: ${JSON.stringify(hash)}`);
     } else {
       this.isCommitted = true;
       this.originalHash = this.originalHash || hash;
@@ -782,6 +799,19 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
     }
 
   }
+
+  /*
+  protected entryChanged(): boolean {
+    if (!this.lastHash) return true;
+    return this.lastHash !== this.makeHash();
+  }
+
+  protected linksChanged(hash?: Hash<this>): boolean {
+    return false;
+  };
+
+  protected saveLinks: (hash: Hash<this>) => Hash<this> = null;
+  /**/
 
   /**
    * Commit the entry to the chain.  If it's already up there, update it.
@@ -839,6 +869,7 @@ export /**/class HoloObject<tE extends holochain.JsonEntry = {}> implements Name
   }
 
   /**
+   * !!DO NOT USE!!
    * Perform any number of mutation operations as a batch, preventing each of
    * the inner functions from updating the entry until all operations are
    * complete and without error.  This method is chainable, allowing you to

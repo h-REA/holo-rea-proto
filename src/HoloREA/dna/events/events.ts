@@ -655,13 +655,13 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
   });
   static get(hash: Hash<EconomicEvent>): EconomicEvent {
     const it = <EconomicEvent> super.get(hash);
-    //it.loadLinks();
+    it.loadLinks();
     return it;
 
   }
   static create(entry: EeEntry & typeof VfObject.entryType): EconomicEvent {
     const it = <EconomicEvent> super.create(entry);
-    //it.loadLinks();
+    it.loadLinks();
     return it;
   }
   constructor(entry?: EeEntry & T & typeof VfObject.entryType, hash?: Hash<EconomicEvent>) {
@@ -778,6 +778,8 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
   protected loadLinks() {
     const my = this.myEntry, hash = this.myHash;
     if (hash) {
+      // think about checking for no links found; nothing to be done about it if
+      // it happens, the DHT just doesn't sync fast enough.
       my.action = EventLinks.get(hash, `action`).hashes()[0];
 
       my.affects = TrackTrace.get(hash, `affects`).hashes()[0];
@@ -786,14 +788,17 @@ class EconomicEvent<T = {}> extends VfObject<EeEntry & T & typeof VfObject.entry
       if (links.length) {
         my.inputOf = links.hashes()[0];
       } else {
-        my.inputOf = null;
+        // may need to not set to null for otto
+        // I hate this.
+        my.inputOf = '';//null;
       }
 
       links = EventLinks.get(hash, `outputOf`);
       if (links.length) {
         my.outputOf = links.hashes()[0];
       } else {
-        my.outputOf = null;
+        // may need to not set to null for otto
+        my.outputOf = '';//null;
       }
     }
   }

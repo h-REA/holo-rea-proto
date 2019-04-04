@@ -1440,7 +1440,7 @@ export /**/ var HoloObject = /** @class */ (function () {
      * changed since the last update() or commit()
      */
     HoloObject.prototype.hasChanged = function () {
-        if (this.myHash) {
+        if (this.lastHash) {
             return this.lastHash !== this.makeHash();
         }
         else {
@@ -1454,7 +1454,7 @@ export /**/ var HoloObject = /** @class */ (function () {
     HoloObject.prototype.committed = function () {
         if (this.isCommitted)
             return true;
-        return !!this.myHash || !!this.lastHash || !!this.originalHash;
+        return !!this.lastHash || !!this.originalHash;
     };
     /**
      * Create a brand new entry and return the HoloObject that handles it.
@@ -1550,7 +1550,7 @@ export /**/ var HoloObject = /** @class */ (function () {
     HoloObject.prototype._commit = function () {
         var hash = commit(this.className, this.myEntry);
         if (!hash || isErr(hash)) {
-            throw new TypeError("entry type mismatch or invalid data; hash " + this.myHash + " is not a " + this.className);
+            throw new TypeError("Failed to commit: " + JSON.stringify(hash));
         }
         else {
             this.isCommitted = true;
@@ -1560,6 +1560,18 @@ export /**/ var HoloObject = /** @class */ (function () {
             return hash;
         }
     };
+    /*
+    protected entryChanged(): boolean {
+      if (!this.lastHash) return true;
+      return this.lastHash !== this.makeHash();
+    }
+  
+    protected linksChanged(hash?: Hash<this>): boolean {
+      return false;
+    };
+  
+    protected saveLinks: (hash: Hash<this>) => Hash<this> = null;
+    /**/
     /**
      * Commit the entry to the chain.  If it's already up there, update it.
      * Override this method and update if there are link-aliased properties you
@@ -1618,6 +1630,7 @@ export /**/ var HoloObject = /** @class */ (function () {
         return this;
     };
     /**
+     * !!DO NOT USE!!
      * Perform any number of mutation operations as a batch, preventing each of
      * the inner functions from updating the entry until all operations are
      * complete and without error.  This method is chainable, allowing you to
